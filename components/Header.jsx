@@ -216,10 +216,12 @@ export default function Header() {
             <div
               className="menu-toggle"
               id="openMenu"
-              onClick={() => setMobileOpen(true)}
-              aria-label="Open menu"
+              onClick={() => setMobileOpen((prev) => !prev)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
               role="button"
               tabIndex={0}
+              style={{ cursor: "pointer" }}
             >
               <span></span>
               <span></span>

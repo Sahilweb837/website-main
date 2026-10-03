@@ -90,15 +90,15 @@ export default function CheckoutForm({
     const canSubmit = isValidCustomer && isValidPayment && !isSubmitting;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-5 lg:gap-10">
             {/* ---------- Left: form ---------- */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="min-w-0 lg:col-span-3 space-y-8">
                 {/* Contact info */}
-                <section>
-                    <h3 className="text-sm font-bold text-[#131b2e] mb-3">
+                <section className="min-w-0">
+                    <h3 className="text-sm font-bold text-[#131b2e] mb-4 sm:text-base">
                         1. Contact Details
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                         <Field
                             label="Full Name"
                             value={customer.fullName}
@@ -155,13 +155,13 @@ export default function CheckoutForm({
                 </section>
 
                 {/* Payment method */}
-                <section>
-                    <h3 className="text-sm font-bold text-[#131b2e] mb-3">
+                <section className="min-w-0 border-t border-slate-100 pt-[24px]">
+                    <h3 className="text-sm font-bold text-[#131b2e] mb-4 sm:text-base">
                         2. Payment Method
                     </h3>
                     <PaymentMethodTabs value={method} onChange={setMethod} />
 
-                    <div className="mt-4 p-4 rounded-xl bg-[#faf8ff] border border-slate-200">
+                    <div className="mt-5 rounded-xl border border-slate-200 bg-[#faf8ff] p-4 sm:p-5">
                         {method === "upi" && (
                             <Field
                                 label="UPI ID"
@@ -273,24 +273,25 @@ export default function CheckoutForm({
                 </section>
 
                 {/* Coupon */}
-                <section>
-                    <h3 className="text-sm font-bold text-[#131b2e] mb-3">
+                <section className="min-w-0">
+                    <h3 className="text-sm font-bold text-[#131b2e] mb-4 sm:text-base">
                         3. Coupon (optional)
                     </h3>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                         <input
                             type="text"
                             value={couponInput}
                             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                             placeholder="NETCODER10"
-                            className="flex-1 text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-orange-500"
+                            className="min-h-[44px] min-w-0 w-full rounded-[6px] border border-slate-200 px-[14px] py-[12px] text-sm transition-colors focus:border-[#ff5532] focus:outline-none focus:ring-2 focus:ring-[#ff5532]/10"
+                            style={{ minHeight: 44, padding: "12px 14px", borderRadius: 6, boxSizing: "border-box", width: "100%" }}
                             disabled={couponApplied.valid}
                         />
                         {couponApplied.valid ? (
                             <button
                                 type="button"
                                 onClick={resetCoupon}
-                                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 rounded-xl"
+                                className="min-h-11 w-full rounded-lg bg-slate-100 px-5 text-xs font-bold text-slate-700 hover:bg-slate-200 sm:w-auto"
                             >
                                 Remove
                             </button>
@@ -298,7 +299,7 @@ export default function CheckoutForm({
                             <button
                                 type="button"
                                 onClick={onApplyCoupon}
-                                className="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 rounded-xl"
+                                className="min-h-11 w-full rounded-lg bg-slate-900 px-5 text-xs font-bold text-white hover:bg-slate-800 sm:w-auto"
                             >
                                 Apply
                             </button>
@@ -316,7 +317,7 @@ export default function CheckoutForm({
             </div>
 
             {/* ---------- Right: summary + submit ---------- */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="flex min-w-0 flex-col gap-[20px] lg:col-span-2 lg:sticky lg:top-0 lg:self-start">
                 <OrderSummary course={course} totals={totals} />
 
                 {errorMsg && (
@@ -329,7 +330,7 @@ export default function CheckoutForm({
                     type="button"
                     onClick={onSubmit}
                     disabled={!canSubmit}
-                    className={`w-full text-sm font-bold px-6 py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${canSubmit
+                    className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 py-4 text-sm font-bold shadow-md transition-all sm:px-6 ${canSubmit
                             ? "bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
                             : "bg-slate-200 text-slate-400 cursor-not-allowed"
                         }`}
@@ -347,17 +348,17 @@ export default function CheckoutForm({
                     )}
                 </button>
 
-                <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500">
-                    <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">lock</span>
+                <div className="grid grid-cols-1 gap-[10px] border-t border-slate-100 pt-[18px] text-[11px] text-slate-600 sm:grid-cols-3">
+                    <span className="flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-[10px] py-[8px]">
+                        <span className="material-symbols-outlined text-[15px] text-[#ff5532]">lock</span>
                         256-bit SSL
                     </span>
-                    <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">verified_user</span>
+                    <span className="flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-[10px] py-[8px]">
+                        <span className="material-symbols-outlined text-[15px] text-[#ff5532]">verified_user</span>
                         PCI-DSS
                     </span>
-                    <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">refresh</span>
+                    <span className="flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-[10px] py-[8px]">
+                        <span className="material-symbols-outlined text-[15px] text-[#ff5532]">refresh</span>
                         14-day refund
                     </span>
                 </div>
@@ -395,7 +396,8 @@ function Field({
                 <select
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:border-orange-500"
+                    className="min-h-[44px] w-full rounded-[6px] border border-slate-200 bg-white px-[14px] py-[12px] text-sm transition-colors focus:border-[#ff5532] focus:outline-none focus:ring-2 focus:ring-[#ff5532]/10"
+                    style={{ minHeight: 44, padding: "12px 14px", borderRadius: 6, boxSizing: "border-box" }}
                 >
                     <option value="">Choose...</option>
                     {selectOptions.map((o) => (
@@ -411,10 +413,11 @@ function Field({
                     onChange={(e) => onChange(e.target.value)}
                     onBlur={onBlur}
                     placeholder={placeholder}
-                    className={`w-full text-sm border rounded-xl px-3 py-2.5 focus:outline-none ${error
+                    className={`min-h-[44px] w-full rounded-[6px] border px-[14px] py-[12px] text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff5532]/10 ${error
                             ? "border-red-400 focus:border-red-500"
                             : "border-slate-200 focus:border-orange-500"
                         }`}
+                        style={{ minHeight: 44, padding: "12px 14px", borderRadius: 6, boxSizing: "border-box" }}
                 />
             )}
             {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}

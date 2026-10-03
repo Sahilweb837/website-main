@@ -17,7 +17,7 @@ export default function OrderSummary({
 }) {
     if (!totals) return null;
     return (
-        <div className="bg-[#faf8ff] rounded-2xl border border-slate-200 p-5">
+        <div className="bg-[#faf8ff] rounded-2xl border border-slate-200 p-4 sm:p-5">
             <div className="flex items-start gap-3 pb-4 border-b border-slate-200">
                 {course.image && (
                     <img

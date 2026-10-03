@@ -17,7 +17,7 @@ export default function PaymentMethodTabs({
     onChange: (v: PaymentMethod) => void;
 }) {
     return (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {TABS.map((tab) => {
                 const active = value === tab.id;
                 return (

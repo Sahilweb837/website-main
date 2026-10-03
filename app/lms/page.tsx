@@ -81,7 +81,7 @@ export default function LMSLandingPage() {
             Official Netcoder Student Portal
           </div>
           <h2 className="lms-hero-heading">
-            Learn By Doing with <span className="highlight">Netcoder LMS</span>
+            Learn By Doing with <span className="highlight">Netcoder </span>
           </h2>
           <p className="lms-hero-desc">
             Access your course roadmap, watch recorded lessons, submit practical

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode, type CSSProperties } from "react";
+import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
@@ -33,8 +33,8 @@ const navItems = [
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.4)",
-    zIndex: 50,
+    background: "rgba(0,0,0,0.45)",
+    zIndex: 90,
     backdropFilter: "blur(2px)",
   },
 
@@ -47,11 +47,11 @@ const navItems = [
     background: "#ffffff",
     borderRight: "1px solid #e5eeff",
     boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
-    zIndex: 50,
+    zIndex: 100,
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
-    transition: "transform 0.3s ease",
+    transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
   },
 
   sidebarInner: {
@@ -79,10 +79,10 @@ const navItems = [
   },
 
   logo: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 144,
+    height: 44,
     objectFit: "contain",
+    objectPosition: "left center",
   },
 
   brandName: {
@@ -257,49 +257,19 @@ const navItems = [
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "0 16px",
-    gap: 12,
+    padding: 0,
   },
 
-  searchWrap: {
-    position: "relative",
-    flex: 1,
-    maxWidth: 520,
-  },
-
-  searchInput: {
+  headerInner: {
     width: "100%",
-    height: 40,
-    paddingLeft: 40,
-    paddingRight: 90,
-    borderRadius: 10,
-    border: "1px solid #c3c6cf",
-    background: "#ffffff",
-    fontSize: "0.875rem",
-    color: "#1a1c1e",
-    outline: "none",
-  },
-
-  searchIcon: {
-    position: "absolute",
-    left: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#73777f",
-    fontSize: 20,
-  },
-
-  kbd: {
-    position: "absolute",
-    right: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    padding: "2px 6px",
-    borderRadius: 4,
-    background: "#f1f4fe",
-    border: "1px solid #c3c6cf",
-    fontSize: "0.65rem",
-    color: "#43474e",
+    maxWidth: 1152,
+    height: "100%",
+    margin: "0 auto",
+    boxSizing: "border-box",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
 
   headerRight: {
@@ -322,6 +292,37 @@ const navItems = [
     border: "none",
     cursor: "pointer",
     boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+  },
+
+  cartBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    height: 40,
+    padding: "0 11px",
+    borderRadius: 10,
+    background: "#ffffff",
+    color: "#43474e",
+    fontWeight: 600,
+    fontSize: "0.875rem",
+    border: "1px solid #dfe2eb",
+    cursor: "pointer",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+  },
+
+  cartCount: {
+    minWidth: 18,
+    height: 18,
+    padding: "0 5px",
+    borderRadius: 999,
+    background: ACCENT,
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: 700,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   notifBtn: {
@@ -396,14 +397,39 @@ const navItems = [
 /* ─── COMPONENT ───────────────────────────────────────── */
 export default function LMSLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [courseCartCount, setCourseCartCount] = useState(0);
   const pathname = usePathname();
   const { user, isAuthLoaded, logout } = useAuth();
+
+  // Initialize desktop sidebar open state
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setSidebarOpen(true);
+    }
+  }, []);
+
+  // Auto-close drawer on mobile when navigating
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    const updateCartCount = (event: Event) => {
+      const count = (event as CustomEvent<number>).detail;
+      setCourseCartCount(typeof count === "number" ? count : 0);
+    };
+
+    window.addEventListener("lms:course-cart-count", updateCartCount);
+    return () => window.removeEventListener("lms:course-cart-count", updateCartCount);
+  }, []);
 
   if (pathname === "/lms") return <>{children}</>;
 
   const currentUser = user || {
-    name: "Sahil Sandhu",
-    email: "sahil@netcoder.in",
+    name: "Student",
+    email: "",
     avatar:
       "https://api.dicebear.com/7.x/bottts/svg?seed=student",
   };
@@ -413,31 +439,126 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
       <style>{`
         .lms-sidebar-resp {
           transform: translateX(-100%);
-          transition: transform 0.3s ease;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          z-index: 100 !important;
         }
         .lms-sidebar-resp.open {
           transform: translateX(0) !important;
         }
         .lms-header-resp {
           left: 0 !important;
-          transition: left 0.3s ease;
+          transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .lms-mainwrap-resp {
           padding-left: 0 !important;
-          transition: padding-left 0.3s ease;
+          transition: padding-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .lms-menu-btn {
+          flex-shrink: 0 !important;
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+        }
+        .lms-header-brand {
+          display: inline-flex;
+          align-items: center;
+          flex: 0 1 auto;
+          min-width: 0;
+        }
+        .lms-header-brand img {
+          display: block;
+          width: 148px;
+          height: 40px;
+          object-fit: contain;
+          object-position: left center;
+        }
+        .lms-header-inner { padding-left: 16px; padding-right: 16px; }
+        @media (min-width: 640px) {
+          .lms-header-inner { padding-left: 24px; padding-right: 24px; }
         }
         @media (min-width: 1024px) {
-          .lms-sidebar-resp {
-            transform: translateX(0) !important;
-          }
-          .lms-header-resp {
+          .lms-header-inner { padding-left: 32px; padding-right: 32px; }
+        }
+        .lms-profile-name {
+          max-width: 160px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        @media (min-width: 1024px) {
+          .lms-header-resp.sidebar-open {
             left: 280px !important;
           }
-          .lms-mainwrap-resp {
+          .lms-mainwrap-resp.sidebar-open {
             padding-left: 280px !important;
           }
           .lms-overlay-resp {
             display: none !important;
+          }
+        }
+        @media (max-width: 1023px) {
+          .lms-header-resp {
+            left: 0 !important;
+          }
+          .lms-mainwrap-resp {
+            padding-left: 0 !important;
+          }
+        }
+        @media (max-width: 700px) {
+          .lms-header-inner {
+            gap: 6px !important;
+            padding: 0 10px !important;
+          }
+          .lms-header-right {
+            gap: 5px !important;
+          }
+          .lms-header-notification {
+            display: none !important;
+          }
+          .lms-header-profile {
+            gap: 6px !important;
+          }
+          .lms-header-brand img {
+            width: 120px;
+            height: 36px;
+          }
+          .lms-profile-text {
+            display: flex !important;
+            max-width: 100px;
+          }
+          .lms-profile-level {
+            display: none !important;
+          }
+          .lms-live-label,
+          .lms-cart-label {
+            display: none !important;
+          }
+          .lms-header-live,
+          .lms-header-cart {
+            width: 40px !important;
+            min-width: 40px !important;
+            padding: 0 !important;
+          }
+        }
+        @media (max-width: 430px) {
+          .lms-header-brand img {
+            width: 92px;
+          }
+          .lms-profile-text {
+            max-width: 76px;
+          }
+          .lms-header-profile img {
+            display: none;
+          }
+          .lms-header-resp {
+            padding: 0 !important;
+          }
+          .lms-header-inner {
+            padding: 0 8px !important;
           }
         }
       `}</style>
@@ -473,20 +594,41 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
                   if (parent && !parent.querySelector(".logo-fallback")) {
                     const div = document.createElement("div");
                     div.className = "logo-fallback";
-                    div.style.cssText = `width:36px;height:36px;border-radius:8px;background:${ACCENT};display:flex;align-items:center;justify-content:center;color:#fff;`;
+                    div.style.cssText = `width:40px;height:40px;flex:0 0 40px;border-radius:8px;background:${ACCENT};display:flex;align-items:center;justify-content:center;color:#fff;`;
                     div.innerHTML = `<span class="material-symbols-outlined" style="font-size:20px">school</span>`;
                     parent.insertBefore(div, parent.firstChild);
                   }
                 }}
               />
-              <span style={S.brandName}>NetCoder LMS</span>
+              <span style={S.brandName}></span>
             </Link>
             <button
-              style={S.closeBtn}
+              type="button"
+              style={{
+                ...S.closeBtn,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 36,
+                height: 36,
+                cursor: "pointer",
+              }}
               onClick={() => setSidebarOpen(false)}
-              aria-label="Close"
+              aria-label="Close side menu"
             >
-              <span className="material-symbols-outlined">close</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
             </button>
           </div>
 
@@ -531,7 +673,6 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
           <div style={S.streakCard}>
             <div style={S.streakTop}>
               <div style={S.streakTitle}>
-                <span style={{ fontSize: 18 }}>🔥</span>
                 <span>14 Days Streak</span>
               </div>
               <span style={S.streakBadge}>Active</span>
@@ -575,33 +716,54 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* MAIN */}
-      <div className="lms-mainwrap-resp" style={S.mainWrap}>
-        <header className="lms-header-resp" style={S.header}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, maxWidth: 520 }}>
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lms-menu-btn"
-              style={{ ...S.notifBtn }}
-              aria-label="Open menu"
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
+      <div className={`lms-mainwrap-resp ${sidebarOpen ? "sidebar-open" : ""}`} style={S.mainWrap}>
+        <header className={`lms-header-resp ${sidebarOpen ? "sidebar-open" : ""}`} style={S.header}>
+          <div className="lms-header-inner" style={S.headerInner}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              {!sidebarOpen && (
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(true)}
+                  className="lms-menu-btn"
+                  style={{
+                    ...S.notifBtn,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    width: 40,
+                    height: 40,
+                    minWidth: 40,
+                    cursor: "pointer",
+                  }}
+                  aria-label="Open side menu"
+                  aria-expanded={false}
+                >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+                </button>
+              )}
 
-            <div style={S.searchWrap}>
-              <span className="material-symbols-outlined" style={S.searchIcon}>
-                search
-              </span>
-              <input
-                style={S.searchInput}
-                placeholder="Search courses, topics, or code problems..."
-                type="text"
-              />
-              <kbd style={S.kbd}>Ctrl + K</kbd>
+              <Link href="/lms/dashboard" className="lms-header-brand" aria-label="NetCoder LMS home">
+                <img src="/images/logo.png" alt="NetCoder" />
+              </Link>
             </div>
-          </div>
 
-          <div style={S.headerRight}>
+          <div className="lms-header-right" style={S.headerRight}>
             <button
+              className="lms-header-live"
               style={S.liveBtn}
               onClick={() => {
                 const el = document.getElementById("countdown-timer");
@@ -611,30 +773,51 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                 videocam
               </span>
-              <span>Join Live Room</span>
+              <span className="lms-live-label">Join Live Room</span>
             </button>
 
-            <button style={S.notifBtn} title="Notifications">
+            {pathname === "/lms/select-course" && (
+              <button
+                type="button"
+                className="lms-header-cart"
+                style={S.cartBtn}
+                aria-label={`Open course cart with ${courseCartCount} items`}
+                onClick={() => window.dispatchEvent(new Event("lms:open-course-cart"))}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 19 }}>
+                  shopping_cart
+                </span>
+                <span className="lms-cart-label">Cart</span>
+                <span style={S.cartCount}>{courseCartCount}</span>
+              </button>
+            )}
+
+            <button className="lms-header-notification" style={S.notifBtn} title="Notifications">
               <span className="material-symbols-outlined">notifications</span>
               <span style={S.notifDot} />
             </button>
 
             <div style={S.divider} />
-
-            <Link href="/lms/profile" style={S.profile}>
+            <Link
+              href={user ? "/lms/profile" : "/login"}
+              className="lms-header-profile"
+              style={S.profile}
+              aria-label={user ? `Open ${currentUser.name}'s profile` : "Sign in"}
+            >
               <img
-                alt="Profile"
+                alt=""
                 style={S.avatar}
                 src={
                   currentUser.avatar ||
                   "https://api.dicebear.com/7.x/bottts/svg?seed=student"
                 }
               />
-              <div style={S.profileText}>
-                <span style={S.profileName}>{currentUser.name}</span>
-                <span style={S.profileLevel}>Level 4 Explorer</span>
+              <div className="lms-profile-text" style={S.profileText}>
+                <span className="lms-profile-name" style={S.profileName}>{currentUser.name}</span>
+                <span className="lms-profile-level" style={S.profileLevel}>My learning</span>
               </div>
             </Link>
+            </div>
           </div>
         </header>
 
