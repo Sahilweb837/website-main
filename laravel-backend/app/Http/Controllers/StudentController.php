@@ -3,33 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use App\Models\Student;
 use App\Models\DrmSecurityLog;
+use App\Services\StudentService;
 
 class StudentController extends Controller
 {
+    protected StudentService $studentService;
+
+    public function __construct()
+    {
+        $this->studentService = new StudentService();
+    }
+
     /**
      * Display a listing of students with enrollment details.
      */
     public function index(Request $request)
     {
-        $query = Student::with('enrollments.course');
-
-        if ($request->has('q')) {
-            $term = '%' . $request->q . '%';
-            $query->where(function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                  ->orWhere('email', 'like', $term)
-                  ->orWhere('student_code', 'like', $term);
-            });
-        }
-
-        $students = $query->orderBy('created_at', 'desc')->get();
+        $search = $request->query('q') ?? $request->query('search');
+        $students = $this->studentService->getAllStudents($search);
 
         return response()->json([
             'success' => true,
-            'count' => $students->count(),
+            'count' => count($students),
             'data' => $students,
         ]);
     }
@@ -39,7 +36,7 @@ class StudentController extends Controller
      */
     public function show($id)
     {
-        $student = Student::with('enrollments.course')->find($id);
+        $student = $this->studentService->getStudentById($id);
 
         if (!$student) {
             return response()->json([
@@ -61,25 +58,84 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:120',
-            'email' => 'required|email|unique:students,email',
+            'email' => 'required|email',
             'phone' => 'nullable|string|max:30',
+            'course' => 'nullable|string|max:150',
+            'slug' => 'nullable|string|max:150',
+            'feePaid' => 'nullable|numeric',
+            'drmStatus' => 'nullable|string',
+            'progress' => 'nullable|integer',
         ]);
 
-        $code = 'NC-STU-2026-' . rand(100, 999);
-        $student = Student::create([
-            'student_code' => $code,
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'drm_status' => 'Protected',
-            'drm_watermark_id' => 'WM-' . strtoupper(substr($validated['name'], 0, 4)) . '-' . rand(100, 999),
-        ]);
+        $student = $this->studentService->createStudent($validated);
 
         return response()->json([
             'success' => true,
-            'message' => 'Student registered successfully',
+            'message' => 'Student registered successfully & DRM credentials generated',
             'data' => $student,
         ], 201);
+    }
+
+    /**
+     * Update existing student profile and enrollment info.
+     */
+    public function update(Request $request, $id = null)
+    {
+        $targetId = $id ?? $request->id ?? $request->student_code;
+
+        if (!$targetId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student ID or code is required',
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:120',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string|max:30',
+            'course' => 'nullable|string|max:150',
+            'slug' => 'nullable|string|max:150',
+            'feePaid' => 'nullable|numeric',
+            'drmStatus' => 'nullable|string',
+            'progress' => 'nullable|integer',
+        ]);
+
+        $updated = $this->studentService->updateStudent($targetId, $validated);
+
+        if (!$updated) {
+            return response()->json([
+                'success' => false,
+                'message' => "Student '{$targetId}' not found for update",
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Student information updated successfully',
+            'data' => $updated,
+        ]);
+    }
+
+    /**
+     * Cascading Delete: "agar delete hai toh delete hojaye sab kuch"
+     * Permanently deletes student and all linked enrollments, DRM logs, and video progress.
+     */
+    public function destroy(Request $request, $id = null)
+    {
+        $targetId = $id ?? $request->query('id') ?? $request->id;
+
+        if (!$targetId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student ID is required for deletion',
+            ], 400);
+        }
+
+        $result = $this->studentService->deleteStudentCascade($targetId);
+
+        $status = $result['success'] ? 200 : 404;
+        return response()->json($result, $status);
     }
 
     /**

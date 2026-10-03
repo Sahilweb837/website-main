@@ -1,0 +1,121 @@
+================================================================================
+                    NETCODER STUDENT PORTAL ARCHITECTURE
+================================================================================
+Generated for: Netcoder LMS & Next.js Student Portal
+Base Workspace: d:\nodejs\netcoder-nextjs
+Route Base:     /student
+
+================================================================================
+1. FOLDER TREE STRUCTURE
+================================================================================
+
+d:\nodejs\netcoder-nextjs\app\student\
+│
+├── folder.txt                   [Architecture & Complete Route Map Documentation]
+├── layout.tsx                   [Student Portal Layout - Header, Nav, Profile & DRM Shield]
+├── page.tsx                     [Student Hub Landing & Route Directory]
+│
+├── login\
+│   └── page.tsx                 [/student/login - Student Authentication & 1-Click Access]
+│
+├── dashboard\
+│   └── page.tsx                 [/student/dashboard - Full Student LMS Dashboard & DRM Watermark]
+│
+├── courses\
+│   └── page.tsx                 [/student/courses - Enrolled Tracks, Syllabus & Classroom Launch]
+│
+└── payment\
+    └── page.tsx                 [/student/payment - Fees, Invoices, Receipts & Gateway Checkout]
+
+================================================================================
+2. COMPLETE ROUTE SPECIFICATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+ROUTE 1: /student/login
+--------------------------------------------------------------------------------
+- Purpose: Dedicated student authentication portal.
+- Features:
+  * Student Email & Password / Mobile OTP authentication.
+  * Google One-Tap & Firebase SSO support.
+  * Instant "1-Click Demo Student Access" (Aarav Patel - Full Stack Cohort).
+  * Direct session initialization and redirection to /student/dashboard.
+  * Security notices and DRM compliance agreement.
+- Target File: app/student/login/page.tsx
+
+--------------------------------------------------------------------------------
+ROUTE 2: /student/dashboard
+--------------------------------------------------------------------------------
+- Purpose: Primary student workspace and progress cockpit.
+- Features:
+  * Personalized greeting with student ID, cohort batch, and avatar.
+  * Dynamic DRM Watermark Status (Anti-screen recording shield with live session hash).
+  * 4 Core Metric KPI Cards:
+    - Active Courses Enrolled
+    - Overall Curriculum Progress (%)
+    - Live Class Attendance (%)
+    - Fee Status & Invoices
+  * "Continue Learning" immediate resume card (links to /lms/classroom).
+  * Enrolled Courses list with progress bars, completed modules, and next lessons.
+  * Upcoming Live Mentor Sessions with countdown timers and live classroom links.
+  * Mentor Announcements & Task Submissions checklist.
+- Target File: app/student/dashboard/page.tsx
+
+--------------------------------------------------------------------------------
+ROUTE 3: /student/courses
+--------------------------------------------------------------------------------
+- Purpose: Student course management and learning track curriculum.
+- Features:
+  * Active Enrolled Courses vs. Recommended Tracks tab navigation.
+  * Search bar and filter by category (Full Stack, AI/ML, Python, Cyber Security).
+  * Detailed Course Cards:
+    - Thumbnail, instructor name, course duration, total lectures.
+    - Completed / Total lessons progress indicator.
+    - "Resume Class" button directly launching `/lms/classroom?course=<slug>`.
+    - Syllabus & module list expansion.
+  * "Enroll in New Track" button redirecting to /student/payment?course=<slug>.
+- Target File: app/student/courses/page.tsx
+
+--------------------------------------------------------------------------------
+ROUTE 4: /student/payment
+--------------------------------------------------------------------------------
+- Purpose: Fee management, payment history, and instant course checkout.
+- Features:
+  * Fee Overview Balance Cards:
+    - Total Course Fee
+    - Amount Paid to Date
+    - Outstanding Balance Due
+    - Next Due Date & Installment Alert
+  * Interactive Pay Online Gateway modal:
+    - Razorpay / UPI (Google Pay, PhonePe, Paytm, BHIM)
+    - Credit/Debit Cards & Net Banking
+    - Instant payment confirmation simulation.
+  * Fee Invoices & Payment Ledger Table:
+    - Transaction ID, Invoice Number, Date, Amount, Payment Method, Status Badge.
+    - Interactive "Download / Print Tax Invoice Receipt" modal.
+  * Course Checkout Integration:
+    - Supports `?course=<slug>` query to immediately open tuition checkout for that course.
+- Target File: app/student/payment/page.tsx
+
+================================================================================
+3. SHARED PORTAL COMPONENTS
+================================================================================
+- app/student/layout.tsx:
+  * Unified top navigation header with Netcoder branding.
+  * Navigation links: Dashboard, My Courses, Fees & Payment, Switch Account.
+  * Active route indicator and breadcrumbs.
+  * User profile badge with role ("Student") and DRM shield indicator.
+  * Quick link back to Main Website (/) and LMS Classroom (/lms/classroom).
+
+================================================================================
+4. BACKEND INTEGRATION & DATA SOURCES
+================================================================================
+- Laravel REST API (http://127.0.0.1:8000/api/):
+  * /api/lms/students  -> Student enrollment records, fee status, DRM watermark hash.
+  * /api/courses       -> Course catalog, syllabus, and dynamic fee pricing.
+  * /api/enrollments   -> User-specific active enrollments.
+- Next.js Client-Side State:
+  * useAuth() hook for authentication state & credentials.
+  * localStorage cache for offline persistence.
+  * lib/api.js client with automatic fallback when offline.
+================================================================================

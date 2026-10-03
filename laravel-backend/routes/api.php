@@ -62,6 +62,9 @@ Route::prefix('v1/lms')->group(function () {
     Route::get('/students', [StudentController::class, 'index']);
     Route::get('/students/{id}', [StudentController::class, 'show']);
     Route::post('/students', [StudentController::class, 'store']);
+    Route::put('/students/{id}', [StudentController::class, 'update']);
+    Route::delete('/students/{id}', [StudentController::class, 'destroy']);
+    Route::delete('/students', [StudentController::class, 'destroy']);
 
     Route::get('/enrollments', [EnrollmentController::class, 'index']);
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
@@ -119,6 +122,10 @@ Route::post('/feedback', [FeedbackController::class, 'store']);
 Route::get('/admin/stats', [AdminController::class, 'getStats']);
 Route::get('/lms/students', [StudentController::class, 'index']);
 Route::post('/lms/students', [StudentController::class, 'store']);
+Route::put('/lms/students/{id}', [StudentController::class, 'update']);
+Route::post('/lms/students/update', [StudentController::class, 'update']);
+Route::delete('/lms/students/{id}', [StudentController::class, 'destroy']);
+Route::delete('/lms/students', [StudentController::class, 'destroy']);
 Route::get('/enrollments', [EnrollmentController::class, 'index']);
 Route::post('/enrollments', [EnrollmentController::class, 'store']);
 

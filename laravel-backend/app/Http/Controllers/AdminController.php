@@ -15,6 +15,16 @@ use App\Models\DemoInquiry;
 class AdminController extends Controller
 {
     /**
+     * Render the admin dashboard view with full LMS metrics.
+     */
+    public function dashboard()
+    {
+        $dashboardService = new \App\Services\LmsDashboardService();
+        $data = $dashboardService->getDashboardData();
+        return view('admin.dashboard', $data);
+    }
+
+    /**
      * Admin login authentication.
      */
     public function login(Request $request)

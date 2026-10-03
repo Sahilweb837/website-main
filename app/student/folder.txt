@@ -1,0 +1,79 @@
+================================================================================
+                    NETCODER STUDENT PORTAL ARCHITECTURE
+================================================================================
+Base Workspace: d:\nodejs\netcoder-nextjs
+Route Base:     /student
+
+================================================================================
+1. FOLDER TREE STRUCTURE
+================================================================================
+
+d:\nodejs\netcoder-nextjs\app\student\
+│
+├── folder.txt                   [Architecture & Complete Route Map Documentation]
+├── layout.tsx                   [Student Portal Layout - Header, Nav, Profile & DRM Shield]
+├── page.tsx                     [Student Hub Landing & Route Directory]
+│
+├── login\
+│   └── page.tsx                 [/student/login - Student Authentication & 1-Click Access]
+│
+├── dashboard\
+│   └── page.tsx                 [/student/dashboard - Full Student LMS Dashboard & DRM Watermark]
+│
+├── courses\
+│   └── page.tsx                 [/student/courses - Enrolled Tracks, Syllabus & Classroom Launch]
+│
+└── payment\
+    └── page.tsx                 [/student/payment - Fees, Invoices, Receipts & Gateway Checkout]
+
+================================================================================
+2. COMPLETE ROUTE SPECIFICATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+ROUTE 1: /student/login
+--------------------------------------------------------------------------------
+- Purpose: Dedicated student authentication portal.
+- Target File: app/student/login/page.tsx
+- Features:
+  * Student Email & Password / Mobile OTP authentication.
+  * Google One-Tap & Firebase SSO support.
+  * Instant "1-Click Demo Student Access" (Aarav Patel - Full Stack Cohort).
+  * Direct session initialization and redirection to /student/dashboard.
+
+--------------------------------------------------------------------------------
+ROUTE 2: /student/dashboard
+--------------------------------------------------------------------------------
+- Purpose: Primary student workspace and progress cockpit.
+- Target File: app/student/dashboard/page.tsx
+- Features:
+  * Student Welcome Header with enrollment ID & cohort batch.
+  * Live DRM Watermark Security status indicator.
+  * 4 Core Metrics: Active Courses, Overall Progress, Attendance Rate, Fee Status.
+  * "Continue Learning" action card directly launching /lms/classroom.
+  * Enrolled Courses progress list.
+  * Live class schedules and mentor notifications.
+
+--------------------------------------------------------------------------------
+ROUTE 3: /student/courses
+--------------------------------------------------------------------------------
+- Purpose: Student course management and learning track curriculum.
+- Target File: app/student/courses/page.tsx
+- Features:
+  * Enrolled Courses and Catalog explorer tabs.
+  * Filter by category and search keyword.
+  * Progress percentage and completed lecture counter.
+  * Launch video player / classroom with single click.
+  * Syllabi preview with interactive module accordion.
+
+--------------------------------------------------------------------------------
+ROUTE 4: /student/payment
+--------------------------------------------------------------------------------
+- Purpose: Fee management, payment history, and instant course checkout.
+- Target File: app/student/payment/page.tsx
+- Features:
+  * Fee summary cards: Total Fees, Paid, Balance Due, Next Due Date.
+  * Interactive Online Fee Payment modal (UPI, Cards, Netbanking).
+  * Invoices & Payment Ledger with Printable/Downloadable Receipt modal.
+  * Course checkout integration via ?course=<slug>.
+================================================================================

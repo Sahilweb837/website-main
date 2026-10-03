@@ -17,9 +17,7 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
-Route::get('/admin', function () {
-    return view('admin.dashboard');
-});
+Route::get('/admin', [AdminController::class, 'dashboard']);
 
 Route::get('/health', function () {
     return response()->json([
