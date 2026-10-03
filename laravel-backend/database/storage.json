@@ -1,0 +1,124 @@
+{
+    "courses": [
+        {
+            "id": 1790943571,
+            "title": "test",
+            "slug": "test",
+            "category": "fullstack",
+            "duration": "40 hrs \u2022 8 Production Projects",
+            "level": "Flagship Bootcamp",
+            "overview": "rest",
+            "price": 79,
+            "fee": 79,
+            "original_price": 180,
+            "originalPrice": 180,
+            "instructor": "Netcoder Senior Faculty",
+            "instructor_avatar": "\/images\/instructor-default.png",
+            "image": "https:\/\/images.unsplash.com\/photo-1667372393119-3d4c48d07fc9?w=800",
+            "hours": "40 hrs \u2022 8 Production Projects",
+            "badge": "Featured",
+            "tagline": "Industry Certified",
+            "icon": "code",
+            "rating": 4.95,
+            "reviews_count": 120,
+            "ratingCount": 120,
+            "is_active": true,
+            "created_at": "2026-10-02 14:19:31"
+        }
+    ],
+    "students": [],
+    "blogs": [
+        {
+            "id": 1,
+            "title": "The Future of Full-Stack Web Development in 2026",
+            "slug": "future-of-full-stack-web-development-2026",
+            "category": "Web Development",
+            "excerpt": "Explore the newest landscape of Server Actions, React 19, Turbopack, and edge database architectures.",
+            "author": "Netcoder Editorial",
+            "date": "Oct 1, 2026",
+            "image": "\/images\/full-stact-development.png"
+        }
+    ],
+    "feedbacks": [
+        {
+            "id": 1,
+            "student_name": "Rohit Verma",
+            "contact_number": "9816012345",
+            "email": "rohit.v@gmail.com",
+            "course": "B.Tech CSE",
+            "semester": "5th",
+            "overall_assessment": "Very Satisfied",
+            "interested_courses": [
+                "Full Stack Web Development",
+                "Cyber Security"
+            ]
+        }
+    ],
+    "classes": [],
+    "notes": [
+        {
+            "id": "note-1",
+            "courseSlug": "fullstack-web-development",
+            "courseTitle": "Full Stack Web Development",
+            "title": "Module 4 Complete Handbook: React 19 Compiler & Next.js 15 Server Actions",
+            "topic": "Next.js App Router Architecture",
+            "module": "Module 4: Frontend Mastery",
+            "mentorName": "Nitin Kapoor",
+            "fileUrl": "https:\/\/netcoder.in\/downloads\/react19-next15-handbook.pdf",
+            "fileType": "pdf",
+            "fileSize": "4.8 MB",
+            "contentSnippet": "Complete reference covering useActionState, optimistic UI patterns, RSC streaming boundaries, and production Prisma connection pooling.",
+            "publishedAt": "Oct 2, 2026",
+            "downloadsCount": 184
+        }
+    ],
+    "tasks": [
+        {
+            "id": "task-1",
+            "courseSlug": "fullstack-web-development",
+            "courseTitle": "Full Stack Web Development",
+            "title": "Assignment 4: Build a Real-Time Collaborative Canvas with WebSockets & React 19",
+            "description": "Architect a multi-user drawing application with cursor broadcast, undo\/redo state history, and persistent session storage in MongoDB with Next.js Server Actions.",
+            "dueDate": "2026-10-08",
+            "points": 100,
+            "status": "open",
+            "starterRepo": "https:\/\/github.com\/netcoder-tech\/collaborative-canvas-starter",
+            "submissionType": "github",
+            "mentorName": "Nitin Kapoor",
+            "submissionsCount": 18
+        }
+    ],
+    "tests": [
+        {
+            "id": "test-1",
+            "courseSlug": "fullstack-web-development",
+            "courseTitle": "Full Stack Web Development",
+            "title": "Full-Stack Architecture & React 19 Mastery Mid-Term Assessment",
+            "duration": "45 mins",
+            "totalQuestions": 25,
+            "totalMarks": 50,
+            "passingScore": 35,
+            "scheduledDate": "2026-10-05",
+            "mentorName": "Nitin Kapoor",
+            "questionsCount": 25
+        }
+    ],
+    "mentors": [
+        {
+            "id": "mentor-001",
+            "name": "Nitin Kapoor",
+            "email": "mentor@netcoder.in",
+            "password": "mentor123",
+            "specialization": "Full Stack, React 19, Next.js & Distributed Systems",
+            "courses": [
+                "fullstack-web-development",
+                "nextjs-fullstack"
+            ],
+            "avatar": "https:\/\/images.unsplash.com\/photo-1534528741775-53994a69daeb?w=150",
+            "phone": "+91 98765 43210",
+            "rating": 4.96,
+            "totalBatches": 18,
+            "totalStudents": 420
+        }
+    ]
+}

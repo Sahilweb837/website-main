@@ -1,0 +1,544 @@
+/* ==========================================================================
+   FLIPKART-STYLE ULTRA-FAST SKELETON LOADING & TRANSITIONS
+   Theme: Crisp Flipkart Neutral Slate Base (#eef0f3) with Gleaming
+          High-Speed White & Warm Brand Orange Glow Shimmer
+   ========================================================================== */
+
+/* Top Flipkart / YouTube Brand-Orange Progress Bar */
+.spa-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3.5px;
+    width: 0%;
+    background: linear-gradient(90deg, #ff7b5a 0%, #ff5532 50%, #ff3b11 100%);
+    box-shadow: 0 0 12px rgba(255, 85, 50, 0.8), 0 0 5px rgba(255, 85, 50, 0.5);
+    z-index: 9999999;
+    pointer-events: none;
+    transition: width 0.28s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease;
+    opacity: 0;
+}
+
+.spa-progress-bar.active {
+    opacity: 1;
+}
+
+/* SPA Page Container Transitions */
+.spa-page-container {
+    min-height: 70vh;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.spa-page-container.spa-loading {
+    opacity: 0.95;
+}
+
+/* ==========================================================================
+   FLIPKART SIGNATURE SHIMMER ANIMATION (Ultra-Smooth 60fps GPU Accelerated)
+   ========================================================================== */
+@keyframes flipkartShimmer {
+    0% {
+        background-position: -250% 0;
+    }
+    100% {
+        background-position: 250% 0;
+    }
+}
+
+.sk-shimmer,
+.sk-box,
+.sk-circle,
+.sk-line,
+.sk-pill,
+.sk-banner,
+.sk-avatar,
+.sk-btn,
+.sk-thumb,
+.sk-fk-search,
+.sk-fk-cat-icon,
+.sk-fk-cat-label,
+.sk-fk-card-thumb,
+.sk-fk-rating-badge,
+.sk-fk-price-tag,
+.sk-fk-card-btn,
+.nc-img-skeleton::before {
+    background: linear-gradient(
+        90deg,
+        #eef0f3 0%,
+        #eef0f3 20%,
+        #fbfcfd 35%,
+        #ffffff 50%,
+        #fff4f0 58%,
+        #fbfcfd 65%,
+        #eef0f3 80%,
+        #eef0f3 100%
+    ) !important;
+    background-size: 250% 100% !important;
+    animation: flipkartShimmer 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+    border-radius: 6px;
+    will-change: background-position;
+    transform: translateZ(0);
+}
+
+/* ==========================================================================
+   FULL-PAGE SKELETON PRELOADER (Flipkart Instant Dismiss Architecture)
+   ========================================================================== */
+#nc-skeleton-preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #ffffff;
+    z-index: 999998;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: opacity 0.22s ease-out, visibility 0.22s ease-out;
+    opacity: 1;
+    visibility: visible;
+}
+
+#nc-skeleton-preloader.sk-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Skeleton Layout Container */
+.sk-page-layout {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 16px 20px 60px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    background: #ffffff;
+}
+
+/* 1. Header Skeleton */
+.sk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 0 20px;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.sk-header-logo {
+    width: 155px;
+    height: 40px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.sk-fk-search {
+    flex: 1;
+    max-width: 440px;
+    height: 38px;
+    border-radius: 20px;
+}
+
+.sk-header-nav {
+    display: flex;
+    gap: 18px;
+}
+
+.sk-header-nav .sk-pill {
+    width: 80px;
+    height: 22px;
+    border-radius: 16px;
+}
+
+.sk-header-btn {
+    width: 110px;
+    height: 38px;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 920px) {
+    .sk-fk-search,
+    .sk-header-nav {
+        display: none;
+    }
+}
+
+/* 2. Flipkart Signature Category Pills Bar */
+.sk-fk-categories {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border: 1px solid #eef0f3;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    overflow-x: auto;
+}
+
+.sk-fk-cat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 68px;
+}
+
+.sk-fk-cat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50% !important;
+}
+
+.sk-fk-cat-label {
+    width: 54px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+/* 3. Hero Section Skeleton */
+.sk-hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 36px;
+    align-items: center;
+    background: #fbfcfd;
+    border: 1px solid #eef0f3;
+    border-radius: 14px;
+    padding: 28px 24px;
+}
+
+@media (max-width: 992px) {
+    .sk-hero-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.sk-hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sk-eyebrow {
+    width: 160px;
+    height: 24px;
+    border-radius: 16px;
+}
+
+.sk-title-line-1 {
+    width: 90%;
+    height: 42px;
+    border-radius: 8px;
+}
+
+.sk-title-line-2 {
+    width: 72%;
+    height: 42px;
+    border-radius: 8px;
+}
+
+.sk-sub-1 {
+    width: 100%;
+    height: 16px;
+    margin-top: 4px;
+}
+
+.sk-sub-2 {
+    width: 85%;
+    height: 16px;
+}
+
+/* Dual Action Buttons in ONE LINE */
+.sk-cta-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 10px;
+    flex-wrap: nowrap;
+}
+
+.sk-cta-btn-primary {
+    width: 145px;
+    height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.sk-cta-btn-ghost {
+    width: 175px;
+    height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.sk-avatar-proof {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 6px;
+}
+
+.sk-avatar-stack {
+    display: flex;
+}
+
+.sk-avatar-stack .sk-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50% !important;
+    margin-right: -10px;
+    border: 2px solid #ffffff;
+}
+
+.sk-proof-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Hero Right: Browser Mockup Skeleton */
+.sk-browser-mock {
+    background: #ffffff;
+    border: 1px solid #eef0f3;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sk-browser-dots {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.sk-browser-dots .sk-circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50% !important;
+}
+
+.sk-browser-banner {
+    width: 100%;
+    height: 190px;
+    border-radius: 10px;
+}
+
+.sk-browser-kicker {
+    width: 100px;
+    height: 18px;
+    border-radius: 8px;
+}
+
+.sk-browser-heading {
+    width: 80%;
+    height: 22px;
+    border-radius: 6px;
+}
+
+.sk-browser-tags {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.sk-browser-tag {
+    width: 110px;
+    height: 24px;
+    border-radius: 12px;
+}
+
+/* 4. Flipkart-Style Stats / Trust Bar */
+.sk-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px 24px;
+    background: #ffffff;
+    border: 1px solid #eef0f3;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+}
+
+@media (max-width: 768px) {
+    .sk-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.sk-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+}
+
+.sk-stat-num {
+    width: 55px;
+    height: 32px;
+    border-radius: 6px;
+}
+
+.sk-stat-label {
+    width: 90px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+/* 5. Section Heading Skeleton */
+.sk-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.sk-section-badge {
+    width: 120px;
+    height: 22px;
+    border-radius: 14px;
+}
+
+.sk-section-title {
+    width: 48%;
+    max-width: 420px;
+    height: 34px;
+    border-radius: 8px;
+}
+
+.sk-section-desc {
+    width: 62%;
+    max-width: 560px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+/* 6. Flipkart Signature 4-Card Course / Product Grid */
+.sk-fk-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    .sk-fk-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 580px) {
+    .sk-fk-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.sk-fk-card {
+    background: #ffffff;
+    border: 1px solid #eef0f3;
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease;
+}
+
+.sk-fk-card-thumb {
+    width: 100%;
+    height: 160px;
+    border-radius: 8px;
+}
+
+.sk-fk-rating-badge {
+    width: 48px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.sk-fk-card-title {
+    width: 82%;
+    height: 18px;
+    border-radius: 4px;
+}
+
+.sk-fk-card-subtitle {
+    width: 60%;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.sk-fk-card-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f1f3f6;
+}
+
+.sk-fk-price-tag {
+    width: 75px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.sk-fk-card-btn {
+    width: 85px;
+    height: 32px;
+    border-radius: 6px;
+}
+
+/* 7. Content & Syllabus Detail Lines Skeleton */
+.sk-content-block {
+    background: #ffffff;
+    border: 1px solid #eef0f3;
+    border-radius: 12px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   IMAGE SKELETON LAZY LOADING
+   ========================================================================== */
+img.nc-lazy {
+    opacity: 0;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+    filter: blur(4px);
+}
+
+img.nc-lazy.nc-loaded {
+    opacity: 1;
+    filter: blur(0);
+}
+
+.nc-img-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #f1f3f6;
+}
+
+.nc-img-skeleton::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transition: opacity 0.25s ease;
+}
+
+.nc-img-skeleton.loaded::before {
+    opacity: 0;
+    pointer-events: none;
+}

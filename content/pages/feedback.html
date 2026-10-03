@@ -1,0 +1,804 @@
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body{
+        background:#f5f5f5;
+        padding:30px 15px;
+        color:#222;
+    }
+
+    .container{
+        max-width:900px;
+        margin:auto;
+        background:#fff;
+        padding:35px;
+        border:1px solid #ddd;
+    }
+
+    .top-bar{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding-bottom:14px;
+        margin-bottom:20px;
+        border-bottom:1px solid #eaeaea;
+        font-size:14px;
+    }
+
+    .top-bar a{
+        color:#555;
+        text-decoration:none;
+        transition:.2s;
+    }
+
+    .top-bar a:hover{
+        color:#ff5532;
+    }
+
+    .top-bar .auth-links{
+        display:flex;
+        gap:14px;
+        align-items:center;
+    }
+
+    .top-bar .btn-login{
+        background:rgba(255,85,50,0.1);
+        color:#ff5532;
+        padding:6px 14px;
+        border-radius:6px;
+        font-weight:600;
+        font-size:13px;
+    }
+
+    .top-bar .btn-login:hover{
+        background:#ff5532;
+        color:#fff;
+    }
+
+    .header{
+        text-align:center;
+        margin-bottom:25px;
+    }
+
+    .brand-logo{
+        text-align:center;
+        margin-bottom:18px;
+    }
+
+    .brand-logo img{
+        max-height:55px;
+        max-width:240px;
+        height:auto;
+        width:auto;
+        object-fit:contain;
+    }
+
+    .header h1{
+        color:#ff5532;
+        font-size:42px;
+        margin-bottom:10px;
+    }
+
+    .header p{
+        font-size:15px;
+        line-height:1.6;
+        color:#444;
+    }
+
+    .alert-success{
+        background:#d4edda;
+        color:#155724;
+        border:1px solid #c3e6cb;
+        padding:12px 16px;
+        border-radius:5px;
+        margin-bottom:18px;
+        font-size:15px;
+    }
+    .alert-error{
+        background:#f8d7da;
+        color:#721c24;
+        border:1px solid #f5c6cb;
+        padding:12px 16px;
+        border-radius:5px;
+        margin-bottom:18px;
+        font-size:15px;
+    }
+
+    /* Success Popup Modal */
+    .popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(6px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: popupFadeIn 0.25s ease-out;
+    }
+
+    .popup-card {
+        background: #ffffff;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+        padding: 40px 30px 35px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+        position: relative;
+        animation: popupScaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popupFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes popupScaleUp {
+        from { transform: scale(0.85); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .popup-icon-wrap {
+        width: 82px;
+        height: 82px;
+        background: #dcfce7;
+        color: #16a34a;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 25px rgba(22, 163, 74, 0.25);
+        animation: popupBounce 0.6s ease-in-out;
+    }
+
+    @keyframes popupBounce {
+        0% { transform: scale(0); }
+        60% { transform: scale(1.15); }
+        100% { transform: scale(1); }
+    }
+
+    .popup-title {
+        color: #0f172a;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .popup-desc {
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 26px;
+    }
+
+    .popup-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-popup-primary {
+        background: #ff5532;
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-popup-primary:hover {
+        background: #e74826;
+        transform: translateY(-1px);
+    }
+
+    .btn-popup-secondary {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-popup-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .popup-close-x {
+        position: absolute;
+        top: 16px;
+        right: 18px;
+        background: #f1f5f9;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: #64748b;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+
+    .popup-close-x:hover {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .err{
+        color:#dc3545;
+        font-size:12px;
+        display:block;
+        margin-top:3px;
+    }
+
+    .student-box{
+        border:3px solid #ff5532;
+        border-radius:25px;
+        padding:25px;
+        margin:30px 0;
+    }
+
+    .row{
+        display:flex;
+        gap:30px;
+        margin-bottom:18px;
+    }
+
+    .field{
+        flex:1;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .field-row{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        width:100%;
+    }
+
+    .field label{
+        white-space:nowrap;
+        font-size:18px;
+        font-weight:500;
+    }
+
+    .field input{
+        flex:1;
+        border:none;
+        border-bottom:2px solid #777;
+        outline:none;
+        padding:5px;
+        font-size:16px;
+        background:transparent;
+        transition:border-color .2s;
+    }
+
+    .field input:focus{
+        border-bottom-color:#ff5532;
+    }
+
+    .field input.is-invalid{
+        border-bottom-color:#dc3545;
+    }
+
+    .req{
+        color:#ff5532;
+        font-weight:700;
+    }
+
+    .question{
+        margin:28px 0;
+    }
+
+    .question h3{
+        font-size:24px;
+        margin-bottom:18px;
+        color:#111;
+    }
+
+    .options{
+        display:flex;
+        flex-wrap:wrap;
+        gap:18px 35px;
+    }
+
+    .options label{
+        font-size:18px;
+        display:flex;
+        align-items:center;
+        gap:8px;
+        cursor:pointer;
+    }
+
+    input[type="radio"],
+    input[type="checkbox"]{
+        accent-color:#ff5532;
+        width:18px;
+        height:18px;
+    }
+
+    .suggestion textarea{
+        width:100%;
+        height:120px;
+        border:2px solid #ddd;
+        padding:12px;
+        resize:none;
+        outline:none;
+        margin-top:15px;
+    }
+
+    .course-box{
+        border:3px solid #ff5532;
+        border-radius:20px;
+        padding:25px;
+        margin-top:35px;
+    }
+
+    .course-box h2{
+        text-align:center;
+        margin-bottom:25px;
+        color:#222;
+        font-size:32px;
+    }
+
+    .course-grid{
+        display:grid;
+        grid-template-columns:repeat(2,1fr);
+        gap:15px 60px;
+    }
+
+    .course-grid label{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        font-size:20px;
+    }
+
+    .submit-btn{
+        text-align:center;
+        margin-top:35px;
+    }
+
+    button{
+        background:#ff5532;
+        color:#fff;
+        border:none;
+        padding:14px 40px;
+        border-radius:8px;
+        font-size:18px;
+        cursor:pointer;
+        transition:.3s;
+    }
+
+    button:hover{
+        background:#e74826;
+    }
+
+    @media(max-width:768px){
+
+        .container{
+            padding:20px 14px;
+            margin:10px auto;
+        }
+
+        .top-bar{
+            font-size:13px;
+            padding-bottom:12px;
+            margin-bottom:16px;
+        }
+
+        .brand-logo img{
+            max-height:46px;
+            max-width:190px;
+        }
+
+        .header h1{
+            font-size:26px;
+            line-height:1.25;
+        }
+
+        .header p{
+            font-size:14px;
+        }
+
+        .student-box{
+            padding:18px 14px;
+            border-radius:16px;
+            margin:20px 0;
+        }
+
+        .row{
+            flex-direction:column;
+            gap:16px;
+            margin-bottom:16px;
+        }
+
+        .field{
+            width:100%;
+        }
+
+        .field-row{
+            flex-direction:column;
+            align-items:flex-start;
+            gap:6px;
+            width:100%;
+        }
+
+        .field label{
+            font-size:16px;
+        }
+
+        .field input{
+            width:100%;
+        }
+
+        .question h3{
+            font-size:19px;
+            line-height:1.3;
+        }
+
+        .options{
+            flex-direction:column;
+            gap:12px;
+        }
+
+        .options label{
+            font-size:16px;
+        }
+
+        .course-box{
+            padding:18px 14px;
+            border-radius:16px;
+            margin-top:25px;
+        }
+
+        .course-box h2{
+            font-size:22px;
+            line-height:1.3;
+        }
+
+        .course-grid{
+            grid-template-columns:1fr;
+            gap:14px;
+        }
+
+        .course-grid label{
+            font-size:17px;
+        }
+
+        button{
+            width:100%;
+            padding:14px 20px;
+            font-size:17px;
+        }
+    }
+</style>
+
+
+<div class="container">
+
+    <!-- Top Utility & Login Bar -->
+    <div class="top-bar">
+        <a href="/" title="Return to Netcoder website">
+            &larr; Netcoder Home
+        </a>
+        <!-- <div class="auth-links">
+            <a href="/student/dashboard" class="btn-login" title="Student Portal">Student Login</a>
+            <a href="/admin/feedback" style="color:#777;" title="Admin Submissions">Admin</a>
+        </div> -->
+    </div>
+
+    <!-- Header with Netcoder Logo -->
+    <div class="header">
+        <div class="brand-logo">
+            <a href="/" title="Netcoder Technology">
+                <img src="/images/logo.png" alt="Netcoder Technology" loading="eager">
+            </a>
+        </div>
+
+        <h1>Seminar/Workshop Feedback Form</h1>
+
+        <p>
+            It was wonderful meeting you at our seminar. We hope it was everything you wished for.
+            We would love it if you could fill out this seminar evaluation form and let us know
+            your honest thoughts about the seminar.
+        </p>
+    </div>
+
+    @if(session('success'))
+        <!-- Success Thank-You Popup Modal -->
+        <div class="popup-overlay" id="successModal">
+            <div class="popup-card">
+                <button type="button" class="popup-close-x" onclick="closeSuccessModal()" title="Close">&times;</button>
+                <div class="popup-icon-wrap">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h2 class="popup-title">Thank You!</h2>
+                <p class="popup-desc">
+                    {{ session('success') }}
+                    <br><br>
+                    Your valuable feedback has been recorded successfully. We sincerely appreciate your participation!
+                </p>
+                <div class="popup-buttons">
+                    <button type="button" class="btn-popup-primary" onclick="closeSuccessModal()">Close</button>
+                    <a href="/" class="btn-popup-secondary">Visit Netcoder</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert-success">✔ {{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert-error">✘ {{ session('error') }}</div>
+    @endif
+
+    <form method="POST" action="{{ route('feedback.store') }}">
+    
+
+    <!-- Student Details -->
+    <div class="student-box">
+
+        <div class="row">
+            <div class="field">
+                <div class="field-row">
+                    <label>Name of Student <span class="req">*</span></label>
+                    <input type="text" name="student_name" id="student_name" value="{{ old('student_name') }}" minlength="2" required placeholder="Enter student full name" class="{{ $errors->has('student_name') ? 'is-invalid' : '' }}">
+                </div>
+                @error('student_name')<span class="err">{{ $message }}</span>@enderror
+            </div>
+
+            <div class="field">
+                <div class="field-row">
+                    <label>Contact Number <span class="req">*</span></label>
+                    <input type="tel" name="contact_number" id="contact_number" value="{{ old('contact_number') }}" required pattern="[0-9]{10}" maxlength="10" minlength="10" inputmode="numeric" placeholder="10-digit mobile number" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" title="Please enter a valid 10-digit mobile number (e.g. 9876543210)" class="{{ $errors->has('contact_number') ? 'is-invalid' : '' }}">
+                </div>
+                @error('contact_number')<span class="err">{{ $message }}</span>@enderror
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="field">
+                <div class="field-row">
+                    <label>Email Address <span class="req">*</span></label>
+                    <input type="email" name="email" id="email" value="{{ old('email') }}" required placeholder="e.g. student@gmail.com" title="Please enter a valid email address" class="{{ $errors->has('email') ? 'is-invalid' : '' }}">
+                </div>
+                @error('email')<span class="err">{{ $message }}</span>@enderror
+            </div>
+
+            <div class="field">
+                <div class="field-row">
+                    <label>Course <span class="req">*</span></label>
+                    <input type="text" name="course" id="course" value="{{ old('course') }}" required placeholder="e.g. Full-Stack Web Development" class="{{ $errors->has('course') ? 'is-invalid' : '' }}">
+                </div>
+                @error('course')<span class="err">{{ $message }}</span>@enderror
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom:0;">
+            <div class="field">
+                <div class="field-row">
+                    <label>Semester <span class="req">*</span></label>
+                    <input type="text" name="semester" id="semester" value="{{ old('semester') }}" required placeholder="e.g. 3rd Semester / Final Year" class="{{ $errors->has('semester') ? 'is-invalid' : '' }}">
+                </div>
+                @error('semester')<span class="err">{{ $message }}</span>@enderror
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Question 1 -->
+    <div class="question">
+        <h3>How did you hear about the seminar?</h3>
+
+        <div class="options">
+            <label><input type="radio" name="heard_about" value="Social Media"   {{ old('heard_about')=='Social Media'   ? 'checked':'' }}> Social Media</label>
+            <label><input type="radio" name="heard_about" value="Search Engine"  {{ old('heard_about')=='Search Engine'  ? 'checked':'' }}> Search Engine</label>
+            <label><input type="radio" name="heard_about" value="Advertisement"  {{ old('heard_about')=='Advertisement'  ? 'checked':'' }}> Advertisement</label>
+            <label><input type="radio" name="heard_about" value="Word of Mouth"  {{ old('heard_about')=='Word of Mouth'  ? 'checked':'' }}> Word of Mouth</label>
+            <label><input type="radio" name="heard_about" value="Other"          {{ old('heard_about')=='Other'          ? 'checked':'' }}> Other</label>
+        </div>
+        @error('heard_about')<span class="err">{{ $message }}</span>@enderror
+    </div>
+
+    <!-- Question 2 -->
+    <div class="question">
+        <h3>What is your overall assessment of the seminar?</h3>
+
+        <div class="options">
+            <label><input type="radio" name="overall_assessment" value="Very Satisfied"    {{ old('overall_assessment')=='Very Satisfied'    ? 'checked':'' }}> Very Satisfied</label>
+            <label><input type="radio" name="overall_assessment" value="Satisfied"         {{ old('overall_assessment')=='Satisfied'         ? 'checked':'' }}> Satisfied</label>
+            <label><input type="radio" name="overall_assessment" value="Neutral"           {{ old('overall_assessment')=='Neutral'           ? 'checked':'' }}> Neutral</label>
+            <label><input type="radio" name="overall_assessment" value="Dissatisfied"      {{ old('overall_assessment')=='Dissatisfied'      ? 'checked':'' }}> Dissatisfied</label>
+            <label><input type="radio" name="overall_assessment" value="Very Dissatisfied" {{ old('overall_assessment')=='Very Dissatisfied' ? 'checked':'' }}> Very Dissatisfied</label>
+        </div>
+        @error('overall_assessment')<span class="err">{{ $message }}</span>@enderror
+    </div>
+
+    <!-- Question 3 -->
+    <div class="question">
+        <h3>The length of this seminar was satisfactory?</h3>
+
+        <div class="options">
+            <label><input type="radio" name="seminar_length" value="Very Satisfied"    {{ old('seminar_length')=='Very Satisfied'    ? 'checked':'' }}> Very Satisfied</label>
+            <label><input type="radio" name="seminar_length" value="Satisfied"         {{ old('seminar_length')=='Satisfied'         ? 'checked':'' }}> Satisfied</label>
+            <label><input type="radio" name="seminar_length" value="Neutral"           {{ old('seminar_length')=='Neutral'           ? 'checked':'' }}> Neutral</label>
+            <label><input type="radio" name="seminar_length" value="Dissatisfied"      {{ old('seminar_length')=='Dissatisfied'      ? 'checked':'' }}> Dissatisfied</label>
+            <label><input type="radio" name="seminar_length" value="Very Dissatisfied" {{ old('seminar_length')=='Very Dissatisfied' ? 'checked':'' }}> Very Dissatisfied</label>
+        </div>
+        @error('seminar_length')<span class="err">{{ $message }}</span>@enderror
+    </div>
+
+    <!-- Question 4 -->
+    <div class="question">
+        <h3>How likely are you to recommend our service to a friend or colleague?</h3>
+
+        <div class="options">
+            <label><input type="radio" name="recommend" value="Very Likely"   {{ old('recommend')=='Very Likely'   ? 'checked':'' }}> Very Likely</label>
+            <label><input type="radio" name="recommend" value="Likely"        {{ old('recommend')=='Likely'        ? 'checked':'' }}> Likely</label>
+            <label><input type="radio" name="recommend" value="Neutral"       {{ old('recommend')=='Neutral'       ? 'checked':'' }}> Neutral</label>
+            <label><input type="radio" name="recommend" value="Unlikely"      {{ old('recommend')=='Unlikely'      ? 'checked':'' }}> Unlikely</label>
+            <label><input type="radio" name="recommend" value="Very Unlikely" {{ old('recommend')=='Very Unlikely' ? 'checked':'' }}> Very Unlikely</label>
+        </div>
+        @error('recommend')<span class="err">{{ $message }}</span>@enderror
+    </div>
+
+    <!-- Question 5 -->
+    <div class="question">
+        <h3>How was your experience with our team?</h3>
+
+        <div class="options">
+            <label><input type="radio" name="team_experience" value="Excellent" {{ old('team_experience')=='Excellent' ? 'checked':'' }}> Excellent</label>
+            <label><input type="radio" name="team_experience" value="Good"      {{ old('team_experience')=='Good'      ? 'checked':'' }}> Good</label>
+            <label><input type="radio" name="team_experience" value="Average"   {{ old('team_experience')=='Average'   ? 'checked':'' }}> Average</label>
+            <label><input type="radio" name="team_experience" value="Poor"      {{ old('team_experience')=='Poor'      ? 'checked':'' }}> Poor</label>
+            <label><input type="radio" name="team_experience" value="Very Poor" {{ old('team_experience')=='Very Poor' ? 'checked':'' }}> Very Poor</label>
+        </div>
+        @error('team_experience')<span class="err">{{ $message }}</span>@enderror
+    </div>
+
+    <!-- Question 6 -->
+    <div class="question">
+        <h3>How interesting was this session for you?</h3>
+
+        <div class="options">
+            <label><input type="radio" name="session_interest" value="Excellent" {{ old('session_interest')=='Excellent' ? 'checked':'' }}> Excellent</label>
+            <label><input type="radio" name="session_interest" value="Good"      {{ old('session_interest')=='Good'      ? 'checked':'' }}> Good</label>
+            <label><input type="radio" name="session_interest" value="Average"   {{ old('session_interest')=='Average'   ? 'checked':'' }}> Average</label>
+            <label><input type="radio" name="session_interest" value="Poor"      {{ old('session_interest')=='Poor'      ? 'checked':'' }}> Poor</label>
+            <label><input type="radio" name="session_interest" value="Very Poor" {{ old('session_interest')=='Very Poor' ? 'checked':'' }}> Very Poor</label>
+        </div>
+        @error('session_interest')<span class="err">{{ $message }}</span>@enderror
+    </div>
+
+    <!-- Suggestion -->
+    <div class="question suggestion">
+        <h3>Do you have any suggestions for improvement?</h3>
+        <textarea name="suggestions">{{ old('suggestions') }}</textarea>
+    </div>
+
+    <!-- Courses -->
+    <div class="course-box">
+
+        <h2>Which course aligns best with your interests?</h2>
+
+        <div class="course-grid">
+
+            <label><input type="checkbox" name="interested_courses[]" value="Data Science AI & ML"    {{ in_array('Data Science AI & ML',    old('interested_courses',[])) ? 'checked':'' }}> Data Science AI &amp; ML</label>
+            <label><input type="checkbox" name="interested_courses[]" value="Web Design"              {{ in_array('Web Design',              old('interested_courses',[])) ? 'checked':'' }}> Web Design</label>
+
+            <label><input type="checkbox" name="interested_courses[]" value="Data Analytics"          {{ in_array('Data Analytics',          old('interested_courses',[])) ? 'checked':'' }}> Data Analytics</label>
+            <label><input type="checkbox" name="interested_courses[]" value="Graphic Design"          {{ in_array('Graphic Design',          old('interested_courses',[])) ? 'checked':'' }}> Graphic Design</label>
+
+            <label><input type="checkbox" name="interested_courses[]" value="Programming in Python"   {{ in_array('Programming in Python',   old('interested_courses',[])) ? 'checked':'' }}> Programming in Python</label>
+            <label><input type="checkbox" name="interested_courses[]" value="UI/UX Design"            {{ in_array('UI/UX Design',            old('interested_courses',[])) ? 'checked':'' }}> UI/UX Design</label>
+
+            <label><input type="checkbox" name="interested_courses[]" value="Full-Stack Development"  {{ in_array('Full-Stack Development',  old('interested_courses',[])) ? 'checked':'' }}> Full-Stack Development</label>
+            <label><input type="checkbox" name="interested_courses[]" value="Digital Marketing"       {{ in_array('Digital Marketing',       old('interested_courses',[])) ? 'checked':'' }}> Digital Marketing</label>
+
+            <label><input type="checkbox" name="interested_courses[]" value="Cyber Security"          {{ in_array('Cyber Security',          old('interested_courses',[])) ? 'checked':'' }}> Cyber Security</label>
+            <label><input type="checkbox" name="interested_courses[]" value="2D, 3D Animation"        {{ in_array('2D, 3D Animation',        old('interested_courses',[])) ? 'checked':'' }}> 2D, 3D Animation</label>
+
+        </div>
+
+    </div>
+
+    <div class="submit-btn">
+        <button type="submit">Submit Feedback</button>
+    </div>
+
+    </form>
+
+</div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const contactInput = document.getElementById('contact_number');
+        const emailInput = document.getElementById('email');
+
+        // Allow only digits in mobile number
+        if (contactInput) {
+            contactInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Mobile validation: exactly 10 digits
+                if (contactInput) {
+                    const phone = contactInput.value.trim();
+                    if (!/^[0-9]{10}$/.test(phone)) {
+                        e.preventDefault();
+                        alert('Please enter a valid 10-digit mobile number (e.g. 9876543210).');
+                        contactInput.focus();
+                        return false;
+                    }
+                }
+
+                // Email validation: proper email format
+                if (emailInput) {
+                    const email = emailInput.value.trim();
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        e.preventDefault();
+                        alert('Please enter a valid email address (e.g. name@example.com).');
+                        emailInput.focus();
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
+    function closeSuccessModal() {
+        const modal = document.getElementById('successModal');
+        if (modal) {
+            modal.style.transition = 'opacity 0.25s ease-out';
+            modal.style.opacity = '0';
+            setTimeout(function() {
+                modal.remove();
+            }, 250);
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('successModal');
+        if (modal && e.target === modal) {
+            closeSuccessModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSuccessModal();
+        }
+    });
+    </script>

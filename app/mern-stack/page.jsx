@@ -1,0 +1,770 @@
+import Link from "next/link";
+import PageInteractiveHandler from "@/components/PageInteractiveHandler";
+
+export const metadata = {
+  "title": "MERN Stack Development Course in Dharamshala",
+  "description": "Professional IT training and digital services in Dharamshala at Netcoder Technology.",
+  "openGraph": {
+    "title": "MERN Stack Development Course in Dharamshala",
+    "description": "Professional IT training and digital services in Dharamshala at Netcoder Technology.",
+    "url": "https://www.netcoder.in/mern-stack",
+    "siteName": "Netcoder Technology",
+    "type": "website"
+  },
+  "alternates": {
+    "canonical": "https://www.netcoder.in/mern-stack"
+  }
+};
+
+export default function MernStackPage() {
+  return (
+    <>
+      <PageInteractiveHandler pageSlug="mern-stack" />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: "{\"@context\":\"https://schema.org\",\"@type\":\"Course\",\"name\":\"MERN Stack Development Training Program\",\"description\":\"Professional MERN Stack Development training covering MongoDB, Express.js, React.js, Node.js, REST APIs, frontend development, backend development, and practical full-stack web application projects.\",\"provider\":{\"@type\":\"Organization\",\"name\":\"Netcoder Technology\",\"sameAs\":\"https://www.netcoder.in/\"}}" }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: "{\"@context\":\"https://schema.org\",\"@type\":\"FAQPage\",\"mainEntity\":[{\"@type\":\"Question\",\"name\":\"What Makes MERN Stack Different From Traditional Web Development?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"MERN Stack uses modern JavaScript technologies like MongoDB, Express.js, React.js, and Node.js to build fast, scalable, and interactive web applications with frontend and backend integration.\"}},{\"@type\":\"Question\",\"name\":\"Why Is React.js Important In MERN Stack Development?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"React.js helps developers create fast, dynamic, and reusable user interfaces, making modern web applications more interactive and user-friendly.\"}},{\"@type\":\"Question\",\"name\":\"Will I Build Real Full Stack Applications During Training?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Yes, students work on practical web applications, REST APIs, database integration projects, and responsive frontend-backend development assignments for real-world experience.\"}},{\"@type\":\"Question\",\"name\":\"Is This Course Suitable For Beginners In Programming?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Absolutely. The training starts from web development fundamentals and gradually moves towards advanced frontend and backend technologies used in MERN Stack development.\"}},{\"@type\":\"Question\",\"name\":\"What Career Opportunities Are Available After Learning MERN Stack?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"After completing this program, learners can explore opportunities in Full Stack Development, Frontend Development, Backend Development, Web Application Development, and Software Engineering roles.\"}}]}" }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: "{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Home\",\"item\":\"https://www.netcoder.in/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Courses\",\"item\":\"https://www.netcoder.in/courses/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"MERN Stack Development Course\",\"item\":\"https://www.netcoder.in/mern-stack.html\"}]}" }}
+      />
+      <div className="course-single">
+                <div>
+                    <img src="/images/mern-stack.png" alt="MERN Stack" loading="lazy" decoding="async" />
+          </div>
+                <div>
+                    <h2>            <span>MERN Stack Development Course</span></h2>
+                    <p>MERN Stack Development is one of the most in-demand technologies in modern web development. Netcoder Technology’s MERN Stack Development Course in Dharamshala helps students and aspiring developers build practical frontend and backend development skills using modern JavaScript technologies. Our program is ideal for learners searching for professional MERN Stack Training in Himachal Pradesh with practical coding and live project experience.            <br />
+
+The training covers             <strong>MongoDB, Express.js, React.js, Node.js, REST APIs, responsive web development, database management, and Git &amp; GitHub </strong>through practical assignments and real-world projects. Students gain hands-on experience with modern full-stack technologies used in the software industry.
+            <br />
+Through practical coding and industry-focused mentorship, learners understand how modern web applications are developed and deployed using full-stack technologies. Netcoder Technology’s MERN Stack Training in Himachal Pradesh helps students build coding confidence and career-ready development skills for opportunities in web and software development.
+            </p>
+                    <a href="#" data-modal-trigger="demo" className="color-btn">Book Demo class</a>
+          </div>
+        </div>
+
+      
+
+      {/* Course Outline */}
+
+
+      
+      <div className="course-outline container">
+                <div className="headings">
+                    <h2>            <span>Course outline</span></h2>
+                    <small>This is our course outline you can check below</small>
+          </div>
+                <div className="col">
+          
+          {/* course outline main */}
+
+                    <ul>
+                        <li>
+                            <h4>1.</h4>
+                            <div>
+                                <h4>Introduction to Web Development HTML &amp; CSS Basics</h4>
+                                <small>Explore the evolution of the web and understand the core technologies like HTML, CSS, and JavaScript that build web applications.Learn to structure web pages with HTML elements and style them using CSS, including creating responsive designs for various devices.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+                        <li>
+                            <h4>2.</h4>
+                            <div>
+                                <h4>JavaScript Fundamentals</h4>
+                                <small>Master the basics of JavaScript, including syntax, data types, control structures, loops, conditionals, and functions.Dive deeper into object-oriented programming, asynchronous JavaScript (callbacks, promises, async/await), and error handling techniques.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+                        <li>
+                            <h4>3.</h4>
+                            <div>
+                                <h4>Front-End Development with React.js</h4>
+                                <small>Discover the basics of React, such as configuring the virtual DOM, JSX, and the environment.To create dynamic user interfaces, comprehend functional and class components, state, props, and component lifecycle.Use React Router to provide routing for single-page applications with Context API and Redux to manage application state.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+                        <li>
+                            <h4>4.</h4>
+                            <div>
+                                <h4>Back-End Development with Node.js and Express.js</h4>
+                                <small>Set up the infrastructure, learn the essential modules, and write server-side JavaScript to get started with Node.js.Discover how to use Express.js to develop RESTful APIs, configure routing, and employ middleware functions.Use Mongoose to establish a connection to MongoDB, then manage the data for your application using CRUD activities.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+                        <li>
+                            <h4>5.</h4>
+                            <div>
+                                <h4>Full-Stack Integration</h4>
+                                <small>Learn how to use Axios to make HTTP queries from the front end and how to use React to manage API answers. Create sign-up and login features, secure your application's routes, and use JSON Web Tokens (JWT) for user authentication. Discover full-stack application deployment techniques, such as putting MERN apps on cloud servers like AWS or Herok.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+                        <li>
+                            <h4>6.</h4>
+                            <div>
+                                <h4>Advanced Topics and Best Practices</h4>
+                                <small>Learn to use debugging techniques and best practices to find and fix common mistakes in your code.Recognize the use of monitoring and logging in application development to keep track of mistakes and performance problems.Learn about caching techniques and other methods for speeding up and streamlining React apps.Learn how to ensure scalability and accessibility while deploying MERN apps to cloud platforms such as AWS and Heroku. Put security measures in place to shield your application from hacker attacks and weaknesses, such as data validation and API security.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+                        <li>
+                            <h4>7.</h4>
+                            <div>
+                                <h4>Capstone Project(Event Management System)</h4>
+                                <small>Develop an event management system that allows users to create, manage, and promote events. Include features like event registration, ticket sales, and event analytics.</small>
+                </div>
+              </li>
+            
+            {/*  */}
+
+            </ul>
+          
+          {/* brochure form */}
+
+                    <div className="brochure-form">
+                        <div className="form">
+                            <h4>Eligibility</h4>
+                            <p>12th , Equivalent and above</p>
+              </div>
+            
+            {/*  */}
+
+                        <form className="form">
+                            <h4>Download Course Brochure</h4>
+                            <div>
+                                <div className="inputs">
+                                    <label htmlFor="name">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8 0C9.06087 0 10.0783 0.421427 10.8284 1.17157C11.5786 1.92172 12 2.93913 12 4C12 5.06087 11.5786 6.07828 10.8284 6.82843C10.0783 7.57857 9.06087 8 8 8C6.93913 8 5.92172 7.57857 5.17157 6.82843C4.42143 6.07828 4 5.06087 4 4C4 2.93913 4.42143 1.92172 5.17157 1.17157C5.92172 0.421427 6.93913 0 8 0ZM8 10C12.42 10 16 11.79 16 14V16H0V14C0 11.79 3.58 10 8 10Z" fill="#ff5532" />
+                                            <defs>
+                                                <linearGradient id="paint0_linear_219_95" x1="8" y1="0" x2="8" y2="16" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#FF8552" />
+                                                    <stop offset="1" stopColor="#FF4E4E" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </label>
+                                    <input type="text" name="name" id="name" placeholder="enter Your name" />
+                  </div>
+                
+                {/*  */}
+
+                                <div className="inputs">
+                                    <label htmlFor="number">                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12.8205 15.9999C12.1233 15.9999 11.1438 15.7477 9.67704 14.9284C7.89346 13.9284 6.5139 13.0052 4.73996 11.2362C3.02961 9.52728 2.1973 8.42084 1.03242 6.30153C-0.283565 3.90864 -0.0592336 2.65434 0.191532 2.11827C0.490164 1.47754 0.930969 1.09432 1.50073 0.713963C1.82435 0.501973 2.16682 0.32025 2.52379 0.171099C2.55952 0.155742 2.59274 0.141099 2.62239 0.127884C2.79921 0.0482406 3.06712 -0.0721179 3.40648 0.056455C3.63295 0.141456 3.83513 0.315387 4.15163 0.627891C4.80069 1.2679 5.68766 2.69327 6.01486 3.39328C6.23455 3.86507 6.37994 4.1765 6.3803 4.52579C6.3803 4.93473 6.17454 5.25009 5.92485 5.59045C5.87805 5.65438 5.83161 5.71545 5.7866 5.77474C5.51476 6.13189 5.45511 6.2351 5.4944 6.41939C5.57406 6.78975 6.16811 7.89226 7.14438 8.8662C8.12065 9.84015 9.19159 10.3966 9.56345 10.4759C9.75563 10.5169 9.86101 10.4548 10.2297 10.1734C10.2825 10.133 10.3368 10.0912 10.3936 10.0494C10.7744 9.76622 11.0752 9.56586 11.4746 9.56586H11.4767C11.8243 9.56586 12.1218 9.71657 12.6148 9.96515C13.2578 10.2894 14.7263 11.1648 15.3703 11.8145C15.6836 12.1302 15.8583 12.3316 15.9437 12.5577C16.0723 12.898 15.9512 13.1648 15.8722 13.3434C15.859 13.373 15.8444 13.4055 15.829 13.4416C15.6787 13.7979 15.4958 14.1396 15.2828 14.4623C14.9031 15.0302 14.5184 15.4699 13.8761 15.7688C13.5463 15.9248 13.1854 16.0038 12.8205 15.9999Z" fill="#ff5532" />
+                                            <defs>
+                                                <linearGradient id="paint0_linear_219_97" x1="8" y1="0" x2="8" y2="16" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#FF8552" />
+                                                    <stop offset="1" stopColor="#FF4E4E" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </label>
+                                    <input type="tel" name="number" id="number" placeholder="enter mobile number" />
+                  </div>
+                
+                {/*  */}
+
+                                <div className="inputs">
+                                    <label htmlFor="email">                    <svg width="16" height="13" viewBox="0 0 16 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M16 2.828V10.4C16 11.0122 15.7661 11.6012 15.3462 12.0466C14.9262 12.492 14.3519 12.7601 13.7408 12.796L13.6 12.8H2.4C1.78783 12.8 1.19879 12.5661 0.753391 12.1462C0.307994 11.7262 0.039914 11.1519 0.00400009 10.5408L0 10.4V2.828L7.556 7.8656L7.6488 7.9184C7.75816 7.97184 7.87828 7.99961 8 7.99961C8.12172 7.99961 8.24184 7.97184 8.3512 7.9184L8.444 7.8656L16 2.828Z" fill="#ff5532" />
+                                            <path d="M13.6004 0C14.4644 0 15.222 0.456 15.6444 1.1416L8.00044 6.2376L0.356445 1.1416C0.557029 0.815814 0.832616 0.542721 1.16021 0.345106C1.48781 0.147491 1.85791 0.031085 2.23965 0.00559998L2.40045 0H13.6004Z" fill="#ff5532" />
+                                            <defs>
+                                                <linearGradient id="paint0_linear_219_99" x1="8" y1="2.828" x2="8" y2="12.8" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#FF8552" />
+                                                    <stop offset="1" stopColor="#FF4E4E" />
+                          </linearGradient>
+                                                <linearGradient id="paint1_linear_219_99" x1="8.00045" y1="0" x2="8.00045" y2="6.2376" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#FF8552" />
+                                                    <stop offset="1" stopColor="#FF4E4E" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </label>
+                                    <input type="email" name="email" id="email" placeholder="Enter Email Address" autoCapitalize="none" autoCorrect="off" spellCheck="false" autoComplete="email" style={{"textTransform":"lowercase"}} inputMode="email" />
+                  </div>
+                                <button className="color-btn">Download Brochure</button>
+                </div>
+              </form>
+                        <div className="form learn-card">
+                            <h4>What You'll Learn</h4>
+                            <ol>
+                                <li>
+                                    <i className="fa-solid fa-circle-check"></i>
+                                    <span>Master MongoDB, Express.js, React, and Node.js</span>
+                  </li>
+                                <li>
+                                    <i className="fa-solid fa-circle-check"></i>
+                                    <span>Build dynamic, single-page web applications</span>
+                  </li>
+                                <li>
+                                    <i className="fa-solid fa-circle-check"></i>
+                                    <span>Create robust RESTful APIs &amp; database schemas</span>
+                  </li>
+                                <li>
+                                    <i className="fa-solid fa-circle-check"></i>
+                                    <span>Understand state management and authentication</span>
+                  </li>
+                                <li>
+                                    <i className="fa-solid fa-circle-check"></i>
+                                    <span>Build a professional MERN stack portfolio</span>
+                  </li>
+                </ol>
+              </div>
+                        <div className="form highlights-card">
+                            <h4>Course Highlights</h4>
+                            <div className="highlights-grid">
+                                <div className="highlight-item">
+                                    <div className="highlight-icon-wrapper">
+                                        <i className="fa-solid fa-book-open"></i>
+                    </div>
+                                    <div className="highlight-text-group">
+                                        <div className="highlight-number">40+</div>
+                                        <div className="highlight-label">Lessons</div>
+                    </div>
+                  </div>
+                                <div className="highlight-item">
+                                    <div className="highlight-icon-wrapper">
+                                        <i className="fa-solid fa-briefcase"></i>
+                    </div>
+                                    <div className="highlight-text-group">
+                                        <div className="highlight-number">10+</div>
+                                        <div className="highlight-label">Projects</div>
+                    </div>
+                  </div>
+                                <div className="highlight-item">
+                                    <div className="highlight-icon-wrapper">
+                                        <i className="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                                    <div className="highlight-text-group">
+                                        <div className="highlight-number">10+</div>
+                                        <div className="highlight-label">Tools Covered</div>
+                    </div>
+                  </div>
+                                <div className="highlight-item">
+                                    <div className="highlight-icon-wrapper">
+                                        <i className="fa-solid fa-award"></i>
+                    </div>
+                                    <div className="highlight-text-group">
+                                        <div className="highlight-number">Certificate</div>
+                                        <div className="highlight-label">Included</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      
+
+      {/* tools you learn */}
+
+
+      
+      <div className="container tools-section">
+        
+        {/* Ambient Blur Lighting */}
+
+                <div className="orb orb-1"></div>
+                <div className="orb orb-2"></div>
+        
+        {/* SECTION HEADER */}
+
+                <header className="tools-header">
+                    <span className="section-tag">TOOLS &amp; TECHNOLOGIES</span>
+                    <h2>Software &amp; Tools             <span>You'll Master</span></h2>
+                    <p>
+                Get hands-on experience with the complete MERN stack through real-world application projects at Netcoder Technology, Dharamshala.
+            </p>
+          </header>
+        
+        {/* TOOLS GRID */}
+
+                <div className="tools-grid">
+                    <div className="tool-card">
+                        <div className="app-avatar id-theme">
+                            <i className="fa-solid fa-database"></i>
+              </div>
+                        <h3>MongoDB</h3>
+                        <p>NoSQL Database</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar ps-theme">
+                            <i className="fa-solid fa-server"></i>
+              </div>
+                        <h3>Express.js</h3>
+                        <p>Backend Framework</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar figma-theme">
+                            <i className="fa-brands fa-react"></i>
+              </div>
+                        <h3>React.js</h3>
+                        <p>Frontend Library</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar ai-theme">
+                            <i className="fa-brands fa-node-js"></i>
+              </div>
+                        <h3>Node.js</h3>
+                        <p>Server Runtime</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar canva-theme">
+                            <i className="fa-solid fa-arrows-rotate"></i>
+              </div>
+                        <h3>Redux</h3>
+                        <p>State Management</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar canva-theme">
+                            <i className="fa-brands fa-js"></i>
+              </div>
+                        <h3>JavaScript ES6+</h3>
+                        <p>Core Language</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar ai-theme">
+                            <i className="fa-brands fa-git-alt"></i>
+              </div>
+                        <h3>Git &amp; GitHub</h3>
+                        <p>Version Control</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar id-theme">
+                            <i className="fa-solid fa-paper-plane"></i>
+              </div>
+                        <h3>Postman</h3>
+                        <p>API Testing</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar ps-theme">
+                            <i className="fa-solid fa-key"></i>
+              </div>
+                        <h3>JWT Auth</h3>
+                        <p>Authentication &amp; Security</p>
+            </div>
+                    <div className="tool-card">
+                        <div className="app-avatar figma-theme">
+                            <i className="fa-solid fa-code"></i>
+              </div>
+                        <h3>VS Code</h3>
+                        <p>Development Environment</p>
+            </div>
+          </div>
+        </div>
+
+      
+
+      {/* industry demand */}
+
+
+      
+      <section className="industry-demand">
+                <div className="container">
+                    <div className="industry-header">
+                        <span>INDUSTRY DEMAND</span>
+                        <h2>
+                    MERN Stack Developers are among the most sought-after professionals in the web development industry.
+                </h2>
+                        <p>
+                    Startups, product companies, and enterprises rely on MERN stack developers for building modern, scalable, single-page web applications.
+                </p>
+            </div>
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <h3>40%</h3>
+                            <p>Growth in MERN stack careers over the next few years</p>
+              </div>
+                        <div className="stat-card">
+                            <h3>75K+</h3>
+                            <p>MERN stack job opportunities available across India</p>
+              </div>
+                        <div className="stat-card">
+                            <h3>₹5L-16L</h3>
+                            <p>Average annual salary range for MERN developers</p>
+              </div>
+                        <div className="stat-card">
+                            <h3>8 in 10</h3>
+                            <p>Startups prefer MERN stack for web apps</p>
+              </div>
+            </div>
+                    <div className="industry-footer">
+                MERN stack skills are in massive demand — companies need developers who can build fast, modern, full-stack JavaScript applications.
+            </div>
+          </div>
+        </section>
+
+      
+
+      {/* Hiring Partners */}
+
+
+      
+      <section className="hiring-section">
+                <div className="containers">
+                    <div className="section-header">
+                        <div className="section-badge">
+                    Student Placements
+                </div>
+                        <h2>
+                    Where Our Students Are Placed
+                </h2>
+                        <p>
+                    Our students have successfully launched their careers with growing technology companies, digital
+                    agencies, and innovative startups across different industries.
+                </p>
+            </div>
+          
+          {/* ROW 1 */}
+
+                    <div className="logo-row row-1">
+                        <div className="logo-track">
+                            <div className="logo-card">                <img src="/images/app_mechanic_logo.png" alt="App Mechanic" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/social_gtm.avif" alt="Social GTM" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/cubix_technology_logo.png" alt="Cubix Technology" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/Development_logics_logo.png" alt="Development Logics" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/richest_soft_logo.svg" alt="Richest Soft" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/social_Simba.png" alt="Social Simba" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/app_mechanic_logo.png" alt="App Mechanic" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/social_gtm.avif" alt="Social GTM" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/cubix_technology_logo.png" alt="Cubix Technology" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/Development_logics_logo.png" alt="Development Logics" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/richest_soft_logo.svg" alt="Richest Soft" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/swiftedge_solutions_logo.webp" alt="Swiftedge Solutions" loading="lazy" decoding="async" />
+                </div>
+                            <div className="logo-card">                <img src="/images/cubeinfotech_logo.png" alt="Cube Infotech" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/unmeteredtechnologies_logo.png" alt="Unmetered Technologies" loading="lazy" decoding="async" /></div>
+              </div>
+            </div>
+          
+          {/* ROW 2 */}
+
+                    <div className="logo-row row-2">
+                        <div className="logo-track">
+                            <div className="logo-card">                <img src="/images/vagabond_logo.png" alt="Vagabond" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/swiftedge_solutions_logo.webp" alt="Swiftedge Solutions" loading="lazy" decoding="async" />
+                </div>
+                            <div className="logo-card">                <img src="/images/cubeinfotech_logo.png" alt="Cube Infotech" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/unmeteredtechnologies_logo.png" alt="Unmetered Technologies" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/signore_black.png" alt="Signore Technologies" loading="lazy" decoding="async" />
+                </div>
+                            <div className="logo-card">                <img src="/images/vagabond_logo.png" alt="Vagabond" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/swiftedge_solutions_logo.webp" alt="Swiftedge Solutions" loading="lazy" decoding="async" />
+                </div>
+                            <div className="logo-card">                <img src="/images/cubeinfotech_logo.png" alt="Cube Infotech" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/unmeteredtechnologies_logo.png" alt="Unmetered Technologies" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/signore_black.png" alt="Signore Technologies" loading="lazy" decoding="async" />
+                </div>
+                            <div className="logo-card">                <img src="/images/cubeinfotech_logo.png" alt="Cube Infotech" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/unmeteredtechnologies_logo.png" alt="Unmetered Technologies" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/signore_black.png" alt="Signore Technologies" loading="lazy" decoding="async" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      
+
+      {/* hiring section 2 */}
+
+
+      
+      <section className="hiring-section">
+                <div className="containers">
+                    <div className="section-header">
+                        <div className="section-badge">
+                    Industry Demand
+                </div>
+                        <h2>
+                    Companies with High Demand for Skilled Professionals
+                </h2>
+                        <p>
+                    These leading organizations consistently seek talented professionals with strong technical, design,
+                    marketing, and business skills.
+                </p>
+            </div>
+          
+          {/* ROW 1 */}
+
+                    <div className="logo-row row-1">
+                        <div className="logo-track">
+                            <div className="logo-card">                <img src="/images/samsung_logo.png" alt="Samsung" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/google_PNG1.png" alt="Google" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/apple-logo-logo-icons-31.png" alt="Apple" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/Flipkart-logo.png" alt="Flipkart" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/amazon-logo-amazon-icon.webp" alt="Amazon" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/swiggy.webp" alt="Swiggy" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/Zomato-logo.png" alt="Zomato" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/samsung_logo.png" alt="Samsung" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/google_PNG1.png" alt="Google" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/apple-logo-logo-icons-31.png" alt="Apple" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/Flipkart-logo.png" alt="Flipkart" loading="lazy" decoding="async" /></div>
+                            <div className="logo-card">                <img src="/images/amazon-logo-amazon-icon.webp" alt="Amazon" loading="lazy" decoding="async" /></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      
+
+      {/* ========== SUCCESS STORIES ========== */}
+
+
+      
+      <div className="testimonials-wrap container">
+                <span className="section-eyebrow">Success Stories</span>
+                <h2 className="section-title">Hear it from our students</h2>
+                <div className="testimonials-grid" id="testimonialsGrid"></div>
+                <div className="more-wrap">
+                    <a className="color-btn" href="https://www.youtube.com/@netcodertechnology/videos" target="_blank" rel="noopener">View more testimonials</a>
+          </div>
+        </div>
+
+      
+
+      {/* popup */}
+
+
+      
+      <div className="popup-overlay" id="popupOverlay">
+                <div className="popup-box" id="popupBox">
+                    <button className="popup-close" id="popupClose" aria-label="Close video">×</button>
+          </div>
+        </div>
+
+      
+
+      {/* Google reviews */}
+
+
+      
+      <section className="nc-reviews">
+                <div className="nc-container">
+                    <div className="nc-heading">
+                        <h2>What Our Students Say</h2>
+                        <p>
+                    Real experiences from students who learned industry-ready skills
+                    through practical training at Netcoder Technology.
+                </p>
+            </div>
+                    <div className="nc-slider-wrapper">
+                        <div className="nc-slider">
+              
+              {/* 1 */}
+
+                            <div className="nc-card">
+                                <div className="nc-user">
+                                    <div className="nc-avatar">M</div>
+                                    <div>
+                                        <h4>Muskan Choudhary</h4>
+                                        <span>Web &amp; Graphic Designing</span>
+                    </div>
+                  </div>
+                                <div className="nc-stars">
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                  </div>
+                                <p>
+                            I have been studying at Netcoder Technology for the last 12 months.
+                            The trainers are knowledgeable, supportive, and always ready to help.
+                        </p>
+                </div>
+              
+              {/* 2 */}
+
+                            <div className="nc-card">
+                                <div className="nc-user">
+                                    <div className="nc-avatar">A</div>
+                                    <div>
+                                        <h4>Arushi Dhiman</h4>
+                                        <span>Graphic Designing</span>
+                    </div>
+                  </div>
+                                <div className="nc-stars">
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                  </div>
+                                <p>
+                            Learned Photoshop, Illustrator, branding, logo design,
+                            typography and social media creatives through practical projects.
+                        </p>
+                </div>
+              
+              {/* 3 */}
+
+                            <div className="nc-card">
+                                <div className="nc-user">
+                                    <div className="nc-avatar">E</div>
+                                    <div>
+                                        <h4>Elite Modeling Agency</h4>
+                                        <span>Digital Marketing</span>
+                    </div>
+                  </div>
+                                <div className="nc-stars">
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                  </div>
+                                <p>
+                            Excellent Digital Marketing course covering SEO, PPC,
+                            Social Media Marketing and Google Analytics.
+                        </p>
+                </div>
+              
+              {/* 4 */}
+
+                            <div className="nc-card">
+                                <div className="nc-user">
+                                    <div className="nc-avatar">K</div>
+                                    <div>
+                                        <h4>Kritika Rihalia</h4>
+                                        <span>Web &amp; Graphic Designing</span>
+                    </div>
+                  </div>
+                                <div className="nc-stars">
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                  </div>
+                                <p>
+                            Even from a Humanities background, learning was easy because
+                            of the supportive trainers and practical approach.
+                        </p>
+                </div>
+              
+              {/* 5 */}
+
+                            <div className="nc-card">
+                                <div className="nc-user">
+                                    <div className="nc-avatar">A</div>
+                                    <div>
+                                        <h4>Abhishek</h4>
+                                        <span>Data Science</span>
+                    </div>
+                  </div>
+                                <div className="nc-stars">
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                  </div>
+                                <p>
+                            The Data Science program is well-structured and builds
+                            strong theoretical and practical skills.
+                        </p>
+                </div>
+              
+              {/* 6 */}
+
+                            <div className="nc-card">
+                                <div className="nc-user">
+                                    <div className="nc-avatar">A</div>
+                                    <div>
+                                        <h4>Amaan Sam</h4>
+                                        <span>Digital Marketing</span>
+                    </div>
+                  </div>
+                                <div className="nc-stars">
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                                    <i className="fas fa-star"></i>
+                  </div>
+                                <p>
+                            Practical Digital Marketing training with SEO, Google Ads,
+                            Social Media Marketing and real-world projects.
+                        </p>
+                </div>
+              </div>
+            </div>
+                    <div className="nc-btn-wrap">
+                        <a href="https://www.google.com/search?sca_esv=dde3a9518543860a&rlz=1C1CHBF_enIN1134IN1135&sxsrf=APpeQnvW1gr9W_ag_pZCfy2tg59a17X6Lw:1785141581641&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_yXoL3TLisELXlaWMufxL6LqPS7DWdqLHdatbinZgSlwcFK9hNfJJaDbljF0Huenx0MGgMSgWRJjaH7DyqMImn7kdB9AGWnyEFprd4hF_XS5ozWPeaWBJFcl0xRnL2T6LCFvr6Q%3D&q=Netcoder+Technology+-+Dharamshala+Reviews&sa=X" target="_blank" className="color-btn">
+                    View All Reviews
+                </a>
+            </div>
+          </div>
+        </section>
+
+      
+
+      {/* FAQs */}
+
+
+      
+      <div className="accordion container">
+                <div className="headings">
+                    <h2>Frequently Asked             <span>Questions</span></h2>
+                    <small>Find answers about our MERN Stack Development training, React.js and Node.js technologies, full-stack coding skills, practical projects, and career opportunities in modern web development.</small>
+          </div>
+                <div className="accordion-item">
+                    <div className="accordion-header active">            <h5>What Makes MERN Stack Different From Traditional Web Development?</h5></div>
+                    <div className="accordion-content show">
+                        <p>MERN Stack uses modern JavaScript technologies like MongoDB, Express.js, React.js, and Node.js to build fast, scalable, and interactive web applications with both frontend and backend integration.</p>
+            </div>
+          </div>
+                <div className="accordion-item">
+                    <div className="accordion-header">            <h5>Why Is React.js Important In MERN Stack Development?</h5></div>
+                    <div className="accordion-content">
+                        <p>React.js helps developers create fast, dynamic, and reusable user interfaces, making modern web applications more interactive and user-friendly.</p>
+            </div>
+          </div>
+                <div className="accordion-item">
+                    <div className="accordion-header">            <h5>Will I Build Real Full Stack Applications During Training?</h5></div>
+                    <div className="accordion-content">
+                        <p>Yes, students work on practical web applications, REST APIs, database integration projects, and responsive frontend-backend development assignments for real-world experience.</p>
+            </div>
+          </div>
+                <div className="accordion-item">
+                    <div className="accordion-header">            <h5>Is This Course Suitable For Beginners In Programming?</h5></div>
+                    <div className="accordion-content">
+                        <p>Absolutely. The training starts from web development fundamentals and gradually moves towards advanced frontend and backend technologies used in MERN Stack development.</p>
+            </div>
+          </div>
+                <div className="accordion-item">
+                    <div className="accordion-header">            <h5>What Career Opportunities Are Available After Learning MERN Stack?</h5></div>
+                    <div className="accordion-content">
+                        <p>After completing this program, learners can explore opportunities in Full Stack Development, Frontend Development, Backend Development, Web Application Development, and Software Engineering roles.</p>
+            </div>
+          </div>
+        </div>
+
+      
+
+      {/* <PopUp Form */}
+
+    </>
+  );
+}

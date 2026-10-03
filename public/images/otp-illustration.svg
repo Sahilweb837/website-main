@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff9f5" />
+      <stop offset="100%" stop-color="#fff0e5" />
+    </linearGradient>
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7a59" />
+      <stop offset="100%" stop-color="#ff5532" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="400" height="400" fill="url(#bg)" />
+  
+  <!-- Phone Base -->
+  <rect x="130" y="70" width="140" height="260" rx="20" fill="#ffffff" stroke="#ff5532" stroke-width="6" />
+  
+  <!-- Phone Screen -->
+  <rect x="140" y="80" width="120" height="240" rx="12" fill="#fafafa" />
+  
+  <!-- Phone Notch -->
+  <path d="M 180 80 L 220 80 A 10 10 0 0 0 210 90 L 190 90 A 10 10 0 0 0 180 80 Z" fill="#ff5532" />
+  
+  <!-- Security Shield Overlay -->
+  <path d="M 270 180 C 270 230 220 270 200 280 C 180 270 130 230 130 180 V 130 L 200 100 L 270 130 Z" fill="url(#primary)" opacity="0.9" />
+  
+  <!-- Checkmark -->
+  <path d="M 170 190 L 190 210 L 230 160" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Abstract Data Lines -->
+  <path d="M 50 150 L 100 150 M 350 250 L 300 250 M 70 200 L 110 200 M 330 200 L 290 200" stroke="#ff5532" stroke-width="4" stroke-linecap="round" opacity="0.4" />
+</svg>

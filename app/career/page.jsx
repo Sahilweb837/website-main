@@ -1,0 +1,218 @@
+import Link from "next/link";
+import PageInteractiveHandler from "@/components/PageInteractiveHandler";
+
+export const metadata = {
+  "title": "Netcoder Technology | Career",
+  "description": "Discover Netcoder Technology, a premier IT training institute in Dharamshala. Learn about our mission to empower students with essential tech skills, expert instruction, and real-world experience for a successful career in IT.",
+  "openGraph": {
+    "title": "Netcoder Technology | Career",
+    "description": "Discover Netcoder Technology, a premier IT training institute in Dharamshala. Learn about our mission to empower students with essential tech skills, expert instruction, and real-world experience for a successful career in IT.",
+    "url": "https://www.netcoder.in/career",
+    "siteName": "Netcoder Technology",
+    "type": "website"
+  },
+  "alternates": {
+    "canonical": "https://www.netcoder.in/career"
+  }
+};
+
+export default function CareerPage() {
+  return (
+    <>
+      <PageInteractiveHandler pageSlug="career" />
+
+      <section className="page-hero">
+                <ul className="circles">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+          </ul>
+                <div className="page-title">
+                    <div>CAREER</div>
+                    <p>HOME /             <b>CAREER</b></p>
+          </div>
+        </section>
+
+      
+
+      {/* banner section end */}
+
+
+      
+
+      {/* creative future */}
+
+
+      
+      <div className="container about">
+                <div className="creative-future">
+                    <h2>We Make             <span>Students Creative Future</span></h2>
+                    <p>Encourage students to work on real-world projects from the beginning. This could include designing logos, websites, branding materials, etc. Practical experience is invaluable in learning design.</p>
+                    <div>
+                        <div>
+                            <h6>
+                                <svg viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2.01672C6.486 2.01672 2 6.50272 2 12.0167C2 17.5307 6.486 22.0167 12 22.0167C17.514 22.0167 22 17.5307 22 12.0167C22 6.50272 17.514 2.01672 12 2.01672ZM10.001 16.4297L6.99545 13.4307C6.6047 13.0407 6.60391 12.4079 6.99369 12.017C7.38371 11.6259 8.01701 11.6252 8.40793 12.0154L9.999 13.6037L14.586 9.01672C14.9765 8.62626 15.6095 8.62626 16 9.01672C16.3905 9.40719 16.3905 10.0403 16 10.4307L10.001 16.4297Z" fill="#ff5532" />
+                  </svg>
+                    Project-Based Learning
+                </h6>
+                            <h6>
+                                <svg viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2.01672C6.486 2.01672 2 6.50272 2 12.0167C2 17.5307 6.486 22.0167 12 22.0167C17.514 22.0167 22 17.5307 22 12.0167C22 6.50272 17.514 2.01672 12 2.01672ZM10.001 16.4297L6.99545 13.4307C6.6047 13.0407 6.60391 12.4079 6.99369 12.017C7.38371 11.6259 8.01701 11.6252 8.40793 12.0154L9.999 13.6037L14.586 9.01672C14.9765 8.62626 15.6095 8.62626 16 9.01672C16.3905 9.40719 16.3905 10.0403 16 10.4307L10.001 16.4297Z" fill="#ff5532" />
+                  </svg>
+                    Soft Skills Development
+                </h6>
+              </div>
+                        <div>
+                            <h6>
+                                <svg viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2.01672C6.486 2.01672 2 6.50272 2 12.0167C2 17.5307 6.486 22.0167 12 22.0167C17.514 22.0167 22 17.5307 22 12.0167C22 6.50272 17.514 2.01672 12 2.01672ZM10.001 16.4297L6.99545 13.4307C6.6047 13.0407 6.60391 12.4079 6.99369 12.017C7.38371 11.6259 8.01701 11.6252 8.40793 12.0154L9.999 13.6037L14.586 9.01672C14.9765 8.62626 15.6095 8.62626 16 9.01672C16.3905 9.40719 16.3905 10.0403 16 10.4307L10.001 16.4297Z" fill="#ff5532" />
+                  </svg>
+                    Community Engagement
+                </h6>
+                            <h6>
+                                <svg viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2.01672C6.486 2.01672 2 6.50272 2 12.0167C2 17.5307 6.486 22.0167 12 22.0167C17.514 22.0167 22 17.5307 22 12.0167C22 6.50272 17.514 2.01672 12 2.01672ZM10.001 16.4297L6.99545 13.4307C6.6047 13.0407 6.60391 12.4079 6.99369 12.017C7.38371 11.6259 8.01701 11.6252 8.40793 12.0154L9.999 13.6037L14.586 9.01672C14.9765 8.62626 15.6095 8.62626 16 9.01672C16.3905 9.40719 16.3905 10.0403 16 10.4307L10.001 16.4297Z" fill="#ff5532" />
+                  </svg>
+                    Internships
+                </h6>
+              </div>
+            </div>
+          </div>
+                <div>
+                    <img src="/images/future.png" alt="Creative Future" loading="lazy" decoding="async" />
+          </div>
+        </div>
+
+      
+
+      {/* creative future end */}
+
+
+      
+
+      {/* Placed Alumni Swiper Slider Section */}
+
+
+      
+      <div className="container">
+                <section className="placed-main">
+                    <h2 className="heading">Our             <span>Alumni</span></h2>
+                    <p>Empowering our alumni to shape the future, one success story at a time.</p>
+                    <div className="swiper mySwiper">
+                        <div className="swiper-wrapper">
+                            <div className="swiper-slide">
+                                <img src="/images/aditiya.jpg" alt="Aditiya Thakur" loading="lazy" decoding="async" />
+                                <h2>Aditiya Thakur</h2>
+                                <h3>Full-Stack Developer</h3>
+                                <p>Signore Technologies Pvt. Ltd.</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/akshay.png" alt="Akshay Bhardwaj" loading="lazy" decoding="async" />
+                                <h2>Akshay Bhardwaj</h2>
+                                <h3>Graphic Designer</h3>
+                                <p>Swiftedge Solutions Pvt.Ltd.</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/sunil.png" alt="Sunil" loading="lazy" decoding="async" />
+                                <h2>Sunil</h2>
+                                <h3>Graphic Designer</h3>
+                                <p>Social Gtm</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/sapna.jpg" alt="Sapna" loading="lazy" decoding="async" />
+                                <h2>Sapna</h2>
+                                <h3>Front-End Developer</h3>
+                                <p>Unmetered Technologies LLP</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/Manju.jpeg" alt="Manju" loading="lazy" decoding="async" />
+                                <h2>Manju</h2>
+                                <h3>Graphic Designer</h3>
+                                <p>Cube Infotech</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/Saurabh.jpeg" alt="Saurabh Guleria" loading="lazy" decoding="async" />
+                                <h2>Saurabh Guleria</h2>
+                                <h3>UI/UX Designer</h3>
+                                <p>App Mechanic</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/Shivdeep.png" alt="Shivdeep Singh" loading="lazy" decoding="async" />
+                                <h2>Shivdeep Singh</h2>
+                                <h3>Sr.Port Engineer</h3>
+                                <p>Smith Enterprises At JNPT</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/Akhil.jpeg" alt="Akhil Katoch" loading="lazy" decoding="async" />
+                                <h2>Akhil Katoch</h2>
+                                <h3>Full-Stack Developer</h3>
+                                <p>RichestSoft</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/abhishek.png" alt="Abhishek Bhardwaj" loading="lazy" decoding="async" />
+                                <h2>Abhishek Bhardwaj</h2>
+                                <h3>Sr. Graphic Designer</h3>
+                                <p>Social Simba</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/harshit.jpeg" alt="Harshit Awasthi" loading="lazy" decoding="async" />
+                                <h2>Harshit Awasthi</h2>
+                                <h3>UI/UX Designer</h3>
+                                <p>Development Logics</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/manhor.jpeg" alt="Manohar Lal" loading="lazy" decoding="async" />
+                                <h2>Manohar Lal</h2>
+                                <h3>Full-Stack Developer</h3>
+                                <p>Cubix Technologies</p>
+                </div>
+                            <div className="swiper-slide">
+                                <img src="/images/rohit.png" alt="Rohit Jaswal" loading="lazy" decoding="async" />
+                                <h2>Rohit Jaswal</h2>
+                                <h3>UI/UX Designer</h3>
+                                <p>The Vagabond</p>
+                </div>
+              </div>
+            
+            {/* Navigation buttons */}
+
+                        <div className="swiper-button-prev"></div>
+                        <div className="swiper-button-next"></div>
+            </div>
+          </section>
+        </div>
+
+      
+
+      {/* placed student end */}
+
+
+      
+
+      {/* Optimhire start */}
+
+
+      
+      <div className="optimhire container">
+                <h2>          <span>Start your career With NetCoder Technology</span></h2>
+                <p>If you are motivated and driven to succeed, we invite you to apply today!</p>
+                <iframe src="https://optimhire.com/d/Search-job-iframe?ref_code=netcoder-technology&skill=&positions=&dark_color=fb8454&light_color=62abb3" width="100%" height="800"></iframe>
+        </div>
+
+      
+
+      {/* Optimhire end */}
+
+
+      
+    </>
+  );
+}
