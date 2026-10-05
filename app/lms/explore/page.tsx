@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import PaymentCheckoutModal, { type CheckoutCourse } from "@/components/lms/PaymentCheckoutModal";
 import CoursePreviewModal from "@/components/lms/CoursePreviewModal";
 import { CourseCatalogSkeletonGrid } from "@/components/lms/CourseSkeleton";
@@ -125,8 +126,23 @@ function CourseCard({
   onPreview: (c: CourseItem) => void;
   onEnroll: (c: CourseItem) => void;
 }) {
+  const router = useRouter();
+  const courseUrl = `/lms/courses/${course.slug}`;
+
   return (
-    <article className="group flex flex-col bg-white rounded-2xl shadow-md hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden border border-slate-200 hover:border-orange-200">
+    <article
+      className="group flex flex-col bg-white rounded-2xl shadow-md hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden border border-slate-200 hover:border-orange-200 cursor-pointer"
+      onClick={() => router.push(courseUrl)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(courseUrl);
+        }
+      }}
+      aria-label={`View ${course.title} course details`}
+    >
       {/* Image & Badges */}
       <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
         <img
@@ -139,7 +155,14 @@ function CourseCard({
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+        {/* Hover play overlay */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-950/40 z-10">
+          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-[22px] text-slate-900 ml-0.5">play_arrow</span>
+          </div>
+          <span className="text-xs font-bold text-white drop-shadow">View Course</span>
+        </div>
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-20">
           <span className="bg-orange-600 text-white text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider shadow-lg">
             {course.badge}
           </span>
@@ -147,7 +170,7 @@ function CourseCard({
             {course.tagline}
           </span>
         </div>
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white z-20">
           <span className="text-[11px] bg-slate-950/80 backdrop-blur-sm px-2.5 py-1 rounded-md font-medium flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">schedule</span>
             {course.hours}
@@ -163,9 +186,16 @@ function CourseCard({
         <div>
           <StarRating rating={course.rating} count={course.ratingCount} />
 
-          <h3 className="font-bold text-base text-slate-900 tracking-tight mb-2 line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors">
-            {course.title}
-          </h3>
+          <Link
+            href={courseUrl}
+            onClick={(e) => e.stopPropagation()}
+            className="no-underline"
+            tabIndex={-1}
+          >
+            <h3 className="font-bold text-base text-slate-900 tracking-tight mb-2 line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors">
+              {course.title}
+            </h3>
+          </Link>
 
           <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">
             {course.overview}
@@ -185,7 +215,10 @@ function CourseCard({
         </div>
 
         {/* Price and CTA */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+        <div
+          className="pt-3 border-t border-slate-100 flex items-center justify-between"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-baseline gap-1.5">
             <span className="text-xl font-black text-slate-900">
               ${course.price}
@@ -196,7 +229,7 @@ function CourseCard({
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => onPreview(course)}
+              onClick={(e) => { e.stopPropagation(); onPreview(course); }}
               className="text-xs text-slate-600 hover:text-orange-600 hover:bg-orange-50 font-bold px-3 py-2 rounded-lg transition-all cursor-pointer"
               type="button"
               aria-label={`Preview ${course.title}`}
@@ -204,7 +237,7 @@ function CourseCard({
               Preview
             </button>
             <button
-              onClick={() => onEnroll(course)}
+              onClick={(e) => { e.stopPropagation(); onEnroll(course); }}
               className="text-xs bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-orange-500/30 cursor-pointer"
               type="button"
               aria-label={`Enroll in ${course.title}`}

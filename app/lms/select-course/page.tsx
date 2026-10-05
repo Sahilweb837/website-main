@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, Suspense, type CSSProperties } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { api } from "@/lib/api";
 import { LMS_COURSES } from "@/data/lms-courses";
@@ -25,6 +25,7 @@ import {
   X,
   Trash2,
   Briefcase,
+  Play,
 } from "lucide-react";
 
 type CourseCardData = {
@@ -151,6 +152,7 @@ const FAQ_ITEMS = [
 ];
 
 function SelectCourseContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { enrolledCourses } = useAuth();
 
@@ -427,49 +429,87 @@ function SelectCourseContent() {
             {filteredCourses.map((c) => {
               const isUserEnrolled = enrolledCourses.includes(c.slug);
               const isInCart = cartCourses.some((item) => item.slug === c.slug);
+              const discountPercent =
+                c.originalPrice > c.price
+                  ? Math.round(((c.originalPrice - c.price) / c.originalPrice) * 100)
+                  : 0;
+
               return (
                 <div
                   key={c.slug}
+                  onClick={() => router.push(`/lms/courses/${c.slug}`)}
                   className={`sc-card${isUserEnrolled ? " sc-card--enrolled" : ""}`}
+                  style={{ cursor: "pointer" }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(`/lms/courses/${c.slug}`);
+                    }
+                  }}
+                  aria-label={`View ${c.title} course details and preview video`}
                 >
-                  {/* Thumbnail */}
-                  <div className="sc-thumb">
-                    <img
-                      src={c.image || "/images/full-stact-development.png"}
-                      alt={c.title}
-                      className="sc-thumb-img"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = "/images/full-stact-development.png";
-                      }}
-                    />
-                    <div className="sc-thumb-overlay" />
-                    <div className="sc-thumb-badges">
-                      <span className="sc-chip sc-chip--dark">{c.category}</span>
-                      {c.badge && <span className="sc-chip sc-chip--accent">{c.badge}</span>}
+                  {/* Thumbnail with Preview Trigger */}
+                  <Link
+                    href={`/lms/courses/${c.slug}`}
+                    className="sc-thumb-link"
+                    onClick={(e) => e.stopPropagation()}
+                    tabIndex={-1}
+                  >
+                    <div className="sc-thumb">
+                      <img
+                        src={c.image || "/images/full-stact-development.png"}
+                        alt={c.title}
+                        className="sc-thumb-img"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/images/full-stact-development.png";
+                        }}
+                      />
+                      <div className="sc-thumb-overlay" />
+                      
+                      {/* Hover Preview Overlay */}
+                      <div className="sc-thumb-preview-hover">
+                        <div className="sc-thumb-play-circle">
+                          <Play className="sc-thumb-play-icon" />
+                        </div>
+                        <span className="sc-thumb-play-text">Preview Course</span>
+                      </div>
+
+                      <div className="sc-thumb-badges">
+                        <span className="sc-chip sc-chip--dark">{c.category}</span>
+                        {c.badge && <span className="sc-chip sc-chip--accent">{c.badge}</span>}
+                      </div>
+                      {isUserEnrolled && (
+                        <div className="sc-enrolled-pill">
+                          <CheckCircle2 className="sc-enrolled-icon" />
+                          Unlocked
+                        </div>
+                      )}
+                      <div className="sc-thumb-meta">
+                        <div className="sc-meta-chip">
+                          <Clock className="sc-meta-icon sc-meta-icon--red" />
+                          <span>{c.duration}</span>
+                        </div>
+                        <div className="sc-meta-chip">
+                          <Star className="sc-meta-icon sc-meta-icon--star" />
+                          <span className="sc-meta-rating">{c.rating}</span>
+                          <span className="sc-meta-count">({c.ratingCount})</span>
+                        </div>
+                      </div>
                     </div>
-                    {isUserEnrolled && (
-                      <div className="sc-enrolled-pill">
-                        <CheckCircle2 className="sc-enrolled-icon" />
-                        Unlocked
-                      </div>
-                    )}
-                    <div className="sc-thumb-meta">
-                      <div className="sc-meta-chip">
-                        <Clock className="sc-meta-icon sc-meta-icon--red" />
-                        <span>{c.duration}</span>
-                      </div>
-                      <div className="sc-meta-chip">
-                        <Star className="sc-meta-icon sc-meta-icon--star" />
-                        <span className="sc-meta-rating">{c.rating}</span>
-                        <span className="sc-meta-count">({c.ratingCount})</span>
-                      </div>
-                    </div>
-                  </div>
+                  </Link>
 
                   {/* Card Body */}
                   <div className="sc-body">
                     <div>
-                      <h3 className="sc-card-title">{c.title}</h3>
+                      <Link
+                        href={`/lms/courses/${c.slug}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="sc-title-link"
+                      >
+                        <h3 className="sc-card-title">{c.title}</h3>
+                      </Link>
                       <p className="sc-card-overview">{c.overview}</p>
                       <div className="sc-highlights">
                         {c.highlights?.slice(0, 3).map((hl, idx) => (
@@ -487,15 +527,21 @@ function SelectCourseContent() {
                         <div className="sc-price-row">
                           <span className="sc-price-main">₹{c.price.toLocaleString("en-IN")}</span>
                           <span className="sc-price-orig">₹{c.originalPrice.toLocaleString("en-IN")}</span>
-                          <span className="sc-save-tag">Save 56%</span>
+                          {discountPercent > 0 && (
+                            <span className="sc-save-tag">Save {discountPercent}%</span>
+                          )}
                         </div>
                       </div>
-                      <div className="sc-card-actions">
+                      <div className="sc-card-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
-                          onClick={() => handleAddToCart(c)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(c);
+                          }}
                           disabled={isInCart || isUserEnrolled}
                           className="sc-btn sc-btn--ghost"
+                          title={isInCart ? "Course in cart" : "Add to cart"}
                         >
                           {isInCart || isUserEnrolled
                             ? <CheckCircle2 className="sc-btn-icon sc-btn-icon--green" />
@@ -504,13 +550,20 @@ function SelectCourseContent() {
                           {isUserEnrolled ? "Enrolled" : isInCart ? "In cart" : "Add to cart"}
                         </button>
                         {isUserEnrolled ? (
-                          <Link href={`/lms/classroom/${c.slug}`} className="sc-btn sc-btn--green">
+                          <Link
+                            href={`/lms/classroom/${c.slug}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="sc-btn sc-btn--green"
+                          >
                             Open Class <ArrowRight className="sc-btn-icon" />
                           </Link>
                         ) : (
                           <button
                             type="button"
-                            onClick={() => handleSelectCourse(c)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectCourse(c);
+                            }}
                             className="sc-btn sc-btn--primary"
                           >
                             Enroll now <ArrowRight className="sc-btn-icon" />
@@ -935,6 +988,7 @@ function SelectCourseContent() {
         .sc-thumb-meta {
           position: absolute; bottom: 10px; left: 12px; right: 12px;
           display: flex; align-items: center; justify-content: space-between; gap: 6px;
+          z-index: 2;
         }
         .sc-meta-chip {
           display: inline-flex; align-items: center; gap: 5px;
@@ -947,6 +1001,31 @@ function SelectCourseContent() {
         .sc-meta-icon--star { color: #fbbf24; fill: #fbbf24; }
         .sc-meta-rating { font-weight: 700; color: #fff; }
         .sc-meta-count { font-size: 10px; color: #94a3b8; }
+
+        .sc-thumb-link { display: block; text-decoration: none; position: relative; }
+        .sc-thumb-preview-hover {
+          position: absolute; inset: 0;
+          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+          opacity: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px);
+          transition: opacity 0.25s ease; z-index: 5;
+        }
+        .sc-card:hover .sc-thumb-preview-hover { opacity: 1; }
+        .sc-thumb-play-circle {
+          width: 46px; height: 46px; border-radius: 50%;
+          background: #ffffff; color: #0f172a;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+          transform: scale(0.9); transition: transform 0.25s ease;
+        }
+        .sc-card:hover .sc-thumb-play-circle { transform: scale(1.06); }
+        .sc-thumb-play-icon { width: 20px; height: 20px; fill: #0f172a; margin-left: 2px; }
+        .sc-thumb-play-text {
+          font-size: 12px; font-weight: 800; color: #ffffff;
+          text-shadow: 0 1px 4px rgba(0,0,0,0.85); letter-spacing: 0.02em;
+        }
+
+        .sc-title-link { text-decoration: none; color: inherit; display: block; }
+        .sc-title-link:hover .sc-card-title { color: #a435f0; }
 
         .sc-body {
           display: flex; flex-direction: column; justify-content: space-between;

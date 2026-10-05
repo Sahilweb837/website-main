@@ -3,12 +3,14 @@
 export interface LMSCourse {
   slug: string;
   title: string;
+  subtitle?: string;
   category: "cloud" | "fullstack" | "ai" | "cyber" | "systems";
   price: number;
   originalPrice: number;
   fee?: number;
   rating: number;
   ratingCount: number;
+  learnersCount?: number;
   duration: string;
   level: string;
   badge: string;
@@ -19,6 +21,20 @@ export interface LMSCourse {
   instructorAvatar: string;
   image: string;
   overview: string;
+  breadcrumbs?: string[];
+  lastUpdated?: string;
+  language?: string;
+  subtitles?: string;
+  couponCode?: string;
+  previewVideoUrl?: string;
+  previewVideos?: Array<{
+    title: string;
+    duration: string;
+    videoUrl: string;
+  }>;
+  whatYouWillLearn?: string[];
+  requirements?: string[];
+  description?: string;
   tools?: string[];
   syllabus?: Array<{
     module: string;
@@ -27,6 +43,112 @@ export interface LMSCourse {
 }
 
 export const LMS_COURSES: LMSCourse[] = [
+  {
+    slug: "the-complete-agentic-ai-engineering-course",
+    title: "AI Engineer Agentic Track: The Complete Agent & MCP Course",
+    subtitle: "Master AI Agents in 30 days: build 8 real-world projects with OpenAI Agents SDK, CrewAI, LangGraph, AutoGen and MCP.",
+    category: "ai",
+    price: 459,
+    originalPrice: 799,
+    fee: 459,
+    rating: 4.7,
+    ratingCount: 49182,
+    learnersCount: 403098,
+    duration: "34.5 hrs • 248 lectures",
+    level: "All Levels",
+    badge: "Bestseller",
+    tagline: "OpenAI Agents SDK, CrewAI, LangGraph & MCP",
+    icon: "psychology",
+    hours: "34.5 hrs • 248 lectures",
+    instructor: "Ed Donner, Ligency",
+    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800",
+    overview: "Master AI Agents in 30 days: build 8 real-world projects with OpenAI Agents SDK, CrewAI, LangGraph, AutoGen and Model Context Protocol (MCP).",
+    breadcrumbs: ["Development", "Data Science", "AI Agents & Agentic AI"],
+    lastUpdated: "9/2026",
+    language: "English",
+    subtitles: "Arabic [Auto], Bulgarian [Auto], 32 more",
+    couponCode: "MT261005G1",
+    previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    previewVideos: [
+      {
+        title: "Course Overview & Agentic Roadmap",
+        duration: "05:14",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      },
+      {
+        title: "Introduction to Model Context Protocol (MCP)",
+        duration: "08:42",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      },
+      {
+        title: "Building your First Autonomous Agent with OpenAI Agents SDK",
+        duration: "14:20",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      },
+    ],
+    whatYouWillLearn: [
+      "Build real-world multi-agent architectures using OpenAI Agents SDK, CrewAI, LangGraph & AutoGen",
+      "Connect LLMs with real tools, APIs, and databases via the Model Context Protocol (MCP)",
+      "Design autonomous agent workflows with memory, reflection, planning, and tool orchestration",
+      "Deploy production-ready agents with tracing, observability, latency evaluation, and security guardrails",
+      "Create deterministic state machines with LangGraph for human-in-the-loop validation",
+      "Implement multi-turn autonomous coding agents and conversational customer support systems",
+    ],
+    requirements: [
+      "Basic understanding of Python programming (functions, loops, classes)",
+      "Curiosity about artificial intelligence, prompt engineering, and LLMs",
+      "No prior agentic AI or machine learning math background needed — we start from first principles",
+    ],
+    description: "The Complete Agentic AI Engineering Course is designed from the ground up to take you from foundational generative AI concepts to building robust, autonomous multi-agent production systems. Learn how OpenAI Agents SDK, CrewAI, LangGraph, and Model Context Protocol (MCP) work together to power next-generation software architectures.",
+    syllabus: [
+      {
+        module: "Section 1: Foundations of Agentic AI & The MCP Architecture",
+        lessons: [
+          "1. Welcome & Complete Agentic AI Roadmap (Preview available)",
+          "2. From Simple Prompts to Autonomous Reasoning Loops",
+          "3. The Model Context Protocol (MCP) Specification Deep Dive (Preview available)",
+          "4. Setting up Environment: Python 3.12, UV, and API Keys",
+        ],
+      },
+      {
+        module: "Section 2: OpenAI Agents SDK & Tool Calling in Practice",
+        lessons: [
+          "5. OpenAI Agents SDK Architecture & Core Primitives",
+          "6. Function Calling vs Tool Orchestration",
+          "7. Building our First Agent with Custom File I/O Tools",
+          "8. Error Recovery & Fallback Strategies",
+        ],
+      },
+      {
+        module: "Section 3: CrewAI Multi-Agent Collaborative Systems",
+        lessons: [
+          "9. Designing Specialized Agent Personas & Goals",
+          "10. Sequential vs Hierarchical Delegation Processes",
+          "11. Project: Autonomous Market Research & Lead Generation Crew",
+          "12. Connecting External MCP Server to CrewAI Workers",
+        ],
+      },
+      {
+        module: "Section 4: LangGraph State Graphs & Human-in-the-Loop",
+        lessons: [
+          "13. Nodes, Edges, State Reducers, and Conditional Routing",
+          "14. Persisting Agent State with Memory & Checkpointers",
+          "15. Implementing Human-in-the-Loop Approval Checkpoints",
+          "16. Project: Code Review & Automated GitHub PR Agent",
+        ],
+      },
+      {
+        module: "Section 5: Production Deployment, Tracing & Guardrails",
+        lessons: [
+          "17. Tracing with Langfuse & Arize Phoenix",
+          "18. Preventing Infinite Loops and Hallucination Guardrails",
+          "19. Dockerizing and Deploying Agents to Cloud Run / Kubernetes",
+          "20. Capstone Presentation & Certificate Verification",
+        ],
+      },
+    ],
+  },
   {
     slug: "production-kubernetes",
     title: "Production Kubernetes & Multi-Cloud Infrastructure",

@@ -358,7 +358,18 @@ export default function MyCoursesPage() {
                             lineHeight: 1.25,
                           }}
                         >
-                          {enrollment.course.title}
+                          <Link
+                            href={`/lms/courses/${enrollment.courseSlug}`}
+                            style={{
+                              color: "inherit",
+                              textDecoration: "none",
+                              transition: "color .2s",
+                            }}
+                            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = T.primary)}
+                            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = T.text)}
+                          >
+                            {enrollment.course.title}
+                          </Link>
                         </h2>
                         <p
                           style={{
@@ -439,19 +450,48 @@ export default function MyCoursesPage() {
 
                   {/* ── Lessons list ── */}
                   <div style={{ padding: 16 }}>
-                    <h3
+                    <div
                       style={{
-                        fontSize: 14,
-                        fontWeight: 800,
-                        color: T.text,
-                        margin: "4px 8px 12px",
                         display: "flex",
                         alignItems: "center",
-                        gap: 6,
+                        justifyContent: "space-between",
+                        marginBottom: 12,
                       }}
                     >
-                      <PlayCircle size={16} color={T.primary} /> Lessons
-                    </h3>
+                      <h3
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: T.text,
+                          margin: "4px 8px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <PlayCircle size={16} color={T.primary} /> Lessons
+                      </h3>
+                      <Link
+                        href={`/lms/courses/${enrollment.courseSlug}`}
+                        className="mc-btn-hover"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: T.primary,
+                          textDecoration: "none",
+                          padding: "5px 12px",
+                          borderRadius: T.radiusSm,
+                          border: `1px solid ${T.primary}33`,
+                          background: T.primarySoft,
+                          marginRight: 8,
+                        }}
+                      >
+                        <ArrowRight size={13} /> View Details
+                      </Link>
+                    </div>
                     <div
                       style={{
                         display: "flex",
