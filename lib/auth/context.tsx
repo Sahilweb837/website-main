@@ -18,7 +18,7 @@ export type AuthContextType = {
   isLoading: boolean;
   isAuthLoaded: boolean;
   enrolledCourses: string[];
-  enrollCourse: (courseSlug: string, paymentDetails?: any) => void;
+  enrollCourse: (courseSlug: string, paymentDetails?: Record<string, unknown>) => boolean;
   isEnrolled: (courseSlug: string) => boolean;
   loginWithPhone: (phone: string, redirectTo?: string) => Promise<void>;
   loginWithGoogle: (redirectTo?: string) => Promise<void>;
@@ -40,7 +40,19 @@ const DEMO_USER: AuthUser = {
 };
 
 const STORAGE_KEY = "lms_auth_user";
-const ENROLLED_KEY = "lms_enrolled_courses";
+const LEGACY_ENROLLED_KEY = "lms_enrolled_courses";
+
+function enrolledStorageKey(userId: string) {
+  return `lms_enrolled_courses_${userId}`;
+}
+
+function studentIdFor(identity: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < identity.length; index += 1) {
+    hash = Math.imul(hash ^ identity.charCodeAt(index), 16777619);
+  }
+  return `student-${(hash >>> 0).toString(36)}`;
+}
 
 function getStoredUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
@@ -51,21 +63,31 @@ function getStoredUser(): AuthUser | null {
       if (parsed && parsed.id) return parsed as AuthUser;
     }
     return null;
-  } catch {
+  } catch (error) {
+    console.error("Unable to load the saved student account.", error);
     return null;
   }
 }
 
-function getStoredEnrolled(): string[] {
-  if (typeof window === "undefined") return [];
+function getStoredEnrolled(userId: string | undefined): string[] {
+  if (typeof window === "undefined" || !userId) return [];
   try {
-    const raw = localStorage.getItem(ENROLLED_KEY);
+    const scopedKey = enrolledStorageKey(userId);
+    const scoped = localStorage.getItem(scopedKey);
+    const raw = scoped ?? (userId === DEMO_USER.id ? localStorage.getItem(LEGACY_ENROLLED_KEY) : null);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.every((slug) => typeof slug === "string")) {
+        if (!scoped) {
+          localStorage.setItem(scopedKey, JSON.stringify(parsed));
+          localStorage.removeItem(LEGACY_ENROLLED_KEY);
+        }
+        return parsed;
+      }
     }
     return [];
-  } catch {
+  } catch (error) {
+    console.error(`Unable to load course enrollments for ${userId}.`, error);
     return [];
   }
 }
@@ -82,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = getStoredUser();
     if (stored) setUser(stored);
 
-    const enrolled = getStoredEnrolled();
+    const enrolled = getStoredEnrolled(stored?.id);
     setEnrolledCourses(enrolled);
 
     setIsAuthLoaded(true);
@@ -97,30 +119,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     setUser(u);
+    setEnrolledCourses(u ? getStoredEnrolled(u.id) : []);
   };
 
-  const enrollCourse = (courseSlug: string, paymentDetails?: any) => {
-    setEnrolledCourses((prev) => {
-      if (prev.includes(courseSlug)) return prev;
-      const updated = [...prev, courseSlug];
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem(ENROLLED_KEY, JSON.stringify(updated));
-          if (paymentDetails) {
-            localStorage.setItem(
-              `lms_payment_${courseSlug}`,
-              JSON.stringify({
-                ...paymentDetails,
-                enrolledAt: new Date().toISOString(),
-              })
-            );
-          }
-        } catch (e) {
-          console.error("Error storing enrollment:", e);
-        }
+  const enrollCourse = (courseSlug: string, paymentDetails?: Record<string, unknown>) => {
+    if (!user) {
+      console.error("A signed-in student is required to save a course enrollment.");
+      return false;
+    }
+    if (enrolledCourses.includes(courseSlug)) return true;
+    const updated = [...enrolledCourses, courseSlug];
+    try {
+      if (paymentDetails) {
+        localStorage.setItem(
+          `lms_payment_${user.id}_${courseSlug}`,
+          JSON.stringify({
+            ...paymentDetails,
+            enrolledAt: new Date().toISOString(),
+          })
+        );
       }
-      return updated;
-    });
+      localStorage.setItem(enrolledStorageKey(user.id), JSON.stringify(updated));
+      setEnrolledCourses(updated);
+      return true;
+    } catch (error) {
+      console.error(`Unable to save enrollment for ${courseSlug}.`, error);
+      return false;
+    }
   };
 
   const isEnrolled = (courseSlug: string) => {
@@ -132,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await new Promise((r) => setTimeout(r, 500));
       persistUser({
-        id: `phone-${phone}`,
+        id: studentIdFor(`phone:${phone.replace(/\D/g, "")}`),
         name: `Student ${phone.slice(-4)}`,
         email: null,
         phone,
@@ -150,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await new Promise((r) => setTimeout(r, 500));
       persistUser({
-        id: "google-001",
+        id: studentIdFor("google:student@gmail.com"),
         name: "Google Student",
         email: "student@gmail.com",
         phone: null,
@@ -171,8 +196,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await new Promise((r) => setTimeout(r, 500));
       const displayName = userData.name?.trim() || (userData.email ? userData.email.split("@")[0] : "Student");
+      const identity = userData.email?.trim().toLowerCase()
+        || userData.phone?.replace(/\D/g, "")
+        || `anonymous:${Date.now()}`;
       persistUser({
-        id: `stu-${Date.now()}`,
+        id: studentIdFor(identity),
         name: displayName,
         email: userData.email?.trim() || null,
         phone: userData.phone?.trim() || null,
@@ -211,7 +239,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistUser(null);
     setEnrolledCourses([]);
     if (typeof window !== "undefined") {
-      localStorage.removeItem(ENROLLED_KEY);
       localStorage.removeItem("auth_token");
     }
     router.push("/login");

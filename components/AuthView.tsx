@@ -11,7 +11,14 @@ interface AuthViewProps {
 
 function AuthForm({ initialMode = "login" }: AuthViewProps) {
   const searchParams = useSearchParams();
-  const { loginWithGoogle, loginAsDemo, loginWithCredentials, isLoading } = useAuth();
+  const {
+    loginWithGoogle,
+    loginAsDemo,
+    loginWithCredentials,
+    isLoading,
+    enrolledCourses,
+    isAuthLoaded,
+  } = useAuth();
 
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [mounted, setMounted] = useState(false);
@@ -28,7 +35,8 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
   const [successText, setSuccessText] = useState<string | null>(null);
 
   const redirectParam = searchParams.get("redirect");
-  const targetRedirect = redirectParam || "/lms/select-course";
+  const targetRedirect =
+    redirectParam || (isAuthLoaded && enrolledCourses.length > 0 ? "/lms/dashboard" : "/lms/select-course");
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 350);
@@ -362,7 +370,7 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
             </div>
             <button
               type="button"
-              onClick={() => loginAsDemo()}
+              onClick={() => loginAsDemo(targetRedirect)}
               disabled={isLoading || isSubmitting}
               style={{
                 flexShrink: 0, padding: "8px 16px",
@@ -386,7 +394,7 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
             {[
               {
-                label: "Google", onClick: () => loginWithGoogle(),
+                label: "Google", onClick: () => loginWithGoogle(targetRedirect),
                 icon: (
                   <svg width="16" height="16" viewBox="0 0 24 24">
                     <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"/>
@@ -397,7 +405,7 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
                 )
               },
               {
-                label: "GitHub", onClick: () => loginAsDemo(),
+                label: "GitHub", onClick: () => loginAsDemo(targetRedirect),
                 icon: (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"/>
@@ -463,7 +471,7 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
                   border: "1px solid #e5e7eb", fontSize: "12px",
                   fontFamily: "'Sora', sans-serif", outline: "none"
                 }} />
-                <button type="button" onClick={() => loginAsDemo()} style={{
+                <button type="button" onClick={() => loginAsDemo(targetRedirect)} style={{
                   padding: "8px 16px", borderRadius: "8px", border: "none",
                   background: "#ff5532", color: "#fff", fontSize: "12px",
                   fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", cursor: "pointer"

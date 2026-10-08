@@ -4,9 +4,10 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { COURSES } from "@/data/courses";
 import { LMS_COURSES } from "@/data/lms-courses";
-import { DEFAULT_LESSONS, type Lesson } from "@/data/lms-data";
+import { DEFAULT_ENROLLMENTS, DEFAULT_LESSONS, type Lesson } from "@/data/lms-data";
 import SecureLMSGuard from "@/components/lms/SecureLMSGuard";
 import { useAuth } from "@/lib/auth/context";
+import { readCourseProgress, writeCourseProgress } from "@/lib/lms-progress";
 import PaymentCheckoutModal from "@/components/lms/PaymentCheckoutModal";
 import { ClassroomSkeleton } from "@/components/lms/CourseSkeleton";
 import { api } from "@/lib/api";
@@ -215,6 +216,7 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
   const [completedLessons, setCompletedLessons] = useState<string[]>(() => {
     return lessons.filter((l) => l.completed).map((l) => l.id);
   });
+  const [progressLoaded, setProgressLoaded] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"notes" | "exercise" | "mentor" | "live">("notes");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -226,6 +228,48 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
       time: "2 hours ago",
     },
   ]);
+
+  useEffect(() => {
+    if (!isAuthLoaded || !user) return;
+    const saved = readCourseProgress(user.id, slug);
+    const validLessonIds = new Set(lessons.map((lesson) => lesson.id));
+    const savedLessonId =
+      saved?.currentLessonId && validLessonIds.has(saved.currentLessonId)
+        ? saved.currentLessonId
+        : null;
+    const seededEnrollment = DEFAULT_ENROLLMENTS.find(
+      (enrollment) => enrollment.userId === user.id && enrollment.courseSlug === slug,
+    );
+    const initialCompleted = saved
+      ? saved.completedLessons.filter((lessonId) => validLessonIds.has(lessonId))
+      : lessons
+          .slice(
+            0,
+            seededEnrollment
+              ? Math.ceil((seededEnrollment.progress / 100) * lessons.length)
+              : 0,
+          )
+          .map((lesson) => lesson.id);
+
+    setCompletedLessons(initialCompleted);
+    const initialLesson = initialLessonId && validLessonIds.has(initialLessonId)
+      ? initialLessonId
+      : lessons.find((lesson) => !initialCompleted.includes(lesson.id))?.id ?? lessons[0]?.id;
+    const nextLesson = initialLessonId && validLessonIds.has(initialLessonId)
+      ? initialLessonId
+      : savedLessonId ?? initialLesson;
+    if (nextLesson) setCurrentLessonId(nextLesson);
+    setProgressLoaded(true);
+  }, [initialLessonId, isAuthLoaded, lessons, slug, user]);
+
+  useEffect(() => {
+    if (!progressLoaded || !user) return;
+    try {
+      writeCourseProgress(user.id, slug, { completedLessons, currentLessonId });
+    } catch {
+      setProgressLoaded(false);
+    }
+  }, [completedLessons, currentLessonId, progressLoaded, slug, user]);
 
   const activeLesson = lessons.find((l) => l.id === currentLessonId) || lessons[0];
   const activeIndex = lessons.findIndex((l) => l.id === currentLessonId);

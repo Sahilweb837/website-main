@@ -4,12 +4,15 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/context";
+import { LMS_COURSES } from "@/data/lms-courses";
+import { DEFAULT_ENROLLMENTS, DEFAULT_LESSONS } from "@/data/lms-data";
+import { getProgressPercent, readCourseProgress } from "@/lib/lms-progress";
 import {
   ArrowLeft, BadgeCheck, Camera, Trash2, Edit, X, Save,
   User as UserIcon, Award, Settings, LifeBuoy, Shield,
   BookOpen, Clock, Flame, Trophy, School, LayoutDashboard,
   Share2, Download, Copy, Lock, KeyRound, LogOut,
-  MessageCircle, Headphones, CheckCircle2, Verified,
+  MessageCircle, Headphones, CheckCircle2,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────
@@ -64,31 +67,12 @@ const AVATAR_PRESETS = [
   "https://api.dicebear.com/7.x/fun-emoji/svg?seed=engineer-aarav",
 ];
 
-const CERTIFICATES = [
-  {
-    id: "CERT-NC-8821",
-    title: "Docker & Kubernetes Cloud Architecture (Production Ready)",
-    issuedDate: "Sept 20, 2026",
-    grade: "Grade A+ (Distinction)",
-    skills: ["Docker", "Kubernetes", "Helm", "Multi-zone HA"],
-    status: "Verified On-Chain",
-  },
-  {
-    id: "CERT-NC-7419",
-    title: "Full-Stack React 19 & Next.js Server Components",
-    issuedDate: "Aug 14, 2026",
-    grade: "Score: 98/100",
-    skills: ["React 19", "Server Actions", "Streaming SSR", "Tailwind"],
-    status: "Verified On-Chain",
-  },
-];
-
 function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "profile";
 
-  const { user, isAuthenticated, isAuthLoaded, updateUser, logout } = useAuth();
+  const { user, isAuthenticated, isAuthLoaded, enrolledCourses, updateUser, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
     "profile" | "certificates" | "settings" | "help"
@@ -116,6 +100,15 @@ function ProfileContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [learningPreferences, setLearningPreferences] = useState({
+    classReminders: true,
+    assignmentReminders: true,
+    communityUpdates: false,
+  });
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [preferencesError, setPreferencesError] = useState("");
+  const [courseProgress, setCourseProgress] = useState<Record<string, number>>({});
+  const [certificateMessage, setCertificateMessage] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -131,6 +124,80 @@ function ProfileContent() {
       setPhone("+91 98765 43210");
     }
   }, [user]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "settings" || tab === "help" || tab === "certificates" || tab === "profile") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!user) {
+      setCourseProgress({});
+      return;
+    }
+    const userEnrollments = DEFAULT_ENROLLMENTS.filter((enrollment) => enrollment.userId === user.id);
+    const slugs = Array.from(new Set([...enrolledCourses, ...userEnrollments.map((enrollment) => enrollment.courseSlug)]));
+    const progress = Object.fromEntries(slugs.map((slug) => {
+      const course = LMS_COURSES.find((item) => item.slug === slug);
+      const seeded = userEnrollments.find((enrollment) => enrollment.courseSlug === slug);
+      const totalLessons = course?.syllabus?.reduce((count, module) => count + module.lessons.length, 0)
+        || DEFAULT_LESSONS[slug]?.length
+        || seeded?.course.syllabus.length
+        || 0;
+      const saved = readCourseProgress(user.id, slug);
+      const percent = saved
+        ? getProgressPercent(saved.completedLessons, totalLessons)
+        : seeded?.progress ?? 0;
+      return [slug, percent];
+    }));
+    setCourseProgress(progress);
+  }, [enrolledCourses, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const stored = localStorage.getItem(`lms_preferences_${user.id}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setLearningPreferences((current) => ({
+          ...current,
+          classReminders: parsed.classReminders ?? current.classReminders,
+          assignmentReminders: parsed.assignmentReminders ?? current.assignmentReminders,
+          communityUpdates: parsed.communityUpdates ?? current.communityUpdates,
+        }));
+      }
+    } catch (error) {
+      console.error("Unable to load student learning preferences.", error);
+      setPreferencesError("We couldn’t load your saved preferences. You can still update them in this session.");
+    } finally {
+      setPreferencesLoaded(true);
+    }
+  }, [user]);
+
+  const updateLearningPreference = (
+    preference: keyof typeof learningPreferences,
+    enabled: boolean,
+  ) => {
+    if (!user) return;
+    const updated = { ...learningPreferences, [preference]: enabled };
+    setLearningPreferences(updated);
+    try {
+      localStorage.setItem(`lms_preferences_${user.id}`, JSON.stringify(updated));
+      setPreferencesError("");
+    } catch (error) {
+      console.error("Unable to save student learning preferences.", error);
+      setPreferencesError("Your browser couldn’t save this preference. Please check available storage and try again.");
+    }
+  };
+
+  const selectTab = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    router.replace(tab === "profile" ? "/lms/profile" : `/lms/profile?tab=${tab}`, {
+      scroll: false,
+    });
+  };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -181,6 +248,55 @@ function ProfileContent() {
     setTimeout(() => setSaveSuccess(false), 3500);
   };
 
+  const studentEnrollments = DEFAULT_ENROLLMENTS.filter((enrollment) => enrollment.userId === user?.id);
+  const certificateRecords = Array.from(new Set([
+    ...enrolledCourses,
+    ...studentEnrollments.map((enrollment) => enrollment.courseSlug),
+  ])).map((slug) => {
+    const course = LMS_COURSES.find((item) => item.slug === slug);
+    const seeded = studentEnrollments.find((enrollment) => enrollment.courseSlug === slug);
+    const progress = courseProgress[slug] ?? 0;
+    return {
+      id: `LOCAL-${slug}`,
+      slug,
+      title: course?.title ?? seeded?.course.title ?? slug,
+      grade: `${progress}% complete`,
+      skills: (course?.tools ?? seeded?.course.tools ?? []).slice(0, 4),
+      status: progress === 100 ? "Completed · local preview" : "In progress",
+      progress,
+    };
+  });
+  const completedCertificates = certificateRecords.filter((certificate) => certificate.progress === 100);
+
+  const downloadCertificate = (certificate: (typeof certificateRecords)[number]) => {
+    const escapeXml = (value: string) => value.replace(/[<>&'"]/g, (character) => ({
+      "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;",
+    } as Record<string, string>)[character] ?? character);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="840" viewBox="0 0 1200 840"><rect width="1200" height="840" fill="#fffaf8"/><rect x="35" y="35" width="1130" height="770" rx="28" fill="none" stroke="#ff5532" stroke-width="4"/><text x="600" y="190" text-anchor="middle" fill="#ff5532" font-family="Arial,sans-serif" font-size="30" font-weight="700">NETCODER TECHNOLOGY</text><text x="600" y="300" text-anchor="middle" fill="#172033" font-family="Arial,sans-serif" font-size="48" font-weight="700">Course Completion Preview</text><text x="600" y="395" text-anchor="middle" fill="#637083" font-family="Arial,sans-serif" font-size="24">Completion recorded on this device for</text><text x="600" y="465" text-anchor="middle" fill="#172033" font-family="Arial,sans-serif" font-size="38" font-weight="700">${escapeXml(user?.name ?? "Student")}</text><text x="600" y="540" text-anchor="middle" fill="#637083" font-family="Arial,sans-serif" font-size="22">Course</text><text x="600" y="600" text-anchor="middle" fill="#172033" font-family="Arial,sans-serif" font-size="28" font-weight="700">${escapeXml(certificate.title)}</text><text x="600" y="700" text-anchor="middle" fill="#637083" font-family="Arial,sans-serif" font-size="16">Local milestone ID: ${escapeXml(certificate.id)} · Not an issued or verified credential</text></svg>`;
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${certificate.slug}-certificate.svg`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const shareTranscript = async () => {
+    if (!completedCertificates.length) {
+      setCertificateMessage("Complete a course to earn and share your first certificate.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(
+        completedCertificates.map(({ title, id }) => `${title} — ${id}`).join("\n"),
+      );
+      setCertificateMessage("Your earned certificate details have been copied.");
+    } catch (error) {
+      console.error("Unable to copy the certificate transcript.", error);
+      setCertificateMessage("Clipboard access is unavailable. Please copy your certificate ID from its card.");
+    }
+  };
+
   const TABS: {
     key: typeof activeTab;
     label: string;
@@ -193,7 +309,7 @@ function ProfileContent() {
       },
       {
         key: "certificates",
-        label: "Certificates & Milestones (2)",
+        label: `Certificates & Milestones (${certificateRecords.length})`,
         icon: <Award size={16} />,
       },
       {
@@ -354,7 +470,7 @@ function ProfileContent() {
                   background: T.primary,
                 }}
               />
-              DRM Encrypted Student Account
+              Student learning profile
             </span>
             <span
               style={{
@@ -366,8 +482,8 @@ function ProfileContent() {
                 fontWeight: 600,
               }}
             >
-              <Verified size={14} color={T.primary} />
-              Laravel API Synchronized
+              <BookOpen size={14} color={T.primary} />
+              Course progress and certificates
             </span>
           </div>
         </div>
@@ -495,7 +611,7 @@ function ProfileContent() {
                   border: "1px solid rgba(255,255,255,.25)",
                 }}
               >
-                Cohort 14 • Advanced Track
+                Netcoder Technology • Student
               </span>
               <span
                 style={{
@@ -507,7 +623,7 @@ function ProfileContent() {
                   fontWeight: 600,
                 }}
               >
-                <BadgeCheck size={14} /> Pass ID: #NC-STU-4912
+                <BadgeCheck size={14} /> Student ID: {user?.id ?? "—"}
               </span>
             </div>
 
@@ -519,7 +635,7 @@ function ProfileContent() {
                 fontSize: 13,
               }}
             >
-              Enrolled Since August 2026 • Verified Engineering Candidate
+              Your courses, progress, and certificates in one place.
             </div>
           </div>
 
@@ -652,7 +768,6 @@ function ProfileContent() {
                     >
                       {name}
                     </h1>
-                    <Verified size={20} color={T.primary} />
                   </div>
                   <p
                     style={{
@@ -667,9 +782,6 @@ function ProfileContent() {
                   >
                     <span>{email}</span>
                     <span>•</span>
-                    <span style={{ color: T.primary, fontWeight: 700 }}>
-                      Level 4 Explorer
-                    </span>
                   </p>
                 </div>
               </div>
@@ -842,29 +954,29 @@ function ProfileContent() {
             icon={<BookOpen size={20} />}
             tint={T.primarySoft}
             color={T.primary}
-            value="3"
-            label="Active Courses"
+            value={`${certificateRecords.length}`}
+            label="Enrolled Courses"
           />
           <MiniStat
             icon={<Clock size={20} />}
             tint={T.successSoft}
             color={T.success}
-            value="18.4 hrs"
-            label="Dedicated This Week"
+            value="—"
+            label="Study Hours Tracked"
           />
           <MiniStat
             icon={<Flame size={20} />}
             tint={T.warningSoft}
             color={T.warning}
-            value="14 Days"
-            label="Unbroken Streak"
+            value="—"
+            label="Learning Streak"
           />
           <MiniStat
             icon={<Trophy size={20} />}
             tint={T.primarySoft}
             color={T.primary}
-            value="2 Certified"
-            label="Micro-Credentials"
+            value={`${completedCertificates.length}`}
+            label="Certificates Earned"
           />
         </div>
 
@@ -886,7 +998,7 @@ function ProfileContent() {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => selectTab(tab.key)}
                 className="pf-tab"
                 style={{
                   display: "inline-flex",
@@ -1329,7 +1441,7 @@ function ProfileContent() {
                     color: T.text,
                   }}
                 >
-                  Verified Micro-Credentials & Course Certifications
+                  Certificates & course milestones
                 </h2>
                 <p
                   style={{
@@ -1338,12 +1450,12 @@ function ProfileContent() {
                     margin: "4px 0 0",
                   }}
                 >
-                  Credentials issued upon 100% completion of course curriculum
-                  and capstone defense.
+                  Progress is saved on this device. Completion downloads are previews until the course issuing service is connected.
                 </p>
               </div>
               <button
                 type="button"
+                onClick={shareTranscript}
                 className="pf-btn-hover"
                 style={{
                   display: "inline-flex",
@@ -1363,16 +1475,29 @@ function ProfileContent() {
               >
                 <Share2 size={15} /> Share Transcript
               </button>
+              {certificateMessage && (
+                <p role="status" style={{ width: "100%", margin: 0, color: T.textMuted, fontSize: 12 }}>
+                  {certificateMessage}
+                </p>
+              )}
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
                 gap: 20,
               }}
             >
-              {CERTIFICATES.map((cert) => (
+              {certificateRecords.length === 0 && (
+                <div style={{ gridColumn: "1 / -1", padding: 28, border: `1px solid ${T.border}`, borderRadius: T.radius, background: T.surface, textAlign: "center" }}>
+                  <BookOpen size={28} color={T.primary} />
+                  <h3 style={{ margin: "12px 0 6px", color: T.text }}>Your first milestone starts with a course</h3>
+                  <p style={{ margin: "0 0 16px", color: T.textMuted, fontSize: 13 }}>Explore the catalog and enroll to see course progress and milestones here.</p>
+                  <Link href="/lms/catalog" style={{ color: T.primary, fontWeight: 700, textDecoration: "none" }}>Explore courses <ArrowLeft size={14} style={{ transform: "rotate(180deg)", verticalAlign: "middle" }} /></Link>
+                </div>
+              )}
+              {certificateRecords.map((cert) => (
                 <div
                   key={cert.id}
                   className="pf-card-hover"
@@ -1407,15 +1532,15 @@ function ProfileContent() {
                         style={{
                           padding: "4px 10px",
                           borderRadius: 999,
-                          background: T.successSoft,
-                          color: T.success,
+                          background: cert.progress === 100 ? T.successSoft : T.primarySoft,
+                          color: cert.progress === 100 ? T.success : T.primaryDeep,
                           fontSize: 10,
                           fontWeight: 800,
                           textTransform: "uppercase",
                           letterSpacing: ".05em",
                         }}
                       >
-                        {cert.status}
+                        {cert.progress === 100 ? <CheckCircle2 size={12} style={{ verticalAlign: "middle" }} /> : <Lock size={11} style={{ verticalAlign: "middle" }} />} {cert.status}
                       </span>
                       <span
                         style={{
@@ -1449,9 +1574,9 @@ function ProfileContent() {
                         color: T.textMuted,
                       }}
                     >
-                      <span>Issued: {cert.issuedDate}</span>
+                      <span>{cert.progress === 100 ? "Course completed" : "Progress"}: {cert.progress}%</span>
                       <span>•</span>
-                      <span style={{ color: T.success, fontWeight: 700 }}>
+                      <span style={{ color: cert.progress === 100 ? T.success : T.textMuted, fontWeight: 700 }}>
                         {cert.grade}
                       </span>
                     </div>
@@ -1492,56 +1617,28 @@ function ProfileContent() {
                       flexWrap: "wrap",
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        alert(`Certificate #${cert.id} opened for verification.`)
-                      }
-                      className="pf-btn-hover"
-                      style={{
-                        flex: 1,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        height: 40,
-                        borderRadius: T.radiusSm,
-                        background: T.primary,
-                        color: "#fff",
-                        border: "none",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      <Download size={15} /> Download PDF
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        alert(
-                          `Copy credential URL: https://netcoder.in/verify/${cert.id}`
-                        )
-                      }
-                      style={{
-                        height: 40,
-                        padding: "0 16px",
-                        borderRadius: T.radiusSm,
-                        background: T.surface,
-                        color: T.text,
-                        border: `1px solid ${T.border}`,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <Copy size={14} /> Verify
-                    </button>
+                    {cert.progress === 100 ? (
+                      <>
+                        <button type="button" onClick={() => downloadCertificate(cert)} className="pf-btn-hover" style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, height: 40, borderRadius: T.radiusSm, background: T.primary, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                          <Download size={15} /> Download certificate preview
+                        </button>
+                        <button type="button" onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(cert.id);
+                            setCertificateMessage("Certificate ID copied.");
+                          } catch (error) {
+                            console.error("Unable to copy the certificate ID.", error);
+                            setCertificateMessage("Clipboard access is unavailable.");
+                          }
+                        }} style={{ height: 40, padding: "0 16px", borderRadius: T.radiusSm, background: T.surface, color: T.text, border: `1px solid ${T.border}`, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          <Copy size={14} /> Copy ID
+                        </button>
+                      </>
+                    ) : (
+                      <Link href={`/lms/courses/${cert.slug}`} style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, height: 40, borderRadius: T.radiusSm, background: T.primarySoft, color: T.primaryDeep, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+                        <BookOpen size={15} /> Continue course
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1584,8 +1681,7 @@ function ProfileContent() {
                   margin: "4px 0 0",
                 }}
               >
-                Manage your password, active login sessions, and DRM device
-                certificates.
+                Manage your learning reminders and account access.
               </p>
             </div>
 
@@ -1594,7 +1690,7 @@ function ProfileContent() {
               iconColor={T.success}
               iconBg={T.successSoft}
               title="DRM Zero-Leak Device Certificate"
-              sub="Authorized hardware: Windows NT 10.0 • Browser ID #8841-NETC"
+              sub="Your course sessions are protected on this browser."
               action={
                 <span
                   style={{
@@ -1615,14 +1711,11 @@ function ProfileContent() {
               icon={<KeyRound size={20} />}
               iconColor={T.primary}
               iconBg={T.primarySoft}
-              title="Student Login Password"
-              sub="Last updated 14 days ago. Strong password recommended."
+              title="Sign-in account"
+              sub={user?.email || user?.phone || "Your student sign-in account"}
               action={
-                <button
-                  type="button"
-                  onClick={() =>
-                    alert("Password reset link sent to your registered email.")
-                  }
+                <a
+                  href={`mailto:hello@netcoder.in?subject=${encodeURIComponent("Help with my student account")}`}
                   style={{
                     height: 36,
                     padding: "0 16px",
@@ -1632,14 +1725,64 @@ function ProfileContent() {
                     border: `1px solid ${T.border}`,
                     fontSize: 12,
                     fontWeight: 700,
-                    cursor: "pointer",
                     fontFamily: "inherit",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    textDecoration: "none",
                   }}
                 >
-                  Change Password
-                </button>
+                  Contact support
+                </a>
               }
             />
+
+            <div
+              style={{
+                padding: 16,
+                borderRadius: T.radiusSm,
+                background: T.bg,
+                border: `1px solid ${T.border}`,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, color: T.text, fontSize: 14, fontWeight: 800 }}>
+                  Learning reminders
+                </h3>
+                <p style={{ margin: "4px 0 0", color: T.textMuted, fontSize: 12 }}>
+                  Choose which updates you want to see in your learning hub.
+                </p>
+              </div>
+              {preferencesLoaded && (
+                <>
+                  <SettingsToggle
+                    label="Live class reminders"
+                    description="Keep upcoming mentor sessions on your radar."
+                    checked={learningPreferences.classReminders}
+                    onChange={(enabled) => updateLearningPreference("classReminders", enabled)}
+                  />
+                  <SettingsToggle
+                    label="Assignment reminders"
+                    description="Get a nudge when a course task is coming up."
+                    checked={learningPreferences.assignmentReminders}
+                    onChange={(enabled) => updateLearningPreference("assignmentReminders", enabled)}
+                  />
+                  <SettingsToggle
+                    label="Community updates"
+                    description="Hear about discussions and study groups."
+                    checked={learningPreferences.communityUpdates}
+                    onChange={(enabled) => updateLearningPreference("communityUpdates", enabled)}
+                  />
+                </>
+              )}
+              {preferencesError && (
+                <p role="alert" style={{ margin: 0, color: T.danger, fontSize: 12 }}>
+                  {preferencesError}
+                </p>
+              )}
+            </div>
 
             <SettingsRow
               icon={<LogOut size={20} />}
@@ -1927,6 +2070,58 @@ function SettingsRow({
         </div>
       </div>
       {action}
+    </div>
+  );
+}
+
+function SettingsToggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+      <div>
+        <div style={{ color: T.text, fontSize: 12, fontWeight: 700 }}>{label}</div>
+        <div style={{ marginTop: 3, color: T.textMuted, fontSize: 11 }}>{description}</div>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        style={{
+          width: 44,
+          height: 25,
+          flex: "0 0 auto",
+          padding: 3,
+          border: "none",
+          borderRadius: 99,
+          background: checked ? T.primary : "#cbd0d9",
+          cursor: "pointer",
+          transition: "background .18s ease",
+        }}
+      >
+        <span
+          style={{
+            display: "block",
+            width: 19,
+            height: 19,
+            borderRadius: "50%",
+            background: "#fff",
+            boxShadow: "0 1px 3px rgba(0,0,0,.2)",
+            transform: checked ? "translateX(19px)" : "translateX(0)",
+            transition: "transform .18s ease",
+          }}
+        />
+      </button>
     </div>
   );
 }

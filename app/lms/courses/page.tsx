@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth/context";
 import { DEFAULT_ENROLLMENTS, DEFAULT_LESSONS } from "@/data/lms-data";
 import type { Lesson } from "@/data/lms-data";
+import { LMS_COURSES } from "@/data/lms-courses";
+import type { Course } from "@/types";
+import { getLearningStreak, getProgressPercent, readCourseProgress } from "@/lib/lms-progress";
 import {
   BookOpen, Clock, CheckCircle2, PlayCircle, Lock,
   ArrowRight, Flame, Trophy, GraduationCap,
@@ -54,23 +57,83 @@ const T = {
 
 export default function MyCoursesPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAuthLoaded, enrolledCourses } = useAuth();
+  const [learningStreak, setLearningStreak] = useState(0);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthLoaded && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthLoaded, isAuthenticated, router]);
+
+  useEffect(() => {
+    setLearningStreak(user ? getLearningStreak(user.id) : 0);
+  }, [user?.id]);
 
   if (!isAuthenticated || !user) return null;
 
-  const enrollments = DEFAULT_ENROLLMENTS.filter((e) => e.userId === user.id);
+  const seededEnrollments = DEFAULT_ENROLLMENTS.filter((enrollment) => enrollment.userId === user.id);
+  const courseSlugs = Array.from(new Set([...enrolledCourses, ...seededEnrollments.map((enrollment) => enrollment.courseSlug)]));
+  const enrollments = courseSlugs.flatMap((courseSlug) => {
+    const seeded = seededEnrollments.find((enrollment) => enrollment.courseSlug === courseSlug);
+    const lmsCourse = LMS_COURSES.find((course) => course.slug === courseSlug);
+    const course: Course | null = lmsCourse ? {
+      slug: lmsCourse.slug,
+      title: lmsCourse.title,
+      category: lmsCourse.category,
+      categoryId: lmsCourse.category,
+      type: "online",
+      duration: lmsCourse.duration,
+      level: lmsCourse.level,
+      image: lmsCourse.image,
+      overview: lmsCourse.overview,
+      highlights: lmsCourse.whatYouWillLearn ?? [],
+      syllabus: lmsCourse.syllabus?.map((module) => ({
+        module: module.module,
+        title: module.module,
+        desc: module.lessons.join(", "),
+      })) ?? [],
+      tools: lmsCourse.tools ?? [],
+      careers: [],
+    } : seeded?.course ?? null;
+    if (!course) return [];
+    let lessonNumber = 0;
+    const classroomLessons: Lesson[] = lmsCourse?.syllabus?.length
+      ? lmsCourse.syllabus.flatMap((module) => module.lessons.map((title) => {
+          lessonNumber += 1;
+          return { id: `les-${lessonNumber}`, title, duration: "25 mins", completed: false };
+        }))
+      : DEFAULT_LESSONS[courseSlug] ?? course.syllabus.map((module, index) => ({
+          id: `mod-${index + 1}`,
+          title: module.title,
+          duration: "25 mins",
+          completed: false,
+        })) ?? [];
+    const saved = readCourseProgress(user.id, courseSlug);
+    const seededCompleted = seeded
+      ? classroomLessons.slice(0, Math.ceil((seeded.progress / 100) * classroomLessons.length)).map((lesson) => lesson.id)
+      : [];
+    const completedLessons = saved?.completedLessons ?? seededCompleted;
+    const currentLessonCandidate = saved?.currentLessonId ?? seeded?.currentLessonId;
+    return [{
+      id: `en-${courseSlug}`,
+      userId: user.id,
+      courseSlug,
+      course,
+      enrollmentDate: seeded?.enrollmentDate ?? new Date().toISOString().slice(0, 10),
+      progress: saved
+        ? getProgressPercent(completedLessons, classroomLessons.length)
+        : seeded?.progress ?? 0,
+      completedLessons,
+      currentLessonId: currentLessonCandidate && classroomLessons.some((lesson) => lesson.id === currentLessonCandidate)
+        ? currentLessonCandidate
+        : classroomLessons.find((lesson) => !completedLessons.includes(lesson.id))?.id ?? classroomLessons[0]?.id ?? null,
+      lessons: classroomLessons,
+    }];
+  });
 
   /* Aggregate stats for the hero */
-  const totalLessons = enrollments.reduce((acc, en) => {
-    const lessons = DEFAULT_LESSONS[en.courseSlug] || [];
-    return acc + (lessons.length || en.course?.syllabus.length || 0);
-  }, 0);
+  const totalLessons = enrollments.reduce((acc, enrollment) => acc + enrollment.lessons.length, 0);
   const completedLessons = enrollments.reduce(
     (acc, en) => acc + en.completedLessons.length,
     0
@@ -160,8 +223,8 @@ export default function MyCoursesPage() {
                   margin: "2px 0 0",
                 }}
               >
-                {enrollments.length} active program
-                {enrollments.length === 1 ? "" : "s"} &bull; keep the streak alive
+                {enrollments.length} enrolled course
+                {enrollments.length === 1 ? "" : "s"} &bull; pick up where you left off
               </p>
             </div>
           </div>
@@ -223,8 +286,8 @@ export default function MyCoursesPage() {
               icon={<Flame size={20} />}
               tint={T.warningSoft}
               color={T.warning}
-              value="14 Days"
-              label="Unbroken Streak"
+              value={`${learningStreak} days`}
+              label="Learning Streak"
             />
           </div>
         )}
@@ -300,10 +363,9 @@ export default function MyCoursesPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {enrollments.map((enrollment) => {
               if (!enrollment.course) return null;
-              const lessons = DEFAULT_LESSONS[enrollment.courseSlug] || [];
+              const lessons = enrollment.lessons;
               const completedCount = enrollment.completedLessons.length;
-              const totalCount =
-                lessons.length || enrollment.course.syllabus.length;
+              const totalCount = lessons.length;
               const pct = Math.round(
                 (completedCount / Math.max(totalCount, 1)) * 100
               );

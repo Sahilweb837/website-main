@@ -1,5 +1,5 @@
-import ExploreCoursesPage from "@/app/lms/explore/page";
+import { redirect } from "next/navigation";
 
-export default function CourseCatalogRoute() {
-  return <ExploreCoursesPage />;
+export default function CourseCatalogPage() {
+  redirect("/lms/select-course#course-catalog");
 }

@@ -1,4 +1,4 @@
-"use client";
+c"use client";
 
 import { useState } from "react";
 import { COURSES } from "@/data/courses";

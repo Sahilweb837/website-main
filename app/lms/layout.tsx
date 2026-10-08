@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 
  
@@ -14,10 +14,10 @@ const navItems = [
   { label: "Dashboard", href: "/lms/dashboard", icon: "dashboard", matchExact: true },
   { label: "My Courses", href: "/lms/courses", icon: "menu_book", matchExact: false },
   { label: "Explore Catalog", href: "/lms/catalog", icon: "explore", matchExact: false },
-  { label: "Practice Arena", href: "/lms/dashboard#arena", icon: "terminal", matchExact: false },
-  { label: "Coding Challenges", href: "/lms/dashboard#challenges", icon: "code", matchExact: false },
-  { label: "Community Hub", href: "/lms/dashboard#community", icon: "forum", matchExact: false },
-  { label: "Certificates & Milestones", href: "/lms/profile", icon: "workspace_premium", matchExact: true },
+  { label: "Practice Arena", href: "/lms/practice", icon: "terminal", matchExact: true },
+  { label: "Coding Challenges", href: "/lms/challenges", icon: "code", matchExact: true },
+  { label: "Community Hub", href: "/lms/community", icon: "forum", matchExact: true },
+  { label: "Certificates & Milestones", href: "/lms/profile?tab=certificates", icon: "workspace_premium", matchExact: true },
 ];
 
  const S: Record<string, CSSProperties> = {
@@ -143,63 +143,6 @@ const navItems = [
     background: ACCENT_SOFT,
     color: ACCENT_DARK,
     fontWeight: 600,
-  },
-
-  streakCard: {
-    margin: "16px 0",
-    padding: 16,
-    borderRadius: 12,
-    background: "#f8f9ff",
-    border: "1px solid #e5eeff",
-    boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
-  },
-
-  streakTop: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-
-  streakTitle: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    fontWeight: 700,
-    fontSize: "0.9rem",
-  },
-
-  streakBadge: {
-    padding: "2px 8px",
-    borderRadius: 999,
-    background: "#d9f2dd",
-    color: "#004d1f",
-    fontSize: "0.65rem",
-    fontWeight: 700,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  },
-
-  streakText: {
-    fontSize: "0.75rem",
-    color: "#5c6169",
-    marginBottom: 10,
-  },
-
-  streakBar: {
-    width: "100%",
-    height: 6,
-    borderRadius: 999,
-    background: "#eef1f8",
-    overflow: "hidden",
-  },
-
-  streakFill: {
-    height: "100%",
-    width: "80%",
-    background: "#22a34a",
-    borderRadius: 999,
-    transition: "width 0.3s",
   },
 
   bottomBox: {
@@ -398,7 +341,9 @@ const navItems = [
 export default function LMSLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [courseCartCount, setCourseCartCount] = useState(0);
+  const [activeHash, setActiveHash] = useState("");
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, isAuthLoaded, logout } = useAuth();
 
   // Initialize desktop sidebar open state
@@ -407,6 +352,13 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
       setSidebarOpen(true);
     }
   }, []);
+
+  useEffect(() => {
+    const updateHash = () => setActiveHash(window.location.hash.slice(1));
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, [pathname]);
 
   // Auto-close drawer on mobile when navigating
   useEffect(() => {
@@ -645,10 +597,13 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
           {/* NAV */}
           <nav style={S.nav}>
             {navItems.map((item) => {
-              const isActive = item.matchExact
-                ? pathname === item.href
-                : pathname.startsWith(item.href.split("#")[0]) &&
-                item.href !== "/lms/dashboard";
+              const [itemPath] = item.href.split("#");
+              const isCertificates = item.href.includes("?tab=certificates");
+              const isActive = isCertificates
+                ? pathname === "/lms/profile" && searchParams.get("tab") === "certificates"
+                : item.matchExact
+                  ? pathname === itemPath
+                  : pathname.startsWith(itemPath);
 
               return (
                 <Link
@@ -669,19 +624,6 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          {/* STREAK CARD */}
-          <div style={S.streakCard}>
-            <div style={S.streakTop}>
-              <div style={S.streakTitle}>
-                <span>14 Days Streak</span>
-              </div>
-              <span style={S.streakBadge}>Active</span>
-            </div>
-            <p style={S.streakText}>Next milestone in 3 days</p>
-            <div style={S.streakBar}>
-              <div style={S.streakFill} />
-            </div>
-          </div>
         </div>
 
         {/* BOTTOM */}
@@ -766,7 +708,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
               className="lms-header-live"
               style={S.liveBtn}
               onClick={() => {
-                const el = document.getElementById("countdown-timer");
+                const el = document.getElementById("upcoming-classes");
                 if (el) el.scrollIntoView({ behavior: "smooth" });
               }}
             >

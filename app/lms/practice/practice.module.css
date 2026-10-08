@@ -1,0 +1,96 @@
+.page {
+  min-height: calc(100vh - 64px);
+  padding: 28px 22px 64px;
+  background: #f7f8fc;
+  color: #202a3e;
+  font-family: "Plus Jakarta Sans", "Sora", sans-serif;
+}
+
+.container { width: min(1050px, 100%); margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; color: #717c90; font-size: 11px; font-weight: 750; text-decoration: none; }
+.back:hover { color: #e35f41; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin: 22px 0 20px; }
+.eyebrow { color: #e56e51; font-size: 9px; font-weight: 900; letter-spacing: 1.2px; }
+.header h1 { margin: 6px 0; color: #1f293c; font-size: clamp(25px, 4vw, 34px); font-weight: 850; letter-spacing: -1.2px; line-height: 1.15; }
+.header p { margin: 0; color: #858fa1; font-size: 11px; line-height: 1.6; }
+.courseTag { display: inline-flex; max-width: 290px; align-items: center; gap: 7px; padding: 9px 11px; border: 1px solid #e6eaf1; border-radius: 10px; background: #fff; color: #667187; font-size: 9px; font-weight: 750; }
+.courseTag svg { flex: 0 0 auto; color: #e66d50; }
+.courseTag select { min-width: 0; max-width: 100%; border: 0; outline-color: #e7866c; background: transparent; color: inherit; font: inherit; }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding: 4px; border: 1px solid #e9ecf2; border-radius: 12px; background: #fff; }
+.tabs a { flex: 1; min-width: 130px; padding: 10px 13px; border-radius: 8px; color: #778195; font-size: 10px; font-weight: 800; text-align: center; text-decoration: none; }
+.tabs a:hover { background: #faf6f4; color: #d45f43; }
+.tabs a.tabActive { background: #fff0ea; color: #d95d40; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.stats article { display: grid; min-height: 72px; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-content: center; column-gap: 10px; padding: 13px; border: 1px solid #e8ebf1; border-radius: 13px; background: #fff; }
+.statIcon { display: grid; width: 34px; height: 34px; grid-row: span 2; place-items: center; border-radius: 10px; background: #fff2eb; color: #e37856; }
+.stats strong { align-self: end; color: #333e53; font-size: 13px; font-weight: 850; }
+.stats small { align-self: start; margin-top: 3px; color: #8c95a5; font-size: 8px; }
+.workspace { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 13px; align-items: start; }
+.challengeList,.problem { overflow: hidden; border: 1px solid #e8ebf1; border-radius: 15px; background: #fff; }
+.listHeader { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid #edf0f4; }
+.listHeader strong { color: #394359; font-size: 11px; font-weight: 850; }
+.listHeader span { display: grid; width: 21px; height: 21px; place-items: center; border-radius: 7px; background: #f2f4f8; color: #768196; font-size: 8px; font-weight: 800; }
+.challengeItem { position: relative; display: flex; width: 100%; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px 36px 14px 14px; border: 0; border-bottom: 1px solid #f0f1f5; background: #fff; text-align: left; cursor: pointer; }
+.challengeItem:last-child { border-bottom: 0; }
+.challengeItem:hover { background: #fcfaf9; }
+.challengeItem.challengeSelected { background: #fff7f3; box-shadow: inset 3px 0 #ef7654; }
+.challengeItem > strong { color: #3a455a; font-size: 10px; font-weight: 800; line-height: 1.4; }
+.challengeItem > small { color: #929aaa; font-size: 8px; }
+.level { display: inline-flex; align-items: center; padding: 4px 7px; border-radius: 5px; font-size: 7px; font-weight: 900; letter-spacing: .55px; text-transform: uppercase; }
+.easy { background: #eaf7ef; color: #408860; }
+.medium { background: #fff5e6; color: #b7813a; }
+.hard { background: #fff0ef; color: #c45d54; }
+.solvedMark { position: absolute; top: 50%; right: 12px; color: #45a374; transform: translateY(-50%); }
+.problem { padding: 20px; }
+.problemTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.problemTop > div { display: flex; align-items: center; gap: 9px; }
+.topic { color: #8992a2; font-size: 8px; }
+.reward { display: inline-flex; align-items: center; gap: 4px; color: #d09042; font-size: 8px; font-weight: 850; }
+.problem h2 { margin: 13px 0 8px; color: #2d384d; font-size: 18px; font-weight: 850; letter-spacing: -.4px; }
+.prompt { margin: 0; color: #6f7a8e; font-size: 10px; line-height: 1.75; }
+.hint { margin-top: 12px; padding: 9px 11px; border: 1px solid #eee9fb; border-radius: 9px; background: #faf9ff; color: #6d60a0; font-size: 9px; }
+.hint summary { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; cursor: pointer; }
+.hint p { margin: 8px 0 1px; color: #7f7898; line-height: 1.6; }
+.editorLabel { display: flex; align-items: center; justify-content: space-between; margin: 17px 0 7px; color: #485369; font-size: 9px; font-weight: 850; }
+.editorLabel span { color: #929aaa; font-size: 8px; font-weight: 700; }
+.problem textarea { display: block; width: 100%; min-height: 205px; resize: vertical; padding: 14px; border: 1px solid #2b3142; border-radius: 10px; outline: none; background: #1e2433; color: #e2e8f5; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; line-height: 1.7; tab-size: 2; }
+.problem textarea:focus { border-color: #8f7bdd; box-shadow: 0 0 0 3px rgba(138, 114, 209, .13); }
+.editorFooter { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.editorFooter > span { color: #939bab; font-size: 8px; }
+.editorFooter button,.resetButton,.solveButton { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border-radius: 8px; font-family: inherit; font-size: 8px; font-weight: 850; cursor: pointer; }
+.editorFooter button { border: 1px solid #e6e9ef; background: #fff; color: #69758b; }
+.problemActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 13px; }
+.resetButton { border: 1px solid #e7eaf0; background: #fff; color: #6d788c; }
+.solveButton { border: 1px solid #e96547; background: #ed6b4b; color: #fff; box-shadow: 0 4px 11px rgba(233, 101, 71, .18); }
+.resetButton:hover,.editorFooter button:hover { background: #f6f7fa; }
+.solveButton:hover { background: #dc5a3d; }
+.notice,.error { margin: 10px 0 0; font-size: 9px; }
+.notice { color: #35895f; }
+.error { color: #b94848; }
+.disclaimer { margin: 10px 0 0; color: #a1a7b2; font-size: 8px; line-height: 1.5; }
+.loading,.gate { display: flex; min-height: 55vh; align-items: center; flex-direction: column; justify-content: center; gap: 10px; padding: 24px; color: #7b8496; text-align: center; }
+.gate > svg { color: #e56c4e; }
+.gate h1 { margin: 0; color: #303a4e; font-size: 22px; }
+.gate p { margin: 0; font-size: 11px; }
+.gate a { display: inline-flex; align-items: center; gap: 7px; margin-top: 8px; padding: 11px 15px; border-radius: 9px; background: #ee6a4a; color: #fff; font-size: 10px; font-weight: 800; text-decoration: none; }
+
+@media(max-width:720px) {
+  .page { padding: 20px 14px 42px; }
+  .header { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .courseTag { max-width: 100%; }
+  .workspace { grid-template-columns: 1fr; }
+  .challengeList { display: grid; grid-template-columns: 1fr; }
+  .challengeItem { min-height: 78px; }
+}
+
+@media(max-width:440px) {
+  .page { padding: 16px 11px 34px; }
+  .stats { gap: 6px; }
+  .stats article { grid-template-columns: 1fr; min-height: 90px; gap: 4px; padding: 10px; }
+  .statIcon { width: 28px; height: 28px; grid-row: auto; }
+  .stats strong { font-size: 11px; }
+  .stats small { font-size: 7px; }
+  .problem { padding: 14px; }
+  .problem h2 { font-size: 16px; }
+  .problem textarea { min-height: 185px; font-size: 10px; }
+}
