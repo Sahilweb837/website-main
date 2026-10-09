@@ -1,10 +1,6 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import Script from "next/script";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import DemoModal from "@/components/DemoModal";
-import FloatingCTA from "@/components/FloatingCTA";
 import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata = {
@@ -118,11 +114,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <Header />
           <main className="spa-page-container">{children}</main>
-          <Footer />
-          <DemoModal />
-          <FloatingCTA />
         </AuthProvider>
 
         {/* ---------- External Libraries ---------- */}

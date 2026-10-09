@@ -99,10 +99,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const router = useRouter();
+  const navigateTarget = (redirectTo: string) => {
+    if (typeof window !== "undefined" && (redirectTo.startsWith("http://") || redirectTo.startsWith("https://"))) {
+      window.location.href = redirectTo;
+    } else {
+      router.push(redirectTo);
+    }
+  };
 
   useEffect(() => {
     const stored = getStoredUser();
-    if (stored) setUser(stored);
+    if (stored) {
+      setUser(stored);
+      if (typeof window !== "undefined") {
+        try {
+          const cookieVal = encodeURIComponent(JSON.stringify(stored));
+          document.cookie = `lms_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `lms_auth_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
+        } catch (e) {
+          console.error("Cookie sync error:", e);
+        }
+      }
+    }
 
     const enrolled = getStoredEnrolled(stored?.id);
     setEnrolledCourses(enrolled);
@@ -114,8 +132,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       if (u) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+        try {
+          const cookieVal = encodeURIComponent(JSON.stringify(u));
+          document.cookie = `lms_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `lms_auth_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
+        } catch (e) {
+          console.error("Cookie write error:", e);
+        }
       } else {
         localStorage.removeItem(STORAGE_KEY);
+        try {
+          document.cookie = "lms_user=; path=/; max-age=0; SameSite=Lax";
+          document.cookie = "lms_auth_user=; path=/; max-age=0; SameSite=Lax";
+        } catch (e) {
+          console.error("Cookie clear error:", e);
+        }
       }
     }
     setUser(u);
@@ -164,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: "student",
         avatar: null,
       });
-      router.push(redirectTo);
+      navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: "student",
         avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=google",
       });
-      router.push(redirectTo);
+      navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
     }
@@ -207,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: "student",
         avatar: null,
       });
-      router.push(redirectTo);
+      navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
     }
@@ -218,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await new Promise((r) => setTimeout(r, 500));
       persistUser(DEMO_USER);
-      router.push(redirectTo);
+      navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
     }

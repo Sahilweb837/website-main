@@ -12,6 +12,8 @@ interface AuthViewProps {
 function AuthForm({ initialMode = "login" }: AuthViewProps) {
   const searchParams = useSearchParams();
   const {
+    user,
+    logout,
     loginWithGoogle,
     loginAsDemo,
     loginWithCredentials,
@@ -34,7 +36,7 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successText, setSuccessText] = useState<string | null>(null);
 
-  const redirectParam = searchParams.get("redirect");
+  const redirectParam = searchParams.get("redirect") || searchParams.get("return_to");
   const targetRedirect =
     redirectParam || (isAuthLoaded && enrolledCourses.length > 0 ? "/lms/dashboard" : "/lms/select-course");
 
@@ -288,14 +290,99 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
               <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 2s ease-in-out infinite" }} />
               System Healthy
             </div>
-            <Link href="/" style={{ fontSize: "12px", fontWeight: 600, color: "#575757", textDecoration: "none", fontFamily: "'Space Grotesk', sans-serif" }}>
-              Home
-            </Link>
+            <a href="http://localhost:8000" style={{ fontSize: "12px", fontWeight: 600, color: "#ff5532", textDecoration: "none", fontFamily: "'Space Grotesk', sans-serif", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <i className="fa-solid fa-arrow-left" style={{ fontSize: "10px" }}></i> Back to Website
+            </a>
           </div>
         </div>
 
         {/* Form container */}
         <div style={{ maxWidth: "440px", width: "100%", margin: "0 auto", paddingTop: "16px", paddingBottom: "16px" }}>
+
+          {/* Active Session Card if user is already logged in */}
+          {user && isAuthLoaded && (
+            <div style={{
+              background: "linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)",
+              border: "1.5px solid #86efac",
+              borderRadius: "16px",
+              padding: "18px 20px",
+              marginBottom: "24px",
+              boxShadow: "0 4px 15px rgba(34,197,94,0.08)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                <div style={{
+                  width: "42px", height: "42px", borderRadius: "50%",
+                  background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "17px", fontWeight: 700,
+                  boxShadow: "0 2px 8px rgba(34,197,94,0.3)"
+                }}>
+                  {user.name ? user.name[0].toUpperCase() : "U"}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#15803d", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Active Student Session
+                  </div>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {user.name}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>
+                    {user.email || user.phone || "Logged in"}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <Link
+                  href={targetRedirect}
+                  style={{
+                    flex: "1 1 auto",
+                    padding: "9px 14px",
+                    background: "#22c55e",
+                    color: "#fff",
+                    borderRadius: "10px",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    textAlign: "center",
+                    boxShadow: "0 2px 8px rgba(34,197,94,0.3)"
+                  }}
+                >
+                  Open LMS Dashboard →
+                </Link>
+                <a
+                  href="http://localhost:8000"
+                  style={{
+                    padding: "9px 12px",
+                    background: "#f1f5f9",
+                    color: "#334155",
+                    borderRadius: "10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    textAlign: "center"
+                  }}
+                >
+                  Main Website
+                </a>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  style={{
+                    padding: "9px 12px",
+                    background: "#fef2f2",
+                    color: "#dc2626",
+                    border: "1px solid #fecaca",
+                    borderRadius: "10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Mode tabs */}
           <div style={{
