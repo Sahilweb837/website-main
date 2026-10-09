@@ -16,7 +16,6 @@ const ACCENT_DARK = "#c94f0e";
 const navItems = [
   { label: "Dashboard", href: "/lms/dashboard", icon: "dashboard", matchExact: true },
   { label: "My Courses", href: "/lms/courses", icon: "menu_book", matchExact: false },
-  { label: "Explore Catalog", href: "/lms/catalog", icon: "explore", matchExact: false },
   { label: "Practice Arena", href: "/lms/practice", icon: "terminal", matchExact: true },
   { label: "Coding Challenges", href: "/lms/challenges", icon: "code", matchExact: true },
   { label: "Community Hub", href: "/lms/community", icon: "forum", matchExact: true },
