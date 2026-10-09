@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     { key: "courses-list", label: "All Courses", href: "/admin/dashboard?tab=courses" },
     { key: "video-manager", label: "Video Manager", href: "/admin/dashboard?tab=videoManager", icon: Film },
   ]},
-  { key: "lms", label: "LMS & DRM", icon: Shield, href: "/admin/dashboard?tab=lms" },
+  { key: "lms", label: "LMS & DRM", icon: Shield, href: "/lms/select-course" },
   { key: "articles", label: "Articles", icon: FileText, href: "/admin/dashboard?tab=overview" },
   { key: "feedback", label: "Feedback", icon: MessageSquare, href: "/admin/dashboard?tab=feedback" },
 ];
@@ -113,33 +113,52 @@ export function Sidebar({ className = "" }: SidebarProps) {
               (item.children && item.children.some((child) => activeKey === child.key));
             const isExpanded = expandedItem === item.key;
             const hasChildren = item.children && item.children.length > 0;
+            const itemClassName = `
+              w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
+              ${isActive
+                ? "bg-orange-50 text-orange-600 shadow-sm shadow-orange-100"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}
+              ${isCollapsed && !hasChildren ? "justify-center" : ""}
+            `;
+            const itemContent = (
+              <>
+                <item.icon size={20} className="flex-shrink-0" aria-hidden="true" />
+                {!isCollapsed && (
+                  <span className="font-medium text-sm truncate">{item.label}</span>
+                )}
+                {!isCollapsed && hasChildren && (
+                  <span className="ml-auto transition-transform duration-200">
+                    {isExpanded ? <ChevronRight size={16} /> : <ChevronRight size={16} className="rotate-90" />}
+                  </span>
+                )}
+              </>
+            );
 
             return (
               <div key={item.key} className="group">
-                <button
-                  onClick={() => handleItemClick(item.key)}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
-                    ${isActive
-                      ? "bg-orange-50 text-orange-600 shadow-sm shadow-orange-100"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}
-                    ${isCollapsed && !hasChildren ? "justify-center" : ""}
-                  `}
-                  role="menuitem"
-                  aria-current={isActive ? "page" : undefined}
-                  aria-expanded={hasChildren ? isExpanded : undefined}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <item.icon size={20} className="flex-shrink-0" aria-hidden="true" />
-                  {!isCollapsed && (
-                    <span className="font-medium text-sm truncate">{item.label}</span>
-                  )}
-                  {!isCollapsed && hasChildren && (
-                    <span className="ml-auto transition-transform duration-200">
-                      {isExpanded ? <ChevronRight size={16} /> : <ChevronRight size={16} className="rotate-90" />}
-                    </span>
-                  )}
-                </button>
+                {hasChildren ? (
+                  <button
+                    onClick={() => handleItemClick(item.key)}
+                    className={itemClassName}
+                    role="menuitem"
+                    aria-current={isActive ? "page" : undefined}
+                    aria-expanded={isExpanded}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    {itemContent}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={closeMobileSidebar}
+                    className={itemClassName}
+                    role="menuitem"
+                    aria-current={isActive ? "page" : undefined}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    {itemContent}
+                  </Link>
+                )}
 
                 {/* Sub-menu */}
                 {!isCollapsed && hasChildren && isExpanded && (
