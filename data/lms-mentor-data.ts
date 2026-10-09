@@ -19,7 +19,9 @@ export interface LiveClass {
   status: "live" | "upcoming" | "completed";
   agenda: string[];
   recordingUrl?: string;
+  recordingLink?: string;
   isAutomatedDaily?: boolean;
+  cohortCode?: string;
   batch?: string;
   createdAt?: string;
 }

@@ -15,6 +15,7 @@ import {
   CircleHelp,
   Clock3,
   Code2,
+  ExternalLink,
   FileCode2,
   FileText,
   Flame,
@@ -26,6 +27,7 @@ import {
   Star,
   Trophy,
   Video,
+  VideoOff,
   Zap,
 } from "lucide-react";
 import { LMS_COURSES } from "@/data/lms-courses";
@@ -121,6 +123,112 @@ function SectionTitle({
   );
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className={styles.skeletonWrapper} aria-label="Loading your dashboard...">
+      <div className={styles.container}>
+        {/* Header Skeleton */}
+        <div className={styles.skHeaderRow}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div className={styles.skBlock} style={{ width: "160px", height: "14px" }} />
+            <div className={styles.skBlock} style={{ width: "300px", height: "36px" }} />
+            <div className={styles.skBlock} style={{ width: "380px", height: "16px" }} />
+            <div className={styles.skBlock} style={{ width: "130px", height: "14px", marginTop: "4px" }} />
+          </div>
+          <div className={styles.skBlock} style={{ width: "190px", height: "40px", borderRadius: "12px" }} />
+        </div>
+
+        {/* Hero Banner Skeleton */}
+        <div className={styles.skHeroCard}>
+          <div className={styles.skHeroLeft}>
+            <div className={styles.skBlock} style={{ width: "190px", height: "22px", borderRadius: "20px" }} />
+            <div className={styles.skBlock} style={{ width: "80%", height: "36px" }} />
+            <div className={styles.skBlock} style={{ width: "70%", height: "18px" }} />
+            <div className={styles.skBlock} style={{ width: "50%", height: "42px", borderRadius: "12px" }} />
+            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+              <div className={styles.skBlock} style={{ width: "165px", height: "46px", borderRadius: "12px" }} />
+              <div className={styles.skBlock} style={{ width: "165px", height: "46px", borderRadius: "12px" }} />
+            </div>
+          </div>
+          <div className={styles.skHeroRight}>
+            <div className={styles.skHeroCircle}>
+              <div className={styles.skBlock} style={{ width: "90px", height: "90px", borderRadius: "50%" }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Course Track Selector Skeleton */}
+        <div className={styles.skPillsRow}>
+          {[200, 240, 190, 220].map((width, idx) => (
+            <div
+              key={idx}
+              className={styles.skBlock}
+              style={{ width: `${width}px`, height: "44px", borderRadius: "24px", flexShrink: 0 }}
+            />
+          ))}
+        </div>
+
+        {/* Dynamic Video / Zoom Section Skeleton */}
+        <div style={{ marginBottom: "14px" }}>
+          <div className={styles.skBlock} style={{ width: "220px", height: "14px", marginBottom: "6px" }} />
+          <div className={styles.skBlock} style={{ width: "280px", height: "26px" }} />
+        </div>
+        <div className={styles.skWatchGrid}>
+          <div className={styles.skWatchMain}>
+            <div className={styles.skBlock} style={{ minHeight: "230px", borderRadius: "0" }} />
+            <div style={{ padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "12px" }}>
+              <div className={styles.skBlock} style={{ width: "130px", height: "14px" }} />
+              <div className={styles.skBlock} style={{ width: "90%", height: "22px" }} />
+              <div className={styles.skBlock} style={{ width: "75%", height: "14px" }} />
+              <div className={styles.skBlock} style={{ width: "100%", height: "8px", borderRadius: "4px" }} />
+              <div className={styles.skBlock} style={{ width: "140px", height: "38px", borderRadius: "10px" }} />
+            </div>
+          </div>
+          <div className={styles.skWatchSide}>
+            {[1, 2, 3].map((n) => (
+              <div key={n} className={styles.skCardSide}>
+                <div className={styles.skBlock} style={{ width: "38px", height: "38px", borderRadius: "10px", flexShrink: 0 }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
+                  <div className={styles.skBlock} style={{ width: "60%", height: "14px" }} />
+                  <div className={styles.skBlock} style={{ width: "85%", height: "12px" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Classes & Tasks Columns Skeleton */}
+        <div className={styles.skColumns}>
+          <div className={styles.skColumnCard}>
+            <div className={styles.skBlock} style={{ width: "190px", height: "20px" }} />
+            <div className={styles.skBlock} style={{ height: "105px", borderRadius: "12px" }} />
+            <div className={styles.skBlock} style={{ height: "105px", borderRadius: "12px" }} />
+          </div>
+          <div className={styles.skColumnCard}>
+            <div className={styles.skBlock} style={{ width: "190px", height: "20px" }} />
+            <div className={styles.skBlock} style={{ height: "64px", borderRadius: "10px" }} />
+            <div className={styles.skBlock} style={{ height: "64px", borderRadius: "10px" }} />
+            <div className={styles.skBlock} style={{ height: "64px", borderRadius: "10px" }} />
+          </div>
+        </div>
+
+        {/* Action Grid Skeleton */}
+        <div className={styles.skActionGrid}>
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className={styles.skActionCard}>
+              <div className={styles.skBlock} style={{ width: "42px", height: "42px", borderRadius: "12px", flexShrink: 0 }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
+                <div className={styles.skBlock} style={{ width: "70%", height: "14px" }} />
+                <div className={styles.skBlock} style={{ width: "50%", height: "11px" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardExperience() {
   const { user, isAuthLoaded, enrolledCourses, loginAsDemo } = useAuth();
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>(INITIAL_CLASSES);
@@ -136,6 +244,7 @@ function DashboardExperience() {
   } | null>(null);
   const [practiceSolved, setPracticeSolved] = useState<string[]>([]);
   const [streak, setStreak] = useState(0);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     const updateClock = () => {
@@ -172,33 +281,44 @@ function DashboardExperience() {
     let active = true;
 
     async function loadLearningData() {
-      const [classesResult, notesResult, tasksResult] = await Promise.allSettled([
-        api.getLiveClasses(),
-        api.getNotes(),
-        api.getTasks(),
-      ]);
+      try {
+        const [classesResult, notesResult, tasksResult] = await Promise.allSettled([
+          api.getLiveClasses(),
+          api.getNotes(),
+          api.getTasks(),
+        ]);
 
-      if (!active) return;
-      if (classesResult.status === "fulfilled" && Array.isArray(classesResult.value?.data)) {
-        setLiveClasses(classesResult.value.data);
-      } else if (classesResult.status === "rejected") {
-        console.error("Unable to load live classes; showing saved schedule.", classesResult.reason);
-      }
-      if (notesResult.status === "fulfilled" && Array.isArray(notesResult.value?.data)) {
-        setMentorNotes(notesResult.value.data);
-      } else if (notesResult.status === "rejected") {
-        console.error("Unable to load mentor notes; showing saved resources.", notesResult.reason);
-      }
-      if (tasksResult.status === "fulfilled" && Array.isArray(tasksResult.value?.data)) {
-        setMentorTasks(tasksResult.value.data);
-      } else if (tasksResult.status === "rejected") {
-        console.error("Unable to load assignments; showing saved tasks.", tasksResult.reason);
+        if (!active) return;
+        if (classesResult.status === "fulfilled" && Array.isArray(classesResult.value?.data)) {
+          setLiveClasses(classesResult.value.data);
+        } else if (classesResult.status === "rejected") {
+          console.error("Unable to load live classes; showing saved schedule.", classesResult.reason);
+        }
+        if (notesResult.status === "fulfilled" && Array.isArray(notesResult.value?.data)) {
+          setMentorNotes(notesResult.value.data);
+        } else if (notesResult.status === "rejected") {
+          console.error("Unable to load mentor notes; showing saved resources.", notesResult.reason);
+        }
+        if (tasksResult.status === "fulfilled" && Array.isArray(tasksResult.value?.data)) {
+          setMentorTasks(tasksResult.value.data);
+        } else if (tasksResult.status === "rejected") {
+          console.error("Unable to load assignments; showing saved tasks.", tasksResult.reason);
+        }
+      } finally {
+        if (active) {
+          setIsLoadingData(false);
+        }
       }
     }
 
     void loadLearningData();
+    const timer = setTimeout(() => {
+      if (active) setIsLoadingData(false);
+    }, 1200);
+
     return () => {
       active = false;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -298,6 +418,32 @@ function DashboardExperience() {
       .slice(0, 2);
   }, [clockReady, currentCourse.slug, isEnrolled, liveClasses]);
 
+  const courseLiveOrZoomSession = useMemo(() => {
+    const matching = liveClasses.filter((session) => session.courseSlug === currentCourse.slug);
+
+    // 1. Live class happening right now
+    const live = matching.find((s) => (clockReady ? calculateAutomatedClassStatus(s) : s.status) === "live");
+    if (live) return { ...live, status: "live" as const };
+
+    // 2. Upcoming Zoom session specifically
+    const upcomingZoom = matching.find(
+      (s) => s.platform === "Zoom" && (clockReady ? calculateAutomatedClassStatus(s) : s.status) === "upcoming",
+    );
+    if (upcomingZoom) return { ...upcomingZoom, status: "upcoming" as const };
+
+    // 3. Any upcoming live session (Google Meet, etc.)
+    const anyUpcoming = matching.find(
+      (s) => (clockReady ? calculateAutomatedClassStatus(s) : s.status) === "upcoming",
+    );
+    if (anyUpcoming) return { ...anyUpcoming, status: "upcoming" as const };
+
+    // 4. Session with mentor recording available
+    const withRecording = matching.find((s) => Boolean(s.recordingUrl));
+    if (withRecording) return withRecording;
+
+    return null;
+  }, [clockReady, currentCourse.slug, liveClasses]);
+
   const featuredClass = courseClasses[0];
   const tasks = useMemo(() => {
     const matching = mentorTasks.filter(
@@ -362,28 +508,25 @@ function DashboardExperience() {
   const mentorName = featuredClass?.mentorName ?? currentCourse.instructor;
   const mentorEmail = featuredClass?.mentorEmail ?? "hello@netcoder.in";
 
-  if (!isAuthLoaded || !user) {
+  if (!isAuthLoaded || (user && isLoadingData)) {
+    return <DashboardSkeleton />;
+  }
+
+  if (!user) {
     return (
       <div className={styles.authState}>
-        {isAuthLoaded ? (
-          <div className={styles.authCard}>
-            <span className={styles.authIcon}><BookOpen size={24} /></span>
-            <p className={styles.eyebrow}>NETCODER LEARNING HUB</p>
-            <h1>Your next chapter starts here.</h1>
-            <p>Sign in to pick up your course, meet your mentor, and keep your progress moving.</p>
-            <Link className={styles.primaryButton} href="/login?redirect=/lms/dashboard">
-              Sign in to continue <ArrowRight size={16} />
-            </Link>
-            <button className={styles.demoButton} onClick={() => void loginAsDemo("/lms/dashboard")}>
-              Preview the learning hub
-            </button>
-          </div>
-        ) : (
-          <div className={styles.loadingCard} aria-label="Loading your learning hub">
-            <span />
-            <p>Getting your learning space ready…</p>
-          </div>
-        )}
+        <div className={styles.authCard}>
+          <span className={styles.authIcon}><BookOpen size={24} /></span>
+          <p className={styles.eyebrow}>NETCODER LEARNING HUB</p>
+          <h1>Your next chapter starts here.</h1>
+          <p>Sign in to pick up your course, meet your mentor, and keep your progress moving.</p>
+          <Link className={styles.primaryButton} href="/login?redirect=/lms/dashboard">
+            Sign in to continue <ArrowRight size={16} />
+          </Link>
+          <button className={styles.demoButton} onClick={() => void loginAsDemo("/lms/dashboard")}>
+            Preview the learning hub
+          </button>
+        </div>
       </div>
     );
   }
@@ -522,31 +665,174 @@ function DashboardExperience() {
 
         <section className={styles.section} aria-labelledby="watch-title">
           <SectionTitle
-            eyebrow="PICK UP RIGHT WHERE YOU LEFT OFF"
-            title="Continue watching"
-            detail="Your next lesson is ready when you are."
-            action={<Link href={`/lms/courses/${currentCourse.slug}`} className={styles.textLink}>All lessons <ArrowRight size={15} /></Link>}
+            eyebrow="LIVE LEARNING & MENTOR VIDEOS"
+            title={courseLiveOrZoomSession ? "Live session & workshop" : "Course video sessions"}
+            detail={courseLiveOrZoomSession
+              ? `Interactive sessions and video recordings added by ${mentorName} for ${currentCourse.title}.`
+              : `Current live schedule and video status for ${currentCourse.title}.`
+            }
+            action={
+              <Link href={`/lms/courses/${currentCourse.slug}`} className={styles.textLink}>
+                All lessons <ArrowRight size={15} />
+              </Link>
+            }
           />
           <div className={styles.watchGrid} id="watch-title">
-            <Link href={continueHref} className={styles.watchCard}>
-              <div
-                className={styles.watchImage}
-                style={{ backgroundImage: `linear-gradient(0deg, rgba(10,16,35,.72), rgba(10,16,35,.06)), url("${currentCourse.image}")` }}
-              >
-                <span className={styles.playButton}><Play size={19} fill="currentColor" /></span>
-                <span className={styles.videoLength}>{savedCourseProgress?.currentLessonId ? "RESUME LESSON" : "START LEARNING"}</span>
-              </div>
-              <div className={styles.watchDetails}>
-                <span className={styles.contentLabel}>{savedCourseProgress?.currentLessonId ? "LAST OPENED" : "UP NEXT"} · {currentCourse.category.toUpperCase()}</span>
-                <h3>{currentLesson?.title ?? (isEnrolled ? "Start your learning journey" : "Explore your next course")}</h3>
-                <p>{currentCourse.title}</p>
-                <div className={styles.watchProgress}>
-                  <span><i style={{ width: `${progress}%` }} /></span>
-                  <small>{progress}% watched</small>
+            {courseLiveOrZoomSession ? (
+              <article className={styles.zoomWatchCard}>
+                <div className={styles.zoomVisualContainer}>
+                  <div className={styles.zoomVisualGlow} />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2 }}>
+                    <span className={`${styles.zoomPlatformTag} ${
+                      courseLiveOrZoomSession.status === "live"
+                        ? styles.tagLive
+                        : courseLiveOrZoomSession.platform === "Zoom"
+                        ? styles.tagZoom
+                        : styles.tagMeet
+                    }`}>
+                      {courseLiveOrZoomSession.status === "live" ? (
+                        <><Radio size={12} className={styles.livePulse} /> LIVE NOW ON {courseLiveOrZoomSession.platform.toUpperCase()}</>
+                      ) : (
+                        <><Video size={12} /> {courseLiveOrZoomSession.platform.toUpperCase()} SESSION</>
+                      )}
+                    </span>
+                    {courseLiveOrZoomSession.batch && (
+                      <span className={styles.zoomLaunchLabel}>{courseLiveOrZoomSession.batch}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.zoomCenterPlay}>
+                    {courseLiveOrZoomSession.meetingLink && getSafeMeetingUrl(courseLiveOrZoomSession.meetingLink) ? (
+                      <a
+                        href={getSafeMeetingUrl(courseLiveOrZoomSession.meetingLink) ?? "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.zoomPlayIcon}
+                        aria-label={`Join live ${courseLiveOrZoomSession.platform} session`}
+                      >
+                        <Play size={22} fill="currentColor" />
+                      </a>
+                    ) : courseLiveOrZoomSession.recordingUrl ? (
+                      <a
+                        href={courseLiveOrZoomSession.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.zoomPlayIcon}
+                        aria-label="Watch mentor session recording"
+                      >
+                        <Play size={22} fill="currentColor" />
+                      </a>
+                    ) : (
+                      <span className={styles.zoomPlayIcon}>
+                        <Video size={22} />
+                      </span>
+                    )}
+                    <span className={styles.zoomLaunchLabel}>
+                      {courseLiveOrZoomSession.status === "live"
+                        ? "JOIN LIVE CLASS NOW"
+                        : courseLiveOrZoomSession.recordingUrl
+                        ? "PLAY RECORDING"
+                        : "INTERACTIVE LAB ROOM"}
+                    </span>
+                  </div>
+
+                  <div className={styles.zoomVisualBottom}>
+                    <span><CalendarDays size={13} style={{ verticalAlign: "middle", marginRight: "4px" }} /> {formatDate(courseLiveOrZoomSession.date)} · {courseLiveOrZoomSession.time}</span>
+                    <span>with {courseLiveOrZoomSession.mentorName}</span>
+                  </div>
                 </div>
-                <span className={styles.resumeLabel}>Resume lesson <ChevronRight size={16} /></span>
+
+                <div className={styles.zoomDetailsPane}>
+                  <div>
+                    <div className={styles.zoomTopline}>
+                      <span className={styles.zoomCourseBadge}>{currentCourse.category.toUpperCase()} · MENTOR SESSION</span>
+                      <span className={styles.zoomCountdown}>
+                        {courseLiveOrZoomSession.status === "live"
+                          ? "🔴 Happening right now"
+                          : clockReady
+                          ? getCountdown(courseLiveOrZoomSession, now)
+                          : "Scheduled"}
+                      </span>
+                    </div>
+
+                    <h3 className={styles.zoomTitle}>{courseLiveOrZoomSession.title}</h3>
+
+                    <div className={styles.zoomMentorRow}>
+                      <img
+                        src={courseLiveOrZoomSession.mentorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
+                        alt={courseLiveOrZoomSession.mentorName}
+                        className={styles.zoomMentorAvatar}
+                      />
+                      <div className={styles.zoomMentorInfo}>
+                        <strong>{courseLiveOrZoomSession.mentorName}</strong>
+                        <span>Lead Instructor · {courseLiveOrZoomSession.cohortCode || "Cohort 2026"}</span>
+                      </div>
+                    </div>
+
+                    {courseLiveOrZoomSession.agenda && courseLiveOrZoomSession.agenda.length > 0 && (
+                      <div className={styles.zoomAgendaPills}>
+                        {courseLiveOrZoomSession.agenda.slice(0, 3).map((item, idx) => (
+                          <span key={idx} className={styles.zoomAgendaPill}>
+                            ✦ {typeof item === "string" ? item.replace(/^\d+\.\s*/, "") : item}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={styles.zoomBtnRow}>
+                    {courseLiveOrZoomSession.meetingLink && getSafeMeetingUrl(courseLiveOrZoomSession.meetingLink) ? (
+                      <a
+                        href={getSafeMeetingUrl(courseLiveOrZoomSession.meetingLink) ?? "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.zoomPrimaryBtn}
+                      >
+                        <Video size={15} /> Join {courseLiveOrZoomSession.platform} Class <ExternalLink size={13} />
+                      </a>
+                    ) : courseLiveOrZoomSession.recordingUrl ? (
+                      <a
+                        href={courseLiveOrZoomSession.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.zoomPrimaryBtn}
+                      >
+                        <Play size={15} fill="currentColor" /> Watch Recording <ExternalLink size={13} />
+                      </a>
+                    ) : (
+                      <Link href={classroomHref} className={styles.zoomPrimaryBtn}>
+                        <BookOpen size={15} /> Open Session Room <ArrowRight size={14} />
+                      </Link>
+                    )}
+                    <Link href={`/lms/courses/${currentCourse.slug}`} className={styles.zoomSecondaryBtn}>
+                      Syllabus & lessons
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ) : (
+              <div className={styles.noClassCard}>
+                <div className={styles.noClassLeft}>
+                  <div className={styles.noClassIconBox}>
+                    <VideoOff size={26} />
+                  </div>
+                  <div className={styles.noClassText}>
+                    <h3>No Live Zoom Sessions Scheduled Yet for {currentCourse.title}</h3>
+                    <p>
+                      Your mentor ({mentorName}) has not scheduled any live Zoom sessions or recordings for this course yet. All mentor-scheduled classes will automatically appear here once scheduled.
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.noClassActions}>
+                  <Link href={classroomHref} className={styles.noClassBrowseBtn}>
+                    <BookOpen size={14} /> Course Lessons
+                  </Link>
+                  <a href="#upcoming-classes" className={styles.noClassScheduleBtn}>
+                    <CalendarDays size={14} /> Check All Classes
+                  </a>
+                </div>
               </div>
-            </Link>
+            )}
             <div className={styles.watchSide}>
               <div className={styles.nextUpCard}>
                 <span className={styles.smallIcon}><BookOpen size={18} /></span>

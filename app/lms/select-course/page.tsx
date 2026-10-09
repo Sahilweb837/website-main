@@ -6,10 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { api } from "@/lib/api";
 import { LMS_COURSES } from "@/data/lms-courses";
+import { COURSES as LEGACY_COURSES } from "@/data/courses.js";
 import { filterApprovedCourses } from "@/lib/approved-courses";
 import PaymentCheckoutModal, { type CheckoutCourse } from "@/components/lms/PaymentCheckoutModal";
 import {
-  Sparkles,
   CheckCircle2,
   ArrowRight,
   Search,
@@ -19,13 +19,15 @@ import {
   ShieldCheck,
   Star,
   Users,
-  Zap,
   ShoppingCart,
   PhoneCall,
   GraduationCap,
   X,
   Trash2,
   Briefcase,
+  ChevronLeft,
+  ChevronRight,
+  Zap,
 } from "lucide-react";
 import { readLmsCart, writeLmsCart } from "@/lib/lms-cart";
 
@@ -46,6 +48,67 @@ type CourseCardData = {
   badge?: string;
   highlights?: string[];
 };
+
+type CourseCategory = {
+  id: string;
+  label: string;
+  approvedSlug?: string;
+  legacySlug?: string;
+  title: string;
+  description: string;
+  image: string;
+};
+
+const COURSE_CATEGORIES: CourseCategory[] = [
+  {
+    id: "digital-marketing",
+    label: "Digital Marketing",
+    legacySlug: "digital-marketing",
+    title: "Advanced Digital Marketing Masterclass",
+    description: "Build practical skills in SEO, paid campaigns, social media marketing, and analytics.",
+    image: "/images/digital-marketing.png",
+  },
+  {
+    id: "data-science",
+    label: "Data Science & Analytics",
+    legacySlug: "data-science-machine-learning",
+    title: "Data Science & Machine Learning with Python",
+    description: "Work with Python, data analysis, machine learning, and real-world model projects.",
+    image: "/images/DataScience-BusinessAnalytics.png",
+  },
+  {
+    id: "ai",
+    label: "AI Programs",
+    approvedSlug: "the-complete-agentic-ai-engineering-course",
+    title: "AI Engineer Agentic Track",
+    description: "Build practical AI agents and workflows with modern agent frameworks and MCP.",
+    image: "/images/machine-learning.png",
+  },
+  {
+    id: "fullstack",
+    label: "Full Stack with AI Engineering",
+    approvedSlug: "nextjs-fullstack",
+    title: "Full-Stack Next.js Engineering",
+    description: "Create modern full-stack applications with TypeScript, Next.js, and production patterns.",
+    image: "/images/full-stact-development.png",
+  },
+  {
+    id: "cyber",
+    label: "Cyber Security",
+    approvedSlug: "cloud-security-devsecops",
+    title: "Enterprise Cloud Security & DevSecOps",
+    description: "Practice cloud security, secure delivery pipelines, IAM, and hands-on attack labs.",
+    image: "/images/cybersecurity2025.png",
+  },
+  {
+    id: "app",
+    label: "App Development",
+    legacySlug: "web-app-online",
+    title: "Online Full Stack & App Development",
+    description: "Explore instructor-led full-stack and app development training with mentor support.",
+    image: "/images/full-stact-development.png",
+  },
+];
 
 const COMPANY_ROWS = [
   [
@@ -160,7 +223,7 @@ function SelectCourseContent() {
   const [courses, setCourses] = useState<CourseCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("digital-marketing");
   const [activeCheckoutCourse, setActiveCheckoutCourse] = useState<CheckoutCourse | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [cartCourses, setCartCourses] = useState<CheckoutCourse[]>([]);
@@ -303,34 +366,163 @@ function SelectCourseContent() {
     setIsCartOpen(false);
   };
 
-  const categories = [
-    { id: "all", label: "All Tracks" },
-    { id: "fullstack", label: "Full-Stack Dev" },
-    { id: "cloud", label: "Cloud & DevOps" },
-    { id: "ai", label: "AI & ML" },
-    { id: "cyber", label: "Cyber Security" },
-  ];
+  const activeCategoryIndex = Math.max(0, COURSE_CATEGORIES.findIndex((category) => category.id === selectedCategory));
+  const activeCategory = COURSE_CATEGORIES[activeCategoryIndex];
+  const approvedCourse = activeCategory.approvedSlug
+    ? courses.find((course) => course.slug === activeCategory.approvedSlug)
+    : undefined;
+  const legacyCourse = activeCategory.legacySlug
+    ? LEGACY_COURSES.find((course) => course.slug === activeCategory.legacySlug)
+    : undefined;
+  const featuredHighlights = approvedCourse?.highlights || legacyCourse?.highlights;
+  const isPurchasable = Boolean(approvedCourse);
+  const isUserEnrolled = approvedCourse ? enrolledCourses.includes(approvedCourse.slug) : false;
 
+  const showPreviousCategory = () => {
+    const nextIndex = (activeCategoryIndex - 1 + COURSE_CATEGORIES.length) % COURSE_CATEGORIES.length;
+    setSelectedCategory(COURSE_CATEGORIES[nextIndex].id);
+  };
+  const showNextCategory = () => {
+    const nextIndex = (activeCategoryIndex + 1) % COURSE_CATEGORIES.length;
+    setSelectedCategory(COURSE_CATEGORIES[nextIndex].id);
+  };
+  const categories = COURSE_CATEGORIES.map(({ id, label }) => ({ id, label }));
   const filteredCourses = useMemo(() => {
-    return courses.filter((c) => {
-      const matchCat =
-        selectedCategory === "all" ||
-        (c.category && c.category.toLowerCase().includes(selectedCategory.toLowerCase()));
-      const q = searchQuery.toLowerCase();
-      const matchQuery =
-        !searchQuery ||
-        c.title.toLowerCase().includes(q) ||
-        (c.overview && c.overview.toLowerCase().includes(q));
-      return matchCat && matchQuery;
+    return courses.filter((course) => {
+      const matchesCategory = course.category?.toLowerCase().includes(selectedCategory);
+      const query = searchQuery.toLowerCase();
+      return matchesCategory && (!query
+        || course.title.toLowerCase().includes(query)
+        || course.overview?.toLowerCase().includes(query));
     });
-  }, [courses, selectedCategory, searchQuery]);
+  }, [courses, searchQuery, selectedCategory]);
 
   return (
     <div className="sc-page">
       <div className="sc-container">
+        <section className="sc-explorer" id="course-catalog" aria-labelledby="explorer-title">
+          <div className="sc-explorer-heading">
+            <div>
+              <p className="sc-explorer-eyebrow">Find your next step</p>
+              <h1 id="explorer-title" className="sc-explorer-title">Explore Courses</h1>
+              <p className="sc-explorer-subtitle">
+                Choose a learning path to see the program, skills, and enrollment options.
+              </p>
+            </div>
+            <a className="sc-explorer-advisor" href="tel:+917590832055">
+              <PhoneCall aria-hidden="true" />
+              Talk to an advisor
+            </a>
+          </div>
+
+          <div className="sc-category-tabs" role="group" aria-label="Course categories">
+            {COURSE_CATEGORIES.map((category, index) => (
+              <button
+                key={category.id}
+                id={`course-category-${category.id}`}
+                type="button"
+                aria-pressed={selectedCategory === category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`sc-category-tab${selectedCategory === category.id ? " is-active" : ""}`}
+              >
+                <span className="sc-category-index">0{index + 1}</span>
+                {category.label}
+              </button>
+            ))}
+          </div>
+
+          <article
+            className="sc-featured-course"
+            id="featured-course-panel"
+            aria-label={`${activeCategory.label} featured course`}
+            aria-live="polite"
+          >
+            <div className="sc-featured-copy">
+              <div className="sc-featured-kicker">
+                <span className="sc-live-dot" />
+                {isPurchasable ? "Available to enroll online" : "Advisor-guided enrollment"}
+              </div>
+              <h2 className="sc-featured-title">{approvedCourse?.title || legacyCourse?.title || activeCategory.title}</h2>
+              <p className="sc-featured-description">
+                {approvedCourse?.overview || legacyCourse?.overview || activeCategory.description}
+              </p>
+
+              <div className="sc-featured-meta">
+                <span><Clock aria-hidden="true" /> {approvedCourse?.duration || legacyCourse?.duration || "Flexible schedule"}</span>
+                <span>{approvedCourse?.level || legacyCourse?.level || "All levels"}</span>
+                {typeof approvedCourse?.rating === "number" && <span>Rated {approvedCourse.rating.toFixed(1)} / 5</span>}
+              </div>
+
+              {featuredHighlights?.length ? (
+                <ul className="sc-featured-highlights">
+                  {featuredHighlights.slice(0, 3).map((highlight) => (
+                    <li key={highlight}><CheckCircle2 aria-hidden="true" />{highlight}</li>
+                  ))}
+                </ul>
+              ) : null}
+
+              <div className="sc-featured-actions">
+                {isPurchasable && approvedCourse ? (
+                  isUserEnrolled ? (
+                    <Link className="sc-featured-primary" href={`/lms/classroom/${approvedCourse.slug}`}>
+                      Continue learning <ArrowRight aria-hidden="true" />
+                    </Link>
+                  ) : (
+                    <button
+                      className="sc-featured-primary"
+                      type="button"
+                      onClick={() => handleSelectCourse(approvedCourse)}
+                    >
+                      Buy Now <ArrowRight aria-hidden="true" />
+                    </button>
+                  )
+                ) : loading && activeCategory.approvedSlug ? (
+                  <button className="sc-featured-primary" type="button" disabled>
+                    Loading course…
+                  </button>
+                ) : (
+                  <a className="sc-featured-primary" href="tel:+917590832055">
+                    Buy Now <ArrowRight aria-hidden="true" />
+                  </a>
+                )}
+                <a className="sc-featured-secondary" href="tel:+917590832055">
+                  Talk to advisor <PhoneCall aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+
+            <div className="sc-featured-art">
+              <img src={activeCategory.image} alt={`${approvedCourse?.title || legacyCourse?.title || activeCategory.title} course`} />
+              <span className="sc-featured-art-label">{activeCategory.label}</span>
+            </div>
+          </article>
+
+          <div className="sc-explorer-controls" aria-label="Featured course navigation">
+            <div className="sc-explorer-dots" aria-label={`Category ${activeCategoryIndex + 1} of ${COURSE_CATEGORIES.length}`}>
+              {COURSE_CATEGORIES.map((category, index) => (
+                <button
+                  type="button"
+                  key={category.id}
+                  className={`sc-explorer-dot${selectedCategory === category.id ? " is-active" : ""}`}
+                  onClick={() => setSelectedCategory(category.id)}
+                  aria-label={`Show ${category.label}`}
+                  aria-current={selectedCategory === category.id ? "true" : undefined}
+                />
+              ))}
+            </div>
+            <div className="sc-explorer-arrows">
+              <button type="button" onClick={showPreviousCategory} aria-label="Previous course category">
+                <ChevronLeft aria-hidden="true" />
+              </button>
+              <button type="button" onClick={showNextCategory} aria-label="Next course category">
+                <ChevronRight aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </section>
 
         {/* ── Learning Hero ── */}
-        <section className="sc-hero" aria-labelledby="learning-hero-title">
+        <section className="sc-hero sc-original-hero" aria-labelledby="learning-hero-title">
           <div className="sc-hero-copy">
             <div className="sc-hero-badge">
               <span className="sc-live-dot" />
@@ -371,7 +563,7 @@ function SelectCourseContent() {
         </section>
 
         {/* ── Filter Row Header ── */}
-        <div className="sc-filter-header" id="course-catalog">
+        <div className="sc-filter-header sc-original-filter-header">
           <h2 className="sc-filter-label">For working professionals</h2>
           <a href="tel:+917590832055" className="sc-advisor-link">
             <PhoneCall className="sc-advisor-icon" />
@@ -380,7 +572,7 @@ function SelectCourseContent() {
         </div>
 
         {/* ── Filter Bar ── */}
-        <div className="sc-filter-bar">
+        <div className="sc-filter-bar sc-original-filter-bar">
           <div className="sc-cat-scroll">
             {categories.map((cat) => (
               <button
@@ -407,7 +599,7 @@ function SelectCourseContent() {
 
         {/* ── Courses Grid ── */}
         {loading ? (
-          <div className="sc-grid">
+          <div className="sc-grid sc-original-results">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="sc-skeleton">
                 <div className="sc-skel-img" />
@@ -421,7 +613,7 @@ function SelectCourseContent() {
             ))}
           </div>
         ) : filteredCourses.length === 0 ? (
-          <div className="sc-empty">
+          <div className="sc-empty sc-original-results">
             <BookOpen className="sc-empty-icon" />
             <h3 className="sc-empty-title">No Learning Tracks Found</h3>
             <p className="sc-empty-sub">
@@ -435,7 +627,7 @@ function SelectCourseContent() {
             </button>
           </div>
         ) : (
-          <div className="sc-grid">
+          <div className="sc-grid sc-original-results">
             {filteredCourses.map((c) => {
               const isUserEnrolled = enrolledCourses.includes(c.slug);
               const isInCart = cartCourses.some((item) => item.slug === c.slug);
@@ -472,6 +664,7 @@ function SelectCourseContent() {
                         src={c.image || "/images/full-stact-development.png"}
                         alt={c.title}
                         className="sc-thumb-img"
+                        loading="lazy"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src = "/images/full-stact-development.png";
                         }}
@@ -780,6 +973,308 @@ function SelectCourseContent() {
           font-family: 'Poppins', serif;
           -webkit-font-smoothing: antialiased;
           padding-bottom: 5rem;
+        }
+        .sc-original-hero,
+        .sc-original-filter-header,
+        .sc-original-filter-bar,
+        .sc-original-results { display: none !important; }
+        .sc-explorer {
+          --sc-accent: #ff5532;
+          --sc-ink: #101b34;
+          max-width: 1140px;
+          margin: 0 auto 3.25rem;
+          color: var(--sc-ink);
+        }
+        .sc-explorer-heading {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 1.5rem;
+          margin-bottom: 1.5rem;
+        }
+        .sc-explorer-eyebrow {
+          margin: 0 0 0.4rem;
+          color: var(--sc-accent);
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .sc-explorer-title {
+          margin: 0;
+          color: var(--sc-ink);
+          font-size: clamp(1.8rem, 4vw, 2.6rem);
+          font-weight: 600;
+          letter-spacing: -0.045em;
+          line-height: 1.1;
+        }
+        .sc-explorer-subtitle {
+          max-width: 620px;
+          margin: 0.65rem 0 0;
+          color: #64748b;
+          font-size: 0.98rem;
+          line-height: 1.6;
+        }
+        .sc-explorer-advisor {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.55rem;
+          min-height: 44px;
+          padding: 0 1rem;
+          border: 1px solid #ffd4c8;
+          border-radius: 0.75rem;
+          color: #b53b20;
+          font-size: 0.87rem;
+          font-weight: 700;
+          text-decoration: none;
+          white-space: nowrap;
+          transition: background 160ms ease, border-color 160ms ease;
+        }
+        .sc-explorer-advisor:hover { background: #fff4f0; border-color: #ffb8a5; }
+        .sc-explorer-advisor svg { width: 17px; height: 17px; }
+        .sc-category-tabs {
+          margin-bottom: 1rem;
+          display: grid;
+          gap: 0.55rem;
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+          padding: 0.15rem 0 0.55rem;
+        }
+        .sc-category-tab {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          min-height: 42px;
+          min-width: 0;
+          padding: 0.45rem 0.55rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.75rem;
+          background: #fff;
+          color: #475569;
+          font: inherit;
+          font-size: 0.77rem;
+          font-weight: 500;
+          line-height: 1.35;
+          cursor: pointer;
+          transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        }
+        .sc-category-tab:hover { border-color: #fdbaaa; color: #b53b20; }
+        .sc-category-tab.is-active {
+          border-color: var(--sc-accent);
+          background: var(--sc-accent);
+          color: #fff;
+          box-shadow: 0 5px 14px rgba(255, 85, 50, 0.2);
+        }
+        .sc-category-index { flex: 0 0 auto; color: #f97316; font-size: 0.64rem; font-weight: 600; }
+        .sc-category-tab.is-active .sc-category-index { color: #ffded5; }
+        .sc-category-tab:focus-visible,
+        .sc-explorer-controls button:focus-visible,
+        .sc-featured-actions a:focus-visible,
+        .sc-featured-actions button:focus-visible {
+          outline: 3px solid rgba(255, 85, 50, 0.35);
+          outline-offset: 3px;
+        }
+        .sc-featured-course {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(320px, 0.88fr);
+          grid-template-areas: "copy visual";
+          min-height: 320px;
+          overflow: hidden;
+          border: 1px solid #e5e9f0;
+          border-radius: 1.25rem;
+          background: linear-gradient(125deg, #fff 0%, #fffaf8 58%, #fff5f1 100%);
+          box-shadow: 0 18px 45px rgba(16, 27, 52, 0.08);
+        }
+        .sc-featured-copy {
+          grid-area: copy;
+          align-self: center;
+          padding: clamp(1.25rem, 3vw, 2.25rem);
+        }
+        .sc-featured-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.6rem;
+          margin-bottom: 0.75rem;
+          color: #a83a22;
+          font-size: 0.72rem;
+          font-weight: 600;
+          letter-spacing: 0.075em;
+          text-transform: uppercase;
+        }
+        .sc-featured-kicker .sc-live-dot { width: 7px; height: 7px; flex-basis: 7px; }
+        .sc-featured-title {
+          max-width: 660px;
+          margin: 0;
+          color: var(--sc-ink);
+          font-size: clamp(1.55rem, 2.6vw, 2.25rem);
+          font-weight: 600;
+          letter-spacing: -0.04em;
+          line-height: 1.14;
+        }
+        .sc-featured-description {
+          max-width: 600px;
+          margin: 0.75rem 0 0;
+          color: #536178;
+          font-size: 0.92rem;
+          line-height: 1.6;
+        }
+        .sc-featured-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.55rem;
+          margin-top: 0.85rem;
+        }
+        .sc-featured-meta span {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          min-height: 31px;
+          padding: 0 0.65rem;
+          border: 1px solid #e7ebf0;
+          border-radius: 999px;
+          background: #fff;
+          color: #475569;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .sc-featured-meta svg { width: 14px; height: 14px; color: var(--sc-accent); }
+        .sc-featured-highlights {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem 0.8rem;
+          margin: 0.8rem 0 0;
+          padding: 0;
+          list-style: none;
+        }
+        .sc-featured-highlights li {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.4rem;
+          color: #334155;
+          font-size: 0.78rem;
+          line-height: 1.45;
+        }
+        .sc-featured-highlights svg { width: 15px; height: 15px; flex: 0 0 15px; color: #12a56a; }
+        .sc-featured-actions {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          margin-top: 1.05rem;
+        }
+        .sc-featured-primary,
+        .sc-featured-secondary {
+          display: inline-flex;
+          min-height: 42px;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          padding: 0 1.25rem;
+          border: 1px solid var(--sc-accent);
+          border-radius: 0.7rem;
+          font: inherit;
+          font-size: 0.88rem;
+          font-weight: 800;
+          text-decoration: none;
+          transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+        .sc-featured-primary {
+          background: var(--sc-accent);
+          color: #fff;
+          cursor: pointer;
+          box-shadow: 0 5px 14px rgba(255, 85, 50, 0.18);
+        }
+        .sc-featured-primary:hover { transform: translateY(-1px); background: #e74727; }
+        .sc-featured-primary:disabled { opacity: 0.65; cursor: wait; }
+        .sc-featured-primary svg,
+        .sc-featured-secondary svg { width: 16px; height: 16px; }
+        .sc-featured-secondary { background: #fff; color: #a83a22; }
+        .sc-featured-secondary:hover { background: #fff4f0; }
+        .sc-featured-art {
+          position: relative;
+          grid-area: visual;
+          min-height: 100%;
+          overflow: hidden;
+          background: #e8eef5;
+        }
+        .sc-featured-art::after {
+          position: absolute;
+          inset: 45% 0 0;
+          background: linear-gradient(transparent, rgba(15, 23, 42, 0.46));
+          content: "";
+          pointer-events: none;
+        }
+        .sc-featured-art img { display: block; width: 100%; height: 320px; min-height: 320px; object-fit: cover; }
+        .sc-featured-art-label {
+          position: absolute;
+          z-index: 1;
+          right: 1rem;
+          bottom: 1rem;
+          left: 1rem;
+          color: #fff;
+          font-size: 0.78rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .sc-explorer-controls {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 1rem;
+        }
+        .sc-explorer-dots { display: flex; align-items: center; gap: 0.55rem; }
+        .sc-explorer-dot {
+          width: 8px;
+          height: 8px;
+          padding: 0;
+          border: 0;
+          border-radius: 999px;
+          background: #cbd5e1;
+          cursor: pointer;
+          transition: width 160ms ease, background 160ms ease;
+        }
+        .sc-explorer-dot.is-active { width: 24px; background: var(--sc-accent); }
+        .sc-explorer-arrows { display: flex; gap: 0.5rem; }
+        .sc-explorer-arrows button {
+          display: inline-flex;
+          width: 40px;
+          height: 40px;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #e2e8f0;
+          border-radius: 50%;
+          background: #fff;
+          color: var(--sc-ink);
+          cursor: pointer;
+          transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+        }
+        .sc-explorer-arrows button:hover { border-color: var(--sc-accent); background: #fff4f0; color: #a83a22; }
+        .sc-explorer-arrows svg { width: 18px; height: 18px; }
+        @media (max-width: 760px) {
+          .sc-explorer-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
+          .sc-explorer-advisor { min-height: 42px; }
+          .sc-category-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+          .sc-featured-course {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas: "visual" "copy";
+          }
+          .sc-featured-art img { min-height: 0; height: auto; aspect-ratio: 2.2; }
+          .sc-featured-copy { padding: 1.4rem; }
+        }
+        @media (max-width: 480px) {
+          .sc-explorer { margin-bottom: 2rem; }
+          .sc-explorer-subtitle { font-size: 0.88rem; }
+          .sc-category-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .sc-category-tab { min-height: 42px; padding: 0.45rem; font-size: 0.72rem; }
+          .sc-featured-title { font-size: 1.65rem; }
+          .sc-featured-description { font-size: 0.9rem; }
+          .sc-featured-actions { align-items: stretch; flex-direction: column; }
+          .sc-featured-primary, .sc-featured-secondary { width: 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sc-category-tab, .sc-featured-primary, .sc-featured-secondary,
+          .sc-explorer-dot, .sc-explorer-arrows button { transition: none; }
         }
         .sc-container {
           max-width: 1152px;
