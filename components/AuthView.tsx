@@ -290,9 +290,9 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
               <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 2s ease-in-out infinite" }} />
               System Healthy
             </div>
-            <a href="http://localhost:8000" style={{ fontSize: "12px", fontWeight: 600, color: "#ff5532", textDecoration: "none", fontFamily: "'Space Grotesk', sans-serif", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-              <i className="fa-solid fa-arrow-left" style={{ fontSize: "10px" }}></i> Back to Website
-            </a>
+            <Link href="/" style={{ fontSize: "12px", fontWeight: 600, color: "#ff5532", textDecoration: "none", fontFamily: "'Space Grotesk', sans-serif", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <i className="fa-solid fa-arrow-left" style={{ fontSize: "10px" }}></i> Back to Home
+            </Link>
           </div>
         </div>
 
@@ -349,8 +349,8 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
                 >
                   Open LMS Dashboard →
                 </Link>
-                <a
-                  href="http://localhost:8000"
+                <Link
+                  href="/"
                   style={{
                     padding: "9px 12px",
                     background: "#f1f5f9",
@@ -362,8 +362,8 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
                     textAlign: "center"
                   }}
                 >
-                  Main Website
-                </a>
+                  Home Page
+                </Link>
                 <button
                   type="button"
                   onClick={() => logout()}

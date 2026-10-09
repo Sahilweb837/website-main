@@ -11,7 +11,37 @@ export async function GET(request: Request) {
     const mentorEmail = searchParams.get("mentorEmail");
     const status = searchParams.get("status");
 
-    // Automatically recalculate status based on current time
+    // Attempt to pull live classes directly from Laravel REST Backend
+    try {
+      const laravelUrl = `http://localhost:8000/api/lms/classes${courseSlug ? `?courseSlug=${encodeURIComponent(courseSlug)}` : ""}`;
+      const laravelRes = await fetch(laravelUrl, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      if (laravelRes.ok) {
+        const json = await laravelRes.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          let classes = json.data;
+          if (status) {
+            classes = classes.filter((c: LiveClass) => c.status === status);
+          }
+          if (mentorEmail) {
+            classes = classes.filter((c: LiveClass) => c.mentorEmail === mentorEmail);
+          }
+          return NextResponse.json({
+            success: true,
+            count: classes.length,
+            data: classes,
+            source: "Laravel Database Engine (Live)",
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch {
+      // Graceful fallback to internal engine if Laravel backend is cold
+    }
+
+    // Fallback: In-memory store
     let result = liveClassesDatabase.map((cls) => ({
       ...cls,
       status: calculateAutomatedClassStatus(cls),
@@ -34,7 +64,7 @@ export async function GET(request: Request) {
       count: result.length,
       data: result,
       timestamp: new Date().toISOString(),
-      source: "Netcoder LMS Classes Engine",
+      source: "Netcoder LMS Classes Engine (Fallback)",
     });
   } catch (error) {
     return NextResponse.json(

@@ -10,6 +10,7 @@ export type AuthUser = {
   phone: string | null;
   role: "student" | "admin";
   avatar: string | null;
+  profileComplete?: boolean;
 };
 
 export type AuthContextType = {
@@ -41,6 +42,7 @@ const DEMO_USER: AuthUser = {
 
 const STORAGE_KEY = "lms_auth_user";
 const LEGACY_ENROLLED_KEY = "lms_enrolled_courses";
+const PROFILE_COMPLETION_KEY = "lms_profile_completion";
 
 function enrolledStorageKey(userId: string) {
   return `lms_enrolled_courses_${userId}`;
@@ -60,13 +62,46 @@ function getStoredUser(): AuthUser | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.id) return parsed as AuthUser;
+      if (parsed && parsed.id) {
+        return {
+          ...parsed,
+          profileComplete: parsed.profileComplete ?? false,
+        } as AuthUser;
+      }
     }
     return null;
   } catch (error) {
     console.error("Unable to load the saved student account.", error);
     return null;
   }
+}
+
+function getStoredProfileComplete(userId: string | undefined): boolean {
+  if (typeof window === "undefined" || !userId) return false;
+  try {
+    const key = `${PROFILE_COMPLETION_KEY}_${userId}`;
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      const legacy = localStorage.getItem(PROFILE_COMPLETION_KEY);
+      if (legacy !== null) {
+        const parsed = JSON.parse(legacy);
+        const completed = Boolean(parsed && parsed[userId]);
+        if (completed) localStorage.setItem(key, "true");
+        return completed;
+      }
+      return false;
+    }
+    return raw === "true";
+  } catch (error) {
+    console.error("Unable to load profile completion state.", error);
+    return false;
+  }
+}
+
+function setStoredProfileComplete(userId: string | undefined, value: boolean) {
+  if (typeof window === "undefined" || !userId) return;
+  const key = `${PROFILE_COMPLETION_KEY}_${userId}`;
+  localStorage.setItem(key, String(Boolean(value)));
 }
 
 function getStoredEnrolled(userId: string | undefined): string[] {
@@ -99,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const router = useRouter();
+
   const navigateTarget = (redirectTo: string) => {
     if (typeof window !== "undefined" && (redirectTo.startsWith("http://") || redirectTo.startsWith("https://"))) {
       window.location.href = redirectTo;
@@ -110,10 +146,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = getStoredUser();
     if (stored) {
-      setUser(stored);
+      const profileComplete = getStoredProfileComplete(stored.id);
+      const userWithProfile = { ...stored, profileComplete };
+      setUser(userWithProfile);
       if (typeof window !== "undefined") {
         try {
-          const cookieVal = encodeURIComponent(JSON.stringify(stored));
+          const cookieVal = encodeURIComponent(JSON.stringify(userWithProfile));
           document.cookie = `lms_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
           document.cookie = `lms_auth_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
         } catch (e) {
@@ -131,9 +169,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persistUser = (u: AuthUser | null) => {
     if (typeof window !== "undefined") {
       if (u) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+        const normalized = {
+          ...u,
+          profileComplete: Boolean(u.profileComplete || getStoredProfileComplete(u.id)),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        setStoredProfileComplete(u.id, normalized.profileComplete ?? false);
         try {
-          const cookieVal = encodeURIComponent(JSON.stringify(u));
+          const cookieVal = encodeURIComponent(JSON.stringify(normalized));
           document.cookie = `lms_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
           document.cookie = `lms_auth_user=${cookieVal}; path=/; max-age=2592000; SameSite=Lax`;
         } catch (e) {
@@ -149,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-    setUser(u);
+    setUser(u ? { ...u, profileComplete: Boolean(u.profileComplete || getStoredProfileComplete(u.id)) } : null);
     setEnrolledCourses(u ? getStoredEnrolled(u.id) : []);
   };
 
@@ -187,14 +230,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
-      persistUser({
+      const userRecord: AuthUser = {
         id: studentIdFor(`phone:${phone.replace(/\D/g, "")}`),
         name: `Student ${phone.slice(-4)}`,
         email: null,
         phone,
         role: "student",
         avatar: null,
-      });
+        profileComplete: false,
+      };
+      persistUser(userRecord);
       navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
@@ -205,14 +250,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
-      persistUser({
+      const userRecord: AuthUser = {
         id: studentIdFor("google:student@gmail.com"),
         name: "Google Student",
         email: "student@gmail.com",
         phone: null,
         role: "student",
         avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=google",
-      });
+        profileComplete: false,
+      };
+      persistUser(userRecord);
       navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
@@ -230,14 +277,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const identity = userData.email?.trim().toLowerCase()
         || userData.phone?.replace(/\D/g, "")
         || `anonymous:${Date.now()}`;
-      persistUser({
+      const userRecord: AuthUser = {
         id: studentIdFor(identity),
         name: displayName,
         email: userData.email?.trim() || null,
         phone: userData.phone?.trim() || null,
         role: "student",
         avatar: null,
-      });
+        profileComplete: Boolean(userData.name && userData.email),
+      };
+      persistUser(userRecord);
       navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
@@ -248,7 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
-      persistUser(DEMO_USER);
+      persistUser({ ...DEMO_USER, profileComplete: true });
       navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
@@ -261,6 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updated: AuthUser = { ...prev, ...fields };
       if (typeof window !== "undefined") {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setStoredProfileComplete(updated.id, Boolean(updated.profileComplete));
       }
       return updated;
     });

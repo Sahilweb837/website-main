@@ -2,8 +2,11 @@
 
 import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
+import { api } from "@/lib/api";
+import { calculateAutomatedClassStatus, getLiveClassStartAt, INITIAL_CLASSES, type LiveClass } from "@/data/lms-mentor-data";
+import { readLmsCart } from "@/lib/lms-cart";
 
  
 const ACCENT = "#ff6b1a";    
@@ -339,11 +342,14 @@ const navItems = [
 
 /* ─── COMPONENT ───────────────────────────────────────── */
 export default function LMSLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [courseCartCount, setCourseCartCount] = useState(0);
-  const [activeHash, setActiveHash] = useState("");
+  const [activeProfileTab, setActiveProfileTab] = useState("");
+  const [liveClasses, setLiveClasses] = useState<LiveClass[]>(INITIAL_CLASSES);
+  const [now, setNow] = useState(0);
+  const [clockReady, setClockReady] = useState(false);
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, isAuthLoaded, logout } = useAuth();
 
   // Initialize desktop sidebar open state
@@ -354,10 +360,12 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const updateHash = () => setActiveHash(window.location.hash.slice(1));
-    updateHash();
-    window.addEventListener("hashchange", updateHash);
-    return () => window.removeEventListener("hashchange", updateHash);
+    const syncProfileTab = () => {
+      setActiveProfileTab(new URLSearchParams(window.location.search).get("tab") ?? "");
+    };
+    syncProfileTab();
+    window.addEventListener("popstate", syncProfileTab);
+    return () => window.removeEventListener("popstate", syncProfileTab);
   }, [pathname]);
 
   // Auto-close drawer on mobile when navigating
@@ -368,6 +376,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    setCourseCartCount(readLmsCart().length);
     const updateCartCount = (event: Event) => {
       const count = (event as CustomEvent<number>).detail;
       setCourseCartCount(typeof count === "number" ? count : 0);
@@ -376,6 +385,56 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
     window.addEventListener("lms:course-cart-count", updateCartCount);
     return () => window.removeEventListener("lms:course-cart-count", updateCartCount);
   }, []);
+
+  useEffect(() => {
+    const updateClock = () => {
+      setNow(Date.now());
+      setClockReady(true);
+    };
+    updateClock();
+    const interval = window.setInterval(updateClock, 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.getLiveClasses().then((result) => {
+      if (active && Array.isArray(result?.data) && result.data.length > 0) {
+        setLiveClasses(result.data);
+      }
+    }).catch((error) => {
+      console.error("Unable to load sidebar live-class schedule.", error);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const featuredClass = liveClasses
+    .map((session) => ({
+      ...session,
+      status: clockReady ? calculateAutomatedClassStatus(session) : session.status,
+    }))
+    .filter((session) => session.status !== "completed")
+    .sort((a, b) => {
+      if (a.status === "live") return -1;
+      if (b.status === "live") return 1;
+      return new Date(`${a.date}T${a.startTime}:00`).getTime()
+        - new Date(`${b.date}T${b.startTime}:00`).getTime();
+    })[0];
+  const featuredClassCountdown = featuredClass
+    ? (() => {
+      if (!clockReady) return "Loading schedule…";
+      if (featuredClass.status === "live") return "Live now";
+        const start = getLiveClassStartAt(featuredClass, new Date(now));
+        if (!start) return "Schedule to be confirmed";
+        const remainingMinutes = Math.max(0, Math.floor((start.getTime() - now) / 60_000));
+        const days = Math.floor(remainingMinutes / 1440);
+        const hours = Math.floor((remainingMinutes % 1440) / 60);
+        const minutes = remainingMinutes % 60;
+        return days > 0 ? `In ${days}d ${hours}h` : hours > 0 ? `In ${hours}h ${minutes}m` : `In ${minutes}m`;
+      })()
+    : clockReady ? "No class scheduled" : "Loading schedule…";
 
   if (pathname === "/lms") return <>{children}</>;
 
@@ -600,7 +659,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
               const [itemPath] = item.href.split("#");
               const isCertificates = item.href.includes("?tab=certificates");
               const isActive = isCertificates
-                ? pathname === "/lms/profile" && searchParams.get("tab") === "certificates"
+                ? pathname === "/lms/profile" && activeProfileTab === "certificates"
                 : item.matchExact
                   ? pathname === itemPath
                   : pathname.startsWith(itemPath);
@@ -609,7 +668,10 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.label}
                   href={item.href}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() => {
+                    setActiveProfileTab(new URLSearchParams(item.href.split("?")[1] ?? "").get("tab") ?? "");
+                    setSidebarOpen(false);
+                  }}
                   style={{
                     ...S.navLink,
                     ...(isActive ? S.navLinkActive : {}),
@@ -623,18 +685,42 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
+          <Link
+            href="/lms/dashboard#upcoming-classes"
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 5,
+              margin: "12px 4px 16px",
+              padding: "13px 14px",
+              border: "1px solid #fed7c9",
+              borderRadius: 14,
+              background: "linear-gradient(135deg, #fff7f3, #fff)",
+              color: "#34303a",
+              textDecoration: "none",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 800 }}>
+              <span className="material-symbols-outlined" style={{ color: ACCENT, fontSize: 20 }}>school</span>
+              Masterclass
+            </span>
+            <span style={{ paddingLeft: 28, color: ACCENT_DARK, fontSize: 12, fontWeight: 700 }}>
+              {featuredClassCountdown}
+            </span>
+          </Link>
 
         </div>
 
         {/* BOTTOM */}
         <div style={S.bottomBox}>
-          <Link href="/lms/profile?tab=help" style={S.bottomLink} onClick={() => setSidebarOpen(false)}>
+          <Link href="/lms/profile?tab=help" style={S.bottomLink} onClick={() => { setActiveProfileTab("help"); setSidebarOpen(false); }}>
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
               help_outline
             </span>
             <span>Help &amp; Support</span>
           </Link>
-          <Link href="/lms/profile?tab=settings" style={S.bottomLink} onClick={() => setSidebarOpen(false)}>
+          <Link href="/lms/profile?tab=settings" style={S.bottomLink} onClick={() => { setActiveProfileTab("settings"); setSidebarOpen(false); }}>
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
               settings
             </span>
@@ -705,17 +791,32 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
 
           <div className="lms-header-right" style={S.headerRight}>
             <button
+              type="button"
               className="lms-header-live"
               style={S.liveBtn}
               onClick={() => {
-                const el = document.getElementById("upcoming-classes");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
+                const meetingUrl = featuredClass?.meetingLink;
+                if (featuredClass?.status === "live" && meetingUrl) {
+                  try {
+                    const parsedUrl = new URL(meetingUrl);
+                    if (parsedUrl.protocol === "https:") {
+                      window.open(parsedUrl.toString(), "_blank", "noopener,noreferrer");
+                      return;
+                    }
+                  } catch (error) {
+                    console.error("The live-class meeting link is invalid.", error);
+                  }
+                }
+                router.push("/lms/dashboard#upcoming-classes");
               }}
+              aria-label={featuredClass?.status === "live" ? "Join the live masterclass" : "View upcoming masterclasses"}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                 videocam
               </span>
-              <span className="lms-live-label">Join Live Room</span>
+              <span className="lms-live-label">
+                {featuredClass?.status === "live" ? "Join Live Class" : "Upcoming Classes"}
+              </span>
             </button>
 
             {pathname === "/lms/select-course" && (

@@ -34,6 +34,7 @@ import {
   INITIAL_CLASSES,
   INITIAL_NOTES,
   INITIAL_TASKS,
+  getLiveClassStartAt,
   type LiveClass,
   type MentorNote,
   type MentorTask,
@@ -74,10 +75,20 @@ function formatDate(date: string, options?: Intl.DateTimeFormatOptions) {
   return new Intl.DateTimeFormat("en-IN", options ?? { day: "numeric", month: "short" }).format(parsed);
 }
 
-function getCountdown(date: string, time: string, now: number) {
-  const startsAt = new Date(`${date}T${time}:00`).getTime();
-  if (Number.isNaN(startsAt)) return "Time to be announced";
-  const seconds = Math.max(0, Math.floor((startsAt - now) / 1000));
+function getSafeMeetingUrl(value?: string) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function getCountdown(session: LiveClass, now: number) {
+  const startAt = getLiveClassStartAt(session, new Date(now));
+  if (!startAt) return "Time to be announced";
+  const seconds = Math.max(0, Math.floor((startAt.getTime() - now) / 1000));
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -115,7 +126,8 @@ function DashboardExperience() {
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>(INITIAL_CLASSES);
   const [mentorNotes, setMentorNotes] = useState<MentorNote[]>(INITIAL_NOTES);
   const [mentorTasks, setMentorTasks] = useState<MentorTask[]>(INITIAL_TASKS);
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(0);
+  const [clockReady, setClockReady] = useState(false);
   const [activeCourseSlug, setActiveCourseSlug] = useState("");
   const [savedCourseProgress, setSavedCourseProgress] = useState<{
     slug: string;
@@ -126,7 +138,12 @@ function DashboardExperience() {
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 30_000);
+    const updateClock = () => {
+      setNow(Date.now());
+      setClockReady(true);
+    };
+    updateClock();
+    const interval = window.setInterval(updateClock, 30_000);
     return () => window.clearInterval(interval);
   }, []);
 
@@ -267,7 +284,10 @@ function DashboardExperience() {
     const matching = liveClasses.filter((session) => session.courseSlug === currentCourse.slug);
     const available = matching.length ? matching : isEnrolled ? [] : liveClasses;
     return available
-      .map((session) => ({ ...session, status: calculateAutomatedClassStatus(session) }))
+      .map((session) => ({
+        ...session,
+        status: clockReady ? calculateAutomatedClassStatus(session) : session.status,
+      }))
       .filter((session) => session.status !== "completed")
       .sort((a, b) => {
         if (a.status === "live") return -1;
@@ -276,7 +296,7 @@ function DashboardExperience() {
           new Date(`${b.date}T${b.startTime}:00`).getTime();
       })
       .slice(0, 2);
-  }, [currentCourse.slug, isEnrolled, liveClasses]);
+  }, [clockReady, currentCourse.slug, isEnrolled, liveClasses]);
 
   const featuredClass = courseClasses[0];
   const tasks = useMemo(() => {
@@ -335,7 +355,10 @@ function DashboardExperience() {
     { title: "Top performer", icon: Trophy, unlocked: false },
     { title: "Assignment master", icon: Award, unlocked: false },
   ];
-  const nextLiveLink = featuredClass?.meetingLink || classroomHref;
+  const liveMeetingUrl = featuredClass?.status === "live"
+    ? getSafeMeetingUrl(featuredClass.meetingLink)
+    : null;
+  const nextLiveLink = liveMeetingUrl || "/lms/dashboard#upcoming-classes";
   const mentorName = featuredClass?.mentorName ?? currentCourse.instructor;
   const mentorEmail = featuredClass?.mentorEmail ?? "hello@netcoder.in";
 
@@ -403,9 +426,15 @@ function DashboardExperience() {
               <Link href={continueHref} className={styles.heroPrimary}>
                 <Play size={17} fill="currentColor" /> {isEnrolled ? "Continue learning" : "Explore this course"}
               </Link>
-              <a href={nextLiveLink} target="_blank" rel="noreferrer" className={styles.heroSecondary}>
-                <Video size={17} /> Join live class
-              </a>
+              {liveMeetingUrl ? (
+                <a href={liveMeetingUrl} target="_blank" rel="noopener noreferrer" className={styles.heroSecondary}>
+                  <Video size={17} /> Join live class
+                </a>
+              ) : (
+                <Link href="/lms/dashboard#upcoming-classes" className={styles.heroSecondary}>
+                  <Video size={17} /> View class schedule
+                </Link>
+              )}
             </div>
           </div>
           <div className={styles.heroVisual} aria-label={`${progress}% course progress`}>
@@ -419,7 +448,15 @@ function DashboardExperience() {
             <div className={`${styles.floatingChip} ${styles.streakChip}`}><Flame size={16} /> {streak} day streak</div>
             <div className={styles.visualCaption}>
               <span className={styles.livePulse} /> NEXT LIVE CLASS
-              <strong>{featuredClass ? getCountdown(featuredClass.date, featuredClass.startTime, now) : "Check back for your next class"}</strong>
+              <strong>
+                {featuredClass?.status === "live"
+                  ? "Live now"
+                  : featuredClass && clockReady
+                    ? getCountdown(featuredClass, now)
+                    : featuredClass
+                      ? "Loading class time…"
+                    : "Check back for your next class"}
+              </strong>
             </div>
           </div>
           <div className={styles.heroShine} />
@@ -546,15 +583,21 @@ function DashboardExperience() {
                           {isLive ? <><span className={styles.livePulse} /> LIVE NOW</> : "UP NEXT"}
                         </span>
                         <span className={styles.classCountdown}>
-                          {isLive ? "Happening now" : getCountdown(session.date, session.startTime, now)}
+                          {isLive ? "Happening now" : clockReady ? getCountdown(session, now) : "Loading schedule…"}
                         </span>
                       </div>
                       <h3>{session.title}</h3>
                       <p>{session.courseTitle}</p>
                       <div className={styles.classMeta}><span><Clock3 size={14} />{session.time}</span><span><Video size={14} />{session.platform}</span><span>with {session.mentorName}</span></div>
-                      <a href={session.meetingLink} target="_blank" rel="noreferrer" className={isLive ? styles.classJoinLive : styles.classJoin}>
-                        {isLive ? "Join live class" : "Save my seat"} <ArrowRight size={15} />
-                      </a>
+                      {isLive && getSafeMeetingUrl(session.meetingLink) ? (
+                        <a href={getSafeMeetingUrl(session.meetingLink) ?? undefined} target="_blank" rel="noopener noreferrer" className={styles.classJoinLive}>
+                          Join live class <ArrowRight size={15} />
+                        </a>
+                      ) : (
+                        <Link href={classroomHref} className={styles.classJoin}>
+                          Prepare for class <ArrowRight size={15} />
+                        </Link>
+                      )}
                     </div>
                   </article>
                 );
@@ -593,7 +636,7 @@ function DashboardExperience() {
           <SectionTitle eyebrow="YOUR LEARNING TOOLKIT" title="Quick actions" detail="Everything you need, right where you need it." />
           <div className={styles.actionGrid} id="actions-title">
             {[
-              { title: "Join live class", sub: "Learn with your mentor", icon: Video, href: nextLiveLink, external: true, tone: "orange" },
+              { title: liveMeetingUrl ? "Join live class" : "View class schedule", sub: "Learn with your mentor", icon: Video, href: nextLiveLink, external: Boolean(liveMeetingUrl), tone: "orange" },
               { title: "Practice coding", sub: "Sharpen your problem solving", icon: Code2, href: "/lms/practice", tone: "blue" },
               { title: "Download notes", sub: "Keep the useful bits close", icon: ArrowDownToLine, href: "#resources", tone: "green" },
               { title: "Code challenges", sub: "Try a focused coding problem", icon: FileCode2, href: "/lms/challenges", tone: "purple" },

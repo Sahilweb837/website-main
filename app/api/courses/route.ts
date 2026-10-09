@@ -3,12 +3,13 @@ import fs from "fs";
 import path from "path";
 import { COURSES } from "@/data/courses";
 import { LMS_COURSES } from "@/data/lms-courses";
+import { filterApprovedCourses } from "@/lib/approved-courses";
 
 // Base local fallback list
-export let defaultCoursesList: any[] = [
+export let defaultCoursesList: any[] = filterApprovedCourses([
   ...LMS_COURSES,
   ...COURSES.filter((c) => !LMS_COURSES.some((l) => l.slug === c.slug)),
-];
+]);
 
 const storagePath = path.join(process.cwd(), "laravel-backend", "database", "storage.json");
 
@@ -37,8 +38,9 @@ function saveStorageData(data: any) {
 export function getAllCourses(): any[] {
   const db = getStorageData();
   if (db && Array.isArray(db.courses) && db.courses.length > 0) {
+    const approvedDbCourses = filterApprovedCourses(db.courses);
     // Merge database courses with rich metadata if available
-    const mergedDbCourses = db.courses.map((pc: any) => {
+    const mergedDbCourses = approvedDbCourses.map((pc: any) => {
       const matched = defaultCoursesList.find(
         (dc) => dc.slug?.toLowerCase() === (pc.slug || "").toLowerCase()
       );
@@ -102,6 +104,10 @@ export async function GET(request: Request) {
 
     let results = all;
 
+    if (results.length === 0) {
+      return NextResponse.json({ success: true, count: 0, data: [] });
+    }
+
     if (category && category !== "All" && category !== "all") {
       results = results.filter(
         (c) => c.category?.toLowerCase() === category.toLowerCase()
@@ -155,6 +161,13 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
+    if (!body.slug && !body.title) {
+      return NextResponse.json(
+        { success: false, message: "Course slug or title is required" },
+        { status: 400 }
+      );
+    }
+
     const newCourse = {
       id: Date.now(),
       slug,
@@ -192,6 +205,14 @@ export async function POST(request: Request) {
     // Save to database/storage.json so Laravel backend immediately has it
     const db = getStorageData() || { courses: [], students: [], blogs: [], feedbacks: [] };
     if (!Array.isArray(db.courses)) db.courses = [];
+    const approvedNewCourse = filterApprovedCourses([newCourse]);
+    if (approvedNewCourse.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Course is not in the approved public catalog." },
+        { status: 403 }
+      );
+    }
+
     db.courses.unshift(newCourse);
     saveStorageData(db);
 

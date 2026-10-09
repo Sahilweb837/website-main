@@ -1005,8 +1005,6 @@ function ProfileContent() {
                   alignItems: "center",
                   gap: 8,
                   padding: "12px 16px",
-                  borderBottom: `2px solid ${active ? T.primary : "transparent"
-                    }`,
                   background: "transparent",
                   border: "none",
                   borderBottomWidth: 2,

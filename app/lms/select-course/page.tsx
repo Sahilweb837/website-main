@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { api } from "@/lib/api";
 import { LMS_COURSES } from "@/data/lms-courses";
+import { filterApprovedCourses } from "@/lib/approved-courses";
 import PaymentCheckoutModal, { type CheckoutCourse } from "@/components/lms/PaymentCheckoutModal";
 import {
   Sparkles,
@@ -25,8 +26,8 @@ import {
   X,
   Trash2,
   Briefcase,
-  Play,
 } from "lucide-react";
+import { readLmsCart, writeLmsCart } from "@/lib/lms-cart";
 
 type CourseCardData = {
   id: string | number;
@@ -172,10 +173,12 @@ function SelectCourseContent() {
   }, []);
 
   useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent("lms:course-cart-count", { detail: cartCourses.length })
-    );
-  }, [cartCourses.length]);
+    setCartCourses(readLmsCart());
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get("cart") === "1") setIsCartOpen(true);
+  }, [searchParams]);
 
   // Check if a course was pre-selected in URL param (e.g. ?course=nextjs-fullstack)
   useEffect(() => {
@@ -198,7 +201,8 @@ function SelectCourseContent() {
         setLoading(true);
         const res = await api.getCourses();
         if (isMounted && res && res.data && Array.isArray(res.data) && res.data.length > 0) {
-          const mapped: CourseCardData[] = res.data.map((c: any) => ({
+          const filteredApiCourses = filterApprovedCourses(res.data);
+          const mapped: CourseCardData[] = filteredApiCourses.map((c: any) => ({
             id: c.id || c.slug,
             slug: c.slug,
             title: c.title,
@@ -226,9 +230,9 @@ function SelectCourseContent() {
         console.warn("Could not load from API, falling back to LMS catalog:", err);
       }
 
-      // Fallback to local LMS_COURSES
+      // Fallback to the approved LMS catalog only.
       if (isMounted) {
-        const fallbackList: CourseCardData[] = LMS_COURSES.map((c: any) => ({
+        const fallbackList: CourseCardData[] = filterApprovedCourses(LMS_COURSES).map((c: any) => ({
           id: c.id || c.slug,
           slug: c.slug,
           title: c.title,
@@ -279,12 +283,18 @@ function SelectCourseContent() {
   };
 
   const handleAddToCart = (course: CourseCardData) => {
-    setCartCourses((current) =>
-      current.some((item) => item.slug === course.slug)
-        ? current
-        : [...current, toCheckoutCourse(course)]
-    );
+    const updated = cartCourses.some((item) => item.slug === course.slug)
+      ? cartCourses
+      : [...cartCourses, toCheckoutCourse(course)];
+    writeLmsCart(updated);
+    setCartCourses(updated);
     setIsCartOpen(true);
+  };
+
+  const handleRemoveFromCart = (slug: string) => {
+    const updated = cartCourses.filter((item) => item.slug !== slug);
+    writeLmsCart(updated);
+    setCartCourses(updated);
   };
 
   const handleCartCheckout = (course: CheckoutCourse) => {
@@ -448,9 +458,9 @@ function SelectCourseContent() {
                       router.push(`/lms/courses/${c.slug}`);
                     }
                   }}
-                  aria-label={`View ${c.title} course details and preview video`}
+                  aria-label={`View ${c.title} course details`}
                 >
-                  {/* Thumbnail with Preview Trigger */}
+                  {/* Course thumbnail */}
                   <Link
                     href={`/lms/courses/${c.slug}`}
                     className="sc-thumb-link"
@@ -468,14 +478,6 @@ function SelectCourseContent() {
                       />
                       <div className="sc-thumb-overlay" />
                       
-                      {/* Hover Preview Overlay */}
-                      <div className="sc-thumb-preview-hover">
-                        <div className="sc-thumb-play-circle">
-                          <Play className="sc-thumb-play-icon" />
-                        </div>
-                        <span className="sc-thumb-play-text">Preview Course</span>
-                      </div>
-
                       <div className="sc-thumb-badges">
                         <span className="sc-chip sc-chip--dark">{c.category}</span>
                         {c.badge && <span className="sc-chip sc-chip--accent">{c.badge}</span>}
@@ -735,11 +737,7 @@ function SelectCourseContent() {
                     <button
                       type="button"
                       aria-label={`Remove ${course.title} from cart`}
-                      onClick={() =>
-                        setCartCourses((current) =>
-                          current.filter((item) => item.slug !== course.slug)
-                        )
-                      }
+                      onClick={() => handleRemoveFromCart(course.slug)}
                       className="sc-cart-remove"
                     >
                       <Trash2 className="sc-cart-remove-icon" />
@@ -1003,27 +1001,6 @@ function SelectCourseContent() {
         .sc-meta-count { font-size: 10px; color: #94a3b8; }
 
         .sc-thumb-link { display: block; text-decoration: none; position: relative; }
-        .sc-thumb-preview-hover {
-          position: absolute; inset: 0;
-          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-          opacity: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px);
-          transition: opacity 0.25s ease; z-index: 5;
-        }
-        .sc-card:hover .sc-thumb-preview-hover { opacity: 1; }
-        .sc-thumb-play-circle {
-          width: 46px; height: 46px; border-radius: 50%;
-          background: #ffffff; color: #0f172a;
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-          transform: scale(0.9); transition: transform 0.25s ease;
-        }
-        .sc-card:hover .sc-thumb-play-circle { transform: scale(1.06); }
-        .sc-thumb-play-icon { width: 20px; height: 20px; fill: #0f172a; margin-left: 2px; }
-        .sc-thumb-play-text {
-          font-size: 12px; font-weight: 800; color: #ffffff;
-          text-shadow: 0 1px 4px rgba(0,0,0,0.85); letter-spacing: 0.02em;
-        }
-
         .sc-title-link { text-decoration: none; color: inherit; display: block; }
         .sc-title-link:hover .sc-card-title { color: #a435f0; }
 

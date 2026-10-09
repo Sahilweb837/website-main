@@ -2094,6 +2094,69 @@
   .communityCard h3 { font-size: 8px; }
 }
 
+.dashboard .eyebrow { font-size: 11px; }
+.pageHeader > div:first-child > p:last-of-type { font-size: 15px; }
+.studentId { font-size: 12px; }
+.studentId strong { font-size: 12px; }
+.headerDate { font-size: 13px; }
+.heroBadge { font-size: 11px; }
+.heroDescription { font-size: 15px; }
+.heroCourse > div > span,
+.heroModule > span { font-size: 10px; }
+.heroCourse strong { font-size: 15px; }
+.heroModule strong { font-size: 14px; }
+.heroModule small { font-size: 12px; }
+.heroPrimary,
+.heroSecondary { min-height: 46px; font-size: 13px; }
+.visualCaption { font-size: 10px; }
+.visualCaption strong { font-size: 12px; }
+.sectionTitle h2 { font-size: 23px; }
+.sectionDetail { font-size: 14px; }
+.textLink { font-size: 13px; }
+.pathStep strong { font-size: 12px; }
+.pathStep small { font-size: 11px; }
+.contentLabel { font-size: 10px; }
+.watchDetails h3 { font-size: 16px; }
+.watchDetails > p { font-size: 13px; }
+.watchProgress small,
+.resumeLabel { font-size: 12px; }
+.classLive {
+  border-width: 2px;
+  background: linear-gradient(112deg, #fff3ed, #fff);
+  box-shadow: 0 0 0 4px rgba(255, 121, 83, 0.1), 0 12px 28px rgba(234, 105, 69, 0.12);
+}
+.classLive .classInfo h3 { color: #9d321d; font-size: 16px; }
+.classDate span,
+.liveTag,
+.upcomingTag,
+.classCountdown { font-size: 11px; }
+.classInfo > p,
+.classMeta { font-size: 12px; }
+.classJoin,
+.classJoinLive { min-height: 40px; padding: 0 13px; font-size: 12px; }
+.taskDetails > span,
+.taskDetails > small { font-size: 11px; }
+.taskDetails > strong { font-size: 14px; }
+.actionCard strong { font-size: 13px; }
+.actionCard small { font-size: 11px; }
+.statCard > span:not(.statIcon) { font-size: 11px; }
+.statCard > small { font-size: 10px; }
+.emptyState strong { font-size: 14px; }
+.emptyState span { font-size: 12px; }
+
+@media (max-width: 560px) {
+  .pageHeader > div:first-child > p:last-of-type { font-size: 13px; }
+  .sectionTitle h2 { font-size: 20px; }
+  .sectionDetail { font-size: 13px; }
+  .heroDescription { font-size: 14px; }
+  .heroPrimary,
+  .heroSecondary { min-height: 44px; font-size: 12px; }
+  .classCard { align-items: flex-start; }
+  .classTopline { align-items: flex-start; flex-direction: column; }
+  .classCountdown { text-align: left; }
+  .actionGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dashboard *,
   .dashboard *::before,
