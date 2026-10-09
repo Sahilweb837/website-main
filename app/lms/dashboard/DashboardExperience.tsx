@@ -520,10 +520,10 @@ function DashboardExperience() {
           <p className={styles.eyebrow}>NETCODER LEARNING HUB</p>
           <h1>Your next chapter starts here.</h1>
           <p>Sign in to pick up your course, meet your mentor, and keep your progress moving.</p>
-          <Link className={styles.primaryButton} href="/login?redirect=/lms/dashboard">
+          <Link className={styles.primaryButton} href="/login?redirect=/lms/select-course">
             Sign in to continue <ArrowRight size={16} />
           </Link>
-          <button className={styles.demoButton} onClick={() => void loginAsDemo("/lms/dashboard")}>
+          <button className={styles.demoButton} onClick={() => void loginAsDemo("/lms/select-course")}>
             Preview the learning hub
           </button>
         </div>
@@ -574,7 +574,7 @@ function DashboardExperience() {
                   <Video size={17} /> Join live class
                 </a>
               ) : (
-                <Link href="/lms/dashboard#upcoming-classes" className={styles.heroSecondary}>
+                <Link href="/lms/select-courses" className={styles.heroSecondary}>
                   <Video size={17} /> View class schedule
                 </Link>
               )}
@@ -598,7 +598,7 @@ function DashboardExperience() {
                     ? getCountdown(featuredClass, now)
                     : featuredClass
                       ? "Loading class time…"
-                    : "Check back for your next class"}
+                      : "Check back for your next class"}
               </strong>
             </div>
           </div>
@@ -683,13 +683,12 @@ function DashboardExperience() {
                 <div className={styles.zoomVisualContainer}>
                   <div className={styles.zoomVisualGlow} />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2 }}>
-                    <span className={`${styles.zoomPlatformTag} ${
-                      courseLiveOrZoomSession.status === "live"
+                    <span className={`${styles.zoomPlatformTag} ${courseLiveOrZoomSession.status === "live"
                         ? styles.tagLive
                         : courseLiveOrZoomSession.platform === "Zoom"
-                        ? styles.tagZoom
-                        : styles.tagMeet
-                    }`}>
+                          ? styles.tagZoom
+                          : styles.tagMeet
+                      }`}>
                       {courseLiveOrZoomSession.status === "live" ? (
                         <><Radio size={12} className={styles.livePulse} /> LIVE NOW ON {courseLiveOrZoomSession.platform.toUpperCase()}</>
                       ) : (
@@ -731,8 +730,8 @@ function DashboardExperience() {
                       {courseLiveOrZoomSession.status === "live"
                         ? "JOIN LIVE CLASS NOW"
                         : courseLiveOrZoomSession.recordingUrl
-                        ? "PLAY RECORDING"
-                        : "INTERACTIVE LAB ROOM"}
+                          ? "PLAY RECORDING"
+                          : "INTERACTIVE LAB ROOM"}
                     </span>
                   </div>
 
@@ -750,8 +749,8 @@ function DashboardExperience() {
                         {courseLiveOrZoomSession.status === "live"
                           ? "🔴 Happening right now"
                           : clockReady
-                          ? getCountdown(courseLiveOrZoomSession, now)
-                          : "Scheduled"}
+                            ? getCountdown(courseLiveOrZoomSession, now)
+                            : "Scheduled"}
                       </span>
                     </div>
 

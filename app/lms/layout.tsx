@@ -6,17 +6,26 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { api } from "@/lib/api";
 import { calculateAutomatedClassStatus, getLiveClassStartAt, INITIAL_CLASSES, type LiveClass } from "@/data/lms-mentor-data";
-import { readLmsCart } from "@/lib/lms-cart";
 
  
 const ACCENT = "#ff6b1a";    
 const ACCENT_SOFT = "#fff3ea";    
 const ACCENT_DARK = "#c94f0e";    
 
-const navItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+  badge?: string;
+  matchExact?: boolean;
+}
+
+const navItems: NavItem[] = [
   { label: "Dashboard", href: "/lms/dashboard", icon: "dashboard", matchExact: true },
-  { label: "My Courses", href: "/lms/courses", icon: "menu_book", matchExact: false },
-  { label: "Practice Arena", href: "/lms/practice", icon: "terminal", matchExact: true },
+  { label: "My Cohorts", href: "/lms/cohorts", icon: "groups" },
+  { label: "My Masterclasses", href: "/lms/masterclasses", icon: "video_library" },
+  { label: "Live Masterclasses", href: "/lms/live-masterclasses", icon: "sensors", badge: "LIVE" },
+  { label: "Free Resources", href: "/lms/resources", icon: "menu_book", badge: "PDF" },
   { label: "Coding Challenges", href: "/lms/challenges", icon: "code", matchExact: true },
   { label: "Community Hub", href: "/lms/community", icon: "forum", matchExact: true },
   { label: "Certificates & Milestones", href: "/lms/profile?tab=certificates", icon: "workspace_premium", matchExact: true },
@@ -61,7 +70,7 @@ const navItems = [
     flexDirection: "column",
     flex: 1,
     overflowY: "auto",
-    padding: "24px 16px 0",
+    padding: "20px 16px 10px",
   },
 
   brandRow: {
@@ -69,7 +78,7 @@ const navItems = [
     alignItems: "center",
     justifyContent: "space-between",
     padding: "0 8px",
-    marginBottom: "24px",
+    marginBottom: "16px",
   },
 
   brandLink: {
@@ -124,15 +133,15 @@ const navItems = [
   nav: {
     display: "flex",
     flexDirection: "column",
-    gap: 4,
-    flex: 1,
+    gap: 8,
+    flex: "0 0 auto",
   },
 
   navLink: {
     display: "flex",
     alignItems: "center",
     gap: 10,
-    padding: "10px 12px",
+    padding: "12px 12px",
     borderRadius: 10,
     fontSize: "0.9rem",
     fontWeight: 500,
@@ -148,12 +157,12 @@ const navItems = [
   },
 
   bottomBox: {
-    padding: 16,
+    padding: "12px 16px 16px",
     borderTop: "1px solid #f1f4fe",
     background: "#ffffff",
     display: "flex",
     flexDirection: "column",
-    gap: 4,
+    gap: 6,
   },
 
   bottomLink: {
@@ -239,37 +248,6 @@ const navItems = [
     boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
   },
 
-  cartBtn: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    height: 40,
-    padding: "0 11px",
-    borderRadius: 10,
-    background: "#ffffff",
-    color: "#43474e",
-    fontWeight: 600,
-    fontSize: "0.875rem",
-    border: "1px solid #dfe2eb",
-    cursor: "pointer",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-  },
-
-  cartCount: {
-    minWidth: 18,
-    height: 18,
-    padding: "0 5px",
-    borderRadius: 999,
-    background: ACCENT,
-    color: "#ffffff",
-    fontSize: 11,
-    fontWeight: 700,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   notifBtn: {
     position: "relative",
     padding: 8,
@@ -343,7 +321,6 @@ const navItems = [
 export default function LMSLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [courseCartCount, setCourseCartCount] = useState(0);
   const [activeProfileTab, setActiveProfileTab] = useState("");
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>(INITIAL_CLASSES);
   const [now, setNow] = useState(0);
@@ -373,17 +350,6 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
       setSidebarOpen(false);
     }
   }, [pathname]);
-
-  useEffect(() => {
-    setCourseCartCount(readLmsCart().length);
-    const updateCartCount = (event: Event) => {
-      const count = (event as CustomEvent<number>).detail;
-      setCourseCartCount(typeof count === "number" ? count : 0);
-    };
-
-    window.addEventListener("lms:course-cart-count", updateCartCount);
-    return () => window.removeEventListener("lms:course-cart-count", updateCartCount);
-  }, []);
 
   useEffect(() => {
     const updateClock = () => {
@@ -543,12 +509,10 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
           .lms-profile-level {
             display: none !important;
           }
-          .lms-live-label,
-          .lms-cart-label {
+          .lms-live-label {
             display: none !important;
           }
-          .lms-header-live,
-          .lms-header-cart {
+          .lms-header-live {
             width: 40px !important;
             min-width: 40px !important;
             padding: 0 !important;
@@ -679,7 +643,23 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
                   <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {item.badge && (
+                    <span
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: 800,
+                        letterSpacing: "0.5px",
+                        padding: "2px 7px",
+                        borderRadius: "6px",
+                        background: item.badge === "LIVE" ? "#ff3b14" : ACCENT_SOFT,
+                        color: item.badge === "LIVE" ? "#ffffff" : ACCENT_DARK,
+                        boxShadow: item.badge === "LIVE" ? "0 0 8px rgba(255, 59, 20, 0.4)" : "none",
+                      }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -691,8 +671,8 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
               display: "flex",
               flexDirection: "column",
               gap: 5,
-              margin: "12px 4px 16px",
-              padding: "13px 14px",
+              margin: "14px 4px 10px",
+              padding: "12px 14px",
               border: "1px solid #fed7c9",
               borderRadius: 14,
               background: "linear-gradient(135deg, #fff7f3, #fff)",
@@ -817,22 +797,6 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
                 {featuredClass?.status === "live" ? "Join Live Class" : "Upcoming Classes"}
               </span>
             </button>
-
-            {pathname === "/lms/select-course" && (
-              <button
-                type="button"
-                className="lms-header-cart"
-                style={S.cartBtn}
-                aria-label={`Open course cart with ${courseCartCount} items`}
-                onClick={() => window.dispatchEvent(new Event("lms:open-course-cart"))}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 19 }}>
-                  shopping_cart
-                </span>
-                <span className="lms-cart-label">Cart</span>
-                <span style={S.cartCount}>{courseCartCount}</span>
-              </button>
-            )}
 
             <button className="lms-header-notification" style={S.notifBtn} title="Notifications">
               <span className="material-symbols-outlined">notifications</span>

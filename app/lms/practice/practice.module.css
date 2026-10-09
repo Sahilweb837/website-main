@@ -94,3 +94,37 @@
   .problem h2 { font-size: 16px; }
   .problem textarea { min-height: 185px; font-size: 10px; }
 }
+
+.back { font-size: 13px; }
+.eyebrow { font-size: 11px; font-weight: 750; }
+.header h1 { font-size: clamp(29px, 4vw, 38px); font-weight: 750; }
+.header p { font-size: 14px; }
+.courseTag { font-size: 12px; }
+.tabs a { padding: 12px 14px; font-size: 13px; }
+.stats strong { font-size: 17px; }
+.stats small { font-size: 11px; }
+.listHeader strong { font-size: 14px; }
+.listHeader span { font-size: 11px; }
+.challengeItem > strong { font-size: 13px; }
+.challengeItem > small { font-size: 11px; }
+.level { font-size: 9px; }
+.topic,.reward { font-size: 11px; }
+.problem h2 { font-size: 21px; }
+.prompt { font-size: 14px; }
+.hint { font-size: 12px; }
+.editorLabel { font-size: 12px; }
+.editorLabel span { font-size: 10px; }
+.problem textarea { font-size: 13px; }
+.editorFooter > span { font-size: 11px; }
+.editorFooter button,.resetButton,.solveButton { font-size: 12px; }
+.disclaimer { font-size: 10px; }
+.notice,.error { font-size: 12px; }
+.gate h1 { font-size: 26px; }
+.gate p { font-size: 14px; }
+.gate a { font-size: 13px; }
+.loading { font-size: 14px; }
+
+@media(max-width:440px) {
+  .stats strong { font-size: 13px; }
+  .stats small { font-size: 10px; }
+}

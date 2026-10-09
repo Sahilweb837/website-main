@@ -403,20 +403,15 @@ function SelectCourseContent() {
         <section className="sc-explorer" id="course-catalog" aria-labelledby="explorer-title">
           <div className="sc-explorer-heading">
             <div>
-              <p className="sc-explorer-eyebrow">Find your next step</p>
               <h1 id="explorer-title" className="sc-explorer-title">Explore Courses</h1>
               <p className="sc-explorer-subtitle">
                 Choose a learning path to see the program, skills, and enrollment options.
               </p>
             </div>
-            <a className="sc-explorer-advisor" href="tel:+917590832055">
-              <PhoneCall aria-hidden="true" />
-              Talk to an advisor
-            </a>
           </div>
 
           <div className="sc-category-tabs" role="group" aria-label="Course categories">
-            {COURSE_CATEGORIES.map((category, index) => (
+            {COURSE_CATEGORIES.map((category) => (
               <button
                 key={category.id}
                 id={`course-category-${category.id}`}
@@ -425,7 +420,6 @@ function SelectCourseContent() {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`sc-category-tab${selectedCategory === category.id ? " is-active" : ""}`}
               >
-                <span className="sc-category-index">0{index + 1}</span>
                 {category.label}
               </button>
             ))}
@@ -499,7 +493,7 @@ function SelectCourseContent() {
 
           <div className="sc-explorer-controls" aria-label="Featured course navigation">
             <div className="sc-explorer-dots" aria-label={`Category ${activeCategoryIndex + 1} of ${COURSE_CATEGORIES.length}`}>
-              {COURSE_CATEGORIES.map((category, index) => (
+              {COURSE_CATEGORIES.map((category) => (
                 <button
                   type="button"
                   key={category.id}
@@ -519,6 +513,35 @@ function SelectCourseContent() {
               </button>
             </div>
           </div>
+
+          <section className="sc-enrollment-section" aria-labelledby="enrollment-title">
+            <div className="sc-enrollment-heading">
+              <p className="sc-enrollment-eyebrow">A clear path from learning to doing</p>
+              <h2 id="enrollment-title">Build skills you can put to work</h2>
+              <p>Choose a track that fits your goals, then get the details you need to take the next step.</p>
+            </div>
+            <div className="sc-enrollment-points">
+              <article className="sc-enrollment-point">
+                <span className="sc-enrollment-icon"><BookOpen aria-hidden="true" /></span>
+                <h3>Learn practical skills</h3>
+                <p>Explore course topics, duration, and level before choosing your program.</p>
+              </article>
+              <article className="sc-enrollment-point">
+                <span className="sc-enrollment-icon"><Users aria-hidden="true" /></span>
+                <h3>Get the right guidance</h3>
+                <p>Talk through your goals and get help finding a suitable learning path.</p>
+              </article>
+              <article className="sc-enrollment-point">
+                <span className="sc-enrollment-icon"><Briefcase aria-hidden="true" /></span>
+                <h3>Take your next step</h3>
+                <p>Build project experience and prepare for the work you want to do.</p>
+              </article>
+            </div>
+            <a className="sc-enrollment-cta" href="tel:+917590832055">
+              Start a conversation <ArrowRight aria-hidden="true" />
+            </a>
+          </section>
+
         </section>
 
         {/* ── Learning Hero ── */}
@@ -992,14 +1015,6 @@ function SelectCourseContent() {
           gap: 1.5rem;
           margin-bottom: 1.5rem;
         }
-        .sc-explorer-eyebrow {
-          margin: 0 0 0.4rem;
-          color: var(--sc-accent);
-          font-size: 0.75rem;
-          font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-        }
         .sc-explorer-title {
           margin: 0;
           color: var(--sc-ink);
@@ -1015,46 +1030,29 @@ function SelectCourseContent() {
           font-size: 0.98rem;
           line-height: 1.6;
         }
-        .sc-explorer-advisor {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.55rem;
-          min-height: 44px;
-          padding: 0 1rem;
-          border: 1px solid #ffd4c8;
-          border-radius: 0.75rem;
-          color: #b53b20;
-          font-size: 0.87rem;
-          font-weight: 700;
-          text-decoration: none;
-          white-space: nowrap;
-          transition: background 160ms ease, border-color 160ms ease;
-        }
-        .sc-explorer-advisor:hover { background: #fff4f0; border-color: #ffb8a5; }
-        .sc-explorer-advisor svg { width: 17px; height: 17px; }
         .sc-category-tabs {
           margin-bottom: 1rem;
           display: grid;
-          gap: 0.55rem;
-          grid-template-columns: repeat(6, minmax(0, 1fr));
-          padding: 0.15rem 0 0.55rem;
+          gap: 0.65rem;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          padding: 0.15rem 0 0.4rem;
         }
         .sc-category-tab {
-          display: inline-flex;
+          display: flex;
           align-items: center;
-          gap: 0.4rem;
-          min-height: 42px;
+          justify-content: center;
+          min-height: 48px;
           min-width: 0;
-          padding: 0.45rem 0.55rem;
+          padding: 0.65rem 0.8rem;
           border: 1px solid #e2e8f0;
           border-radius: 0.75rem;
           background: #fff;
           color: #475569;
           font: inherit;
-          font-size: 0.77rem;
+          font-size: 0.84rem;
           font-weight: 500;
-          line-height: 1.35;
+          line-height: 1.4;
+          text-align: center;
           cursor: pointer;
           transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
         }
@@ -1065,8 +1063,6 @@ function SelectCourseContent() {
           color: #fff;
           box-shadow: 0 5px 14px rgba(255, 85, 50, 0.2);
         }
-        .sc-category-index { flex: 0 0 auto; color: #f97316; font-size: 0.64rem; font-weight: 600; }
-        .sc-category-tab.is-active .sc-category-index { color: #ffded5; }
         .sc-category-tab:focus-visible,
         .sc-explorer-controls button:focus-visible,
         .sc-featured-actions a:focus-visible,
@@ -1251,10 +1247,96 @@ function SelectCourseContent() {
         }
         .sc-explorer-arrows button:hover { border-color: var(--sc-accent); background: #fff4f0; color: #a83a22; }
         .sc-explorer-arrows svg { width: 18px; height: 18px; }
+        .sc-enrollment-section {
+          display: grid;
+          grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.6fr);
+          align-items: center;
+          gap: 2rem;
+          margin-top: 2.5rem;
+          padding: clamp(1.25rem, 3vw, 2.25rem);
+          border: 1px solid #e7eaf0;
+          border-radius: 1.1rem;
+          background: #f8fafc;
+        }
+        .sc-enrollment-heading { min-width: 0; }
+        .sc-enrollment-eyebrow {
+          margin: 0 0 0.5rem;
+          color: #c2410c;
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .sc-enrollment-heading h2 {
+          margin: 0;
+          color: var(--sc-ink);
+          font-size: clamp(1.3rem, 2.3vw, 1.8rem);
+          font-weight: 600;
+          letter-spacing: -0.03em;
+          line-height: 1.2;
+        }
+        .sc-enrollment-heading > p:last-child {
+          margin: 0.6rem 0 0;
+          color: #64748b;
+          font-size: 0.85rem;
+          line-height: 1.6;
+        }
+        .sc-enrollment-points {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.8rem;
+        }
+        .sc-enrollment-point {
+          min-width: 0;
+          padding: 1rem;
+          border: 1px solid #e6eaf0;
+          border-radius: 0.85rem;
+          background: #fff;
+        }
+        .sc-enrollment-icon {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.65rem;
+          background: #fff2ec;
+          color: #d64b29;
+        }
+        .sc-enrollment-icon svg { width: 17px; height: 17px; }
+        .sc-enrollment-point h3 {
+          margin: 0.7rem 0 0.35rem;
+          color: #172033;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+        .sc-enrollment-point p {
+          margin: 0;
+          color: #64748b;
+          font-size: 0.76rem;
+          line-height: 1.55;
+        }
+        .sc-enrollment-cta {
+          display: none;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          min-height: 44px;
+          padding: 0 1rem;
+          border-radius: 0.7rem;
+          background: #ff5532;
+          color: #fff;
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-decoration: none;
+        }
+        .sc-enrollment-cta svg { width: 16px; height: 16px; }
         @media (max-width: 760px) {
-          .sc-explorer-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
-          .sc-explorer-advisor { min-height: 42px; }
+          .sc-explorer-heading { align-items: flex-start; }
           .sc-category-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+          .sc-enrollment-section { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+          .sc-enrollment-points { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+          .sc-enrollment-cta { display: inline-flex; justify-self: start; }
           .sc-featured-course {
             grid-template-columns: minmax(0, 1fr);
             grid-template-areas: "visual" "copy";
@@ -1266,11 +1348,14 @@ function SelectCourseContent() {
           .sc-explorer { margin-bottom: 2rem; }
           .sc-explorer-subtitle { font-size: 0.88rem; }
           .sc-category-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .sc-category-tab { min-height: 42px; padding: 0.45rem; font-size: 0.72rem; }
+          .sc-category-tab { min-height: 46px; padding: 0.55rem; font-size: 0.76rem; }
           .sc-featured-title { font-size: 1.65rem; }
           .sc-featured-description { font-size: 0.9rem; }
           .sc-featured-actions { align-items: stretch; flex-direction: column; }
           .sc-featured-primary, .sc-featured-secondary { width: 100%; }
+          .sc-enrollment-points { grid-template-columns: minmax(0, 1fr); }
+          .sc-enrollment-point { padding: 0.85rem; }
+          .sc-enrollment-cta { width: 100%; }
         }
         @media (prefers-reduced-motion: reduce) {
           .sc-category-tab, .sc-featured-primary, .sc-featured-secondary,
