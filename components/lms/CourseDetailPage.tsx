@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
-import { LMS_COURSES, type LMSCourse } from "@/data/lms-courses";
+import { LMS_COURSES } from "@/data/lms-courses";
 import { api } from "@/lib/api";
 import PaymentCheckoutModal, { type CheckoutCourse } from "@/components/lms/PaymentCheckoutModal";
+import { readLmsCart, writeLmsCart } from "@/lib/lms-cart";
 import styles from "./CourseDetailPage.module.css";
 import {
   Star,
@@ -16,12 +17,7 @@ import {
   Subtitles,
   Award,
   ShieldCheck,
-  Play,
   PlayCircle,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -53,18 +49,12 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const [dynamicCourse, setDynamicCourse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
   const [openSections, setOpenSections] = useState<Record<number, boolean>>({ 0: true, 1: true });
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string>("MT261005G1");
   const [couponMessage, setCouponMessage] = useState<string>("MT261005G1 is applied");
   const [isInCart, setIsInCart] = useState(false);
   const [purchaseSidebarHost, setPurchaseSidebarHost] = useState<HTMLElement | null>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch course details from API with fallback
   useEffect(() => {
@@ -138,24 +128,6 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
           language: dynamicCourse.language || fallback.language || "English",
           subtitles: dynamicCourse.subtitles || fallback.subtitles || "Arabic [Auto], Bulgarian [Auto], 32 more",
           couponCode: dynamicCourse.couponCode || fallback.couponCode || "MT261005G1",
-          previewVideoUrl: dynamicCourse.previewVideoUrl || fallback.previewVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-          previewVideos: fallback.previewVideos || [
-            {
-              title: "Course Overview & Learning Roadmap",
-              duration: "05:14",
-              videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-            },
-            {
-              title: "Introduction to Model Context Protocol (MCP)",
-              duration: "08:42",
-              videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-            },
-            {
-              title: "Building your First Autonomous Agent",
-              duration: "14:20",
-              videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            },
-          ],
           whatYouWillLearn: fallback.whatYouWillLearn || [
             "Build real-world multi-agent architectures using modern agent frameworks & SDKs",
             "Connect LLMs with real tools, APIs, and databases via the Model Context Protocol (MCP)",
@@ -174,9 +146,9 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
             {
               module: "Section 1: Foundations of Agentic AI & The MCP Architecture",
               lessons: [
-                "1. Welcome & Complete Agentic AI Roadmap (Preview available)",
+                "1. Welcome & Complete Agentic AI Roadmap",
                 "2. From Simple Prompts to Autonomous Reasoning Loops",
-                "3. The Model Context Protocol (MCP) Specification Deep Dive (Preview available)",
+                "3. The Model Context Protocol (MCP) Specification Deep Dive",
                 "4. Setting up Environment: Python 3.12, UV, and API Keys",
               ],
             },
@@ -224,6 +196,9 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
   }, [slug, dynamicCourse]);
 
   const enrolled = isEnrolled(course.slug);
+  useEffect(() => {
+    setIsInCart(readLmsCart().some((item) => item.slug === course.slug));
+  }, [course.slug]);
 
   const discountPercent = useMemo(() => {
     if (!course.originalPrice || course.originalPrice <= course.price) return 43;
@@ -253,8 +228,13 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
   };
 
   const handleAddToCart = () => {
+    const cart = readLmsCart();
+    const updated = cart.some((item) => item.slug === checkoutCourseData.slug)
+      ? cart
+      : [...cart, checkoutCourseData];
+    writeLmsCart(updated);
     setIsInCart(true);
-    window.dispatchEvent(new CustomEvent("lms:course-cart-count", { detail: 1 }));
+    router.push("/lms/select-course?cart=1#course-catalog");
   };
 
   const handleApplyCoupon = (e: React.FormEvent) => {
@@ -283,43 +263,6 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
       });
       setOpenSections(newOpen);
     }
-  };
-
-  const sampleVideos = useMemo(() => {
-    if (course.previewVideos && course.previewVideos.length > 0) {
-      return course.previewVideos;
-    }
-    return [
-      {
-        title: "1. Course Overview & What We Will Build",
-        duration: "05:14",
-        videoUrl: course.previewVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-      },
-      {
-        title: "2. Architecture & Model Context Protocol (MCP)",
-        duration: "08:42",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-      },
-      {
-        title: "3. Tool Calling & First Live Agent Demo",
-        duration: "14:20",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      },
-    ];
-  }, [course]);
-
-  const activeVideo = sampleVideos[currentVideoIndex] || sampleVideos[0];
-
-  const handlePlayPreview = (index = 0) => {
-    setCurrentVideoIndex(index);
-    setShowVideoModal(true);
-    setIsPlaying(true);
-    setTimeout(() => {
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
-      }
-    }, 100);
   };
 
   return (
@@ -460,29 +403,19 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
             {purchaseSidebarHost && createPortal(
               <div className={`${styles.purchaseCard} sticky top-20 z-30 bg-[#ffffff] text-[#1c1d1f] rounded-xl border border-slate-200 shadow-xl`}>
                 
-                {/* Video Preview Thumbnail Area */}
-                <div
-                  onClick={() => handlePlayPreview(0)}
-                  className={`${styles.previewImage} relative aspect-[2/1] w-full rounded-t-xl bg-slate-900 cursor-pointer group overflow-hidden`}
-                >
+                <div className={`${styles.previewImage} relative aspect-[2/1] w-full rounded-t-xl bg-slate-900 overflow-hidden`}>
                   <img
                     src={course.image || "/images/full-stact-development.png"}
                     alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    className="w-full h-full object-cover opacity-90"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = "/images/full-stact-development.png";
                     }}
                   />
-                  {/* Dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20 group-hover:bg-black/50 transition-colors" />
-
-                  {/* Play Button & "Preview this course" label */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <div className="w-16 h-16 rounded-full bg-white text-[#1c1d1f] flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                      <Play className="w-7 h-7 fill-[#1c1d1f] ml-1" />
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+                  <div className="absolute inset-0 flex items-end p-4 sm:p-5">
                     <span className="text-sm font-extrabold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wide">
-                      Preview this course
+                      Course overview
                     </span>
                   </div>
                 </div>
@@ -748,29 +681,19 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
                       {isOpen && (
                         <div className="divide-y divide-slate-100 bg-white">
-                          {lessons.map((les: string, lIdx: number) => {
-                            const isPreviewable = lIdx === 0 || les.includes("Preview");
+                          {lessons.map((les: string) => {
                             return (
                               <div
-                                key={lIdx}
+                                key={`${secIdx}-${les}`}
                                 className={`${styles.lessonRow} px-4 sm:px-5 py-3 flex items-center justify-between gap-3 text-sm text-[#2d2f31]`}
                               >
                                 <div className="flex items-center gap-3">
                                   <PlayCircle className="w-4 h-4 text-slate-500 shrink-0" />
-                                  <span className="hover:text-[#ff5532] cursor-pointer">
+                                  <span className="text-[#2d2f31]">
                                     {les}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-4 text-xs">
-                                  {isPreviewable && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handlePlayPreview(secIdx % sampleVideos.length)}
-                                      className="min-h-10 px-2 text-[#ff5532] underline font-bold hover:text-[#e64020] cursor-pointer"
-                                    >
-                                      Preview
-                                    </button>
-                                  )}
                                   <span className="text-slate-500 font-mono">08:15</span>
                                 </div>
                               </div>
@@ -910,143 +833,6 @@ export default function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
       </main>
       </div>
-
-      {/* ─── INTERACTIVE COURSE DEMO VIDEO PREVIEW MODAL ─── */}
-      {showVideoModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-6 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setShowVideoModal(false)}
-        >
-          <div
-            className="bg-[#1c1d1f] text-white w-full max-w-4xl rounded-lg overflow-hidden shadow-2xl border border-slate-700 flex flex-col max-h-[92vh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="px-5 py-3.5 bg-[#2d2f31] flex items-center justify-between border-b border-slate-700">
-              <div>
-                <p className="text-[11px] uppercase tracking-wider font-extrabold text-[#ffb199]">
-                  Course Preview
-                </p>
-                <h3 className="text-sm sm:text-base font-bold text-white truncate max-w-lg">
-                  {course.title}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowVideoModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition"
-                aria-label="Close preview"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body: Video Player + Playlist */}
-            <div className="grid grid-cols-1 md:grid-cols-12 flex-1 overflow-hidden">
-              
-              {/* Video Player Column */}
-              <div className="md:col-span-8 bg-black flex flex-col justify-center items-center relative aspect-video md:aspect-auto">
-                <video
-                  ref={videoRef}
-                  src={activeVideo.videoUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-contain max-h-[55vh]"
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
-              </div>
-
-              {/* Sample Videos Playlist Column */}
-              <div className="md:col-span-4 bg-[#1c1d1f] border-t md:border-t-0 md:border-l border-slate-700 flex flex-col max-h-[35vh] md:max-h-[55vh]">
-                <div className="p-3 bg-[#2d2f31] text-xs font-bold text-slate-200 border-b border-slate-700">
-                  Free Sample Videos ({sampleVideos.length})
-                </div>
-                <div className="overflow-y-auto flex-1 divide-y divide-slate-800 p-2">
-                  {sampleVideos.map((vid, idx) => {
-                    const isSelected = idx === currentVideoIndex;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setCurrentVideoIndex(idx);
-                          setIsPlaying(true);
-                          setTimeout(() => {
-                            if (videoRef.current) {
-                              videoRef.current.currentTime = 0;
-                              videoRef.current.play().catch(() => {});
-                            }
-                          }, 100);
-                        }}
-                        className={`w-full text-left p-2.5 rounded transition flex items-start gap-2.5 ${
-                          isSelected ? "bg-[#3e4143] text-white" : "text-slate-300 hover:bg-slate-800"
-                        }`}
-                      >
-                        <div className="mt-0.5 shrink-0">
-                          {isSelected ? (
-                            <Play className="w-4 h-4 fill-[#ff5532] text-[#ff5532]" />
-                          ) : (
-                            <PlayCircle className="w-4 h-4 text-slate-400" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold leading-tight line-clamp-2">
-                            {vid.title}
-                          </p>
-                          <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
-                            {vid.duration}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Modal Footer CTA */}
-            <div className="p-4 bg-[#2d2f31] border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-baseline gap-2">
-                <span className="text-xs text-slate-300">Ready to unlock all 248 lectures?</span>
-                <span className="text-lg font-black text-white">
-                  ₹{course.price.toLocaleString("en-IN")}.00
-                </span>
-                <span className="text-xs text-slate-400 line-through">
-                  ₹{course.originalPrice.toLocaleString("en-IN")}.00
-                </span>
-              </div>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowVideoModal(false);
-                    handleAddToCart();
-                  }}
-                  className="flex-1 sm:flex-none min-h-11 px-5 py-2.5 rounded bg-[#ff5532] hover:bg-[#e64020] text-white font-bold text-xs transition"
-                >
-                  Add to cart
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowVideoModal(false);
-                    handleEnrollClick();
-                  }}
-                  className="flex-1 sm:flex-none px-5 py-2.5 rounded bg-white hover:bg-slate-200 text-[#1c1d1f] font-bold text-xs transition"
-                >
-                  Buy now
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* ─── PAYMENT CHECKOUT MODAL ─── */}
       <PaymentCheckoutModal

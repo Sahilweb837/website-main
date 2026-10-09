@@ -26,12 +26,6 @@ export interface LMSCourse {
   language?: string;
   subtitles?: string;
   couponCode?: string;
-  previewVideoUrl?: string;
-  previewVideos?: Array<{
-    title: string;
-    duration: string;
-    videoUrl: string;
-  }>;
   whatYouWillLearn?: string[];
   requirements?: string[];
   description?: string;
@@ -69,24 +63,6 @@ export const LMS_COURSES: LMSCourse[] = [
     language: "English",
     subtitles: "Arabic [Auto], Bulgarian [Auto], 32 more",
     couponCode: "MT261005G1",
-    previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    previewVideos: [
-      {
-        title: "Course Overview & Agentic Roadmap",
-        duration: "05:14",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-      },
-      {
-        title: "Introduction to Model Context Protocol (MCP)",
-        duration: "08:42",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-      },
-      {
-        title: "Building your First Autonomous Agent with OpenAI Agents SDK",
-        duration: "14:20",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      },
-    ],
     whatYouWillLearn: [
       "Build real-world multi-agent architectures using OpenAI Agents SDK, CrewAI, LangGraph & AutoGen",
       "Connect LLMs with real tools, APIs, and databases via the Model Context Protocol (MCP)",
@@ -105,9 +81,9 @@ export const LMS_COURSES: LMSCourse[] = [
       {
         module: "Section 1: Foundations of Agentic AI & The MCP Architecture",
         lessons: [
-          "1. Welcome & Complete Agentic AI Roadmap (Preview available)",
+          "1. Welcome & Complete Agentic AI Roadmap",
           "2. From Simple Prompts to Autonomous Reasoning Loops",
-          "3. The Model Context Protocol (MCP) Specification Deep Dive (Preview available)",
+          "3. The Model Context Protocol (MCP) Specification Deep Dive",
           "4. Setting up Environment: Python 3.12, UV, and API Keys",
         ],
       },

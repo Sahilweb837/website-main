@@ -144,7 +144,7 @@ function ProfileContent() {
       const seeded = userEnrollments.find((enrollment) => enrollment.courseSlug === slug);
       const totalLessons = course?.syllabus?.reduce((count, module) => count + module.lessons.length, 0)
         || DEFAULT_LESSONS[slug]?.length
-        || seeded?.course.syllabus.length
+        || seeded?.course?.syllabus?.length
         || 0;
       const saved = readCourseProgress(user.id, slug);
       const percent = saved
@@ -259,9 +259,9 @@ function ProfileContent() {
     return {
       id: `LOCAL-${slug}`,
       slug,
-      title: course?.title ?? seeded?.course.title ?? slug,
+      title: course?.title ?? seeded?.course?.title ?? slug,
       grade: `${progress}% complete`,
-      skills: (course?.tools ?? seeded?.course.tools ?? []).slice(0, 4),
+      skills: (course?.tools ?? seeded?.course?.tools ?? []).slice(0, 4),
       status: progress === 100 ? "Completed · local preview" : "In progress",
       progress,
     };
@@ -1005,8 +1005,6 @@ function ProfileContent() {
                   alignItems: "center",
                   gap: 8,
                   padding: "12px 16px",
-                  borderBottom: `2px solid ${active ? T.primary : "transparent"
-                    }`,
                   background: "transparent",
                   border: "none",
                   borderBottomWidth: 2,

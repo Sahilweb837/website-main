@@ -356,46 +356,45 @@ export const INITIAL_TESTS: MentorTest[] = [
 ];
 
 // Helper to determine if a class is happening right now (automated status)
+function getIndiaDateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 export function calculateAutomatedClassStatus(cls: LiveClass): "live" | "upcoming" | "completed" {
   if (cls.status === "completed") return "completed";
-  
-  // If explicitly forced live
-  if (cls.status === "live") return "live";
+  const now = new Date();
+  const classDate = cls.isAutomatedDaily
+    ? getIndiaDateKey(now)
+    : cls.date;
+  const startAt = new Date(`${classDate}T${cls.startTime}:00+05:30`);
+  const endAt = new Date(`${classDate}T${cls.endTime}:00+05:30`);
 
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    if (cls.date !== today && !cls.isAutomatedDaily) {
-      const classDate = new Date(`${cls.date}T00:00:00`);
-      const now = new Date();
-      if (classDate < new Date(`${today}T00:00:00`)) {
-        return "completed";
-      }
-      return "upcoming";
-    }
-
-    const now = new Date();
-    const currentHours = now.getHours();
-    const currentMinutes = now.getMinutes();
-    const currentTotalMin = currentHours * 60 + currentMinutes;
-
-    if (cls.startTime && cls.endTime) {
-      const [startH, startM] = cls.startTime.split(":").map(Number);
-      const [endH, endM] = cls.endTime.split(":").map(Number);
-      const startTotal = startH * 60 + startM;
-      const endTotal = endH * 60 + endM;
-
-      // If within 15 mins before start until end, mark live
-      if (currentTotalMin >= startTotal - 15 && currentTotalMin <= endTotal) {
-        return "live";
-      } else if (currentTotalMin > endTotal) {
-        return "completed";
-      } else {
-        return "upcoming";
-      }
-    }
-  } catch (e) {
-    console.warn("Status calculation fallback", e);
+  if (!Number.isFinite(startAt.getTime()) || !Number.isFinite(endAt.getTime())) {
+    return cls.status === "live" ? "live" : "upcoming";
   }
 
-  return cls.status;
+  const liveWindowStart = startAt.getTime() - 15 * 60_000;
+  if (now.getTime() >= liveWindowStart && now.getTime() <= endAt.getTime()) return "live";
+  if (now.getTime() > endAt.getTime()) return cls.isAutomatedDaily ? "upcoming" : "completed";
+  return "upcoming";
+}
+
+export function getLiveClassStartAt(cls: LiveClass, now = new Date()) {
+  const date = cls.isAutomatedDaily
+    ? getIndiaDateKey(now)
+    : cls.date;
+  const startAt = new Date(`${date}T${cls.startTime}:00+05:30`);
+  if (!Number.isFinite(startAt.getTime())) return null;
+
+  if (cls.isAutomatedDaily && startAt.getTime() <= now.getTime()) {
+    startAt.setTime(startAt.getTime() + 24 * 60 * 60_000);
+  }
+  return startAt;
 }

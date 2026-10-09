@@ -457,11 +457,11 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
 
   return (
     <SecureLMSGuard showWatermark={true} contentTitle={course.title}>
-      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="w-full space-y-5 sm:space-y-6 max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 pb-10 sm:pb-12">
         {/* Top Header & Security Bar */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-wrap items-start lg:items-center justify-between gap-4">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <Link href="/lms/dashboard" className="hover:text-orange-600 transition">
                 Dashboard
               </Link>
@@ -472,10 +472,10 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
               <span>/</span>
               <span className="text-slate-900 font-semibold">{course.title}</span>
             </div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900">{course.title}</h1>
+            <h1 className="break-words text-xl md:text-2xl font-bold text-slate-900">{course.title}</h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {/* DRM Shield Badge */}
             <div
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
@@ -504,7 +504,7 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
               borderColor: activeLiveClass.status === "live" ? "#ff5532" : "#fed7aa",
             }}
           >
-            <div className="flex items-center gap-3.5">
+            <div className="flex min-w-0 flex-1 items-start sm:items-center gap-3.5">
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl flex-shrink-0"
                 style={{
@@ -549,7 +549,7 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <button
                 type="button"
                 onClick={() => handleCopyLink(activeLiveClass.meetingLink, activeLiveClass.id)}
@@ -567,7 +567,7 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
                 style={{ background: "linear-gradient(135deg, #ff5532 0%, #ff7354 100%)" }}
               >
                 <i className="fa-solid fa-video"></i>
-                <span>Join Live Meeting ↗</span>
+                <span>{activeLiveClass.status === "live" ? "Join Live Meeting ↗" : "Open Meeting Room ↗"}</span>
               </a>
             </div>
           </div>
@@ -617,7 +617,7 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
                   <h3 className="text-base font-bold text-white mt-0.5">{activeLesson.title}</h3>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-start">
                   <button
                     onClick={handlePrevLesson}
                     disabled={activeIndex === 0}

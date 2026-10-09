@@ -96,7 +96,7 @@ export default function PracticeExperience({ initialView }: { initialView: "aren
   const availableCourses = enrolledSlugs.map((slug) => ({
     slug,
     title: LMS_COURSES.find((item) => item.slug === slug)?.title
-      ?? DEFAULT_ENROLLMENTS.find((enrollment) => enrollment.userId === user?.id && enrollment.courseSlug === slug)?.course.title
+      ?? DEFAULT_ENROLLMENTS.find((enrollment) => enrollment.userId === user?.id && enrollment.courseSlug === slug)?.course?.title
       ?? slug.replace(/-/g, " "),
   }));
   const courseName = availableCourses.find((item) => item.slug === selectedCourseSlug)?.title ?? "Your first course";
