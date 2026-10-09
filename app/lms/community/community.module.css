@@ -67,3 +67,45 @@
   .composer > div { flex-wrap: wrap; }
   .composer > div > span { min-width: 30px; }
 }
+
+.back { font-size: 13px; }
+.eyebrow { font-size: 11px; font-weight: 750; }
+.header h1 { font-size: clamp(29px, 4vw, 38px); font-weight: 750; }
+.header p,.feedHeader p { color: #707c91; font-size: 14px; }
+.createButton,.composer button,.emptyFeed button { min-height: 42px; padding-right: 15px; padding-left: 15px; font-size: 13px; font-weight: 700; }
+.composer { gap: 11px; margin-bottom: 18px; padding: 18px; }
+.composer label { font-size: 14px; font-weight: 650; }
+.composer textarea { min-height: 110px; padding: 12px; font-size: 14px; }
+.composer select { padding: 9px 10px; font-size: 13px; }
+.composer > div > span { color: #8993a3; font-size: 11px; }
+.composer button { min-height: 36px; }
+.notice { font-size: 13px; }
+.groupCard { gap: 14px; padding: 18px; }
+.groupCard strong { font-size: 15px; font-weight: 700; }
+.groupCard p { color: #77718c; font-size: 13px; line-height: 1.5; }
+.groupCard button { gap: 6px; padding: 10px 12px; font-size: 12px; font-weight: 650; }
+.feedHeader h2 { font-size: 20px; font-weight: 700; }
+.feedHeader > span { font-size: 12px; }
+.filters { flex-wrap: wrap; gap: 8px; overflow: visible; }
+.filters button { padding: 9px 13px; font-size: 12px; font-weight: 600; }
+.feed { gap: 14px; margin-top: 14px; }
+.post { padding: 19px; }
+.postHeader { gap: 11px; }
+.avatar { width: 40px; height: 40px; font-size: 12px; font-weight: 700; }
+.postHeader strong { font-size: 13px; font-weight: 650; }
+.postHeader small { color: #818b9c; font-size: 11px; }
+.category { padding: 6px 9px; color: #687489; font-size: 11px; font-weight: 650; }
+.post h3 { margin: 15px 0; font-size: 17px; font-weight: 650; line-height: 1.5; }
+.reply { margin: 10px 0 0 12px; padding: 11px 12px; }
+.reply strong { font-size: 12px; }
+.reply p { color: #626f83; font-size: 13px; }
+.postActions { gap: 16px; margin-top: 14px; padding-top: 12px; }
+.postActions button { gap: 6px; font-size: 12px; font-weight: 600; }
+.replyForm input { padding: 11px 12px; font-size: 13px; }
+.replyForm button { width: 40px; }
+.emptyFeed strong,.empty h1 { font-size: 16px; }
+.emptyFeed p,.empty p { font-size: 13px; line-height: 1.5; }
+.emptyFeed button { min-height: 38px; }
+.dashboardLink { gap: 7px; margin-top: 22px; font-size: 12px; font-weight: 650; }
+.empty a { padding: 11px 15px; font-size: 13px; font-weight: 650; }
+.loading { font-size: 14px; }
