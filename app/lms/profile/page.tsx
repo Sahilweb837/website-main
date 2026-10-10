@@ -420,7 +420,7 @@ function ProfileContent() {
           }}
         >
           <Link
-            href="/lms/dashboard"
+            href="/lms/courses"
             className="pf-btn-hover"
             style={{
               display: "inline-flex",
@@ -1387,7 +1387,7 @@ function ProfileContent() {
                 </div>
 
                 <Link
-                  href="/lms/dashboard"
+                  href="/lms/courses"
                   className="pf-btn-hover"
                   style={{
                     width: "100%",

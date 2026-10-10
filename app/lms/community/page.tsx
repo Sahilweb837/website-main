@@ -124,7 +124,7 @@ export default function CommunityPage() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        <Link href="/lms/dashboard" className={styles.back}><ArrowLeft size={15} /> Learning dashboard</Link>
+        <Link href="/lms/courses" className={styles.back}><ArrowLeft size={15} /> My Courses</Link>
         <header className={styles.header}>
           <div><span className={styles.eyebrow}>LEARN BETTER, TOGETHER</span><h1>Your learning community</h1><p>Ask a question, share a win, or find people learning alongside you.</p></div>
           <button type="button" className={styles.createButton} onClick={() => setComposerOpen((open) => !open)}><Plus size={16} /> Start a discussion</button>
@@ -140,7 +140,7 @@ export default function CommunityPage() {
             return <article className={styles.post} key={post.id}><div className={styles.postHeader}><span className={styles.avatar}>{post.author.split(" ").map((part) => part[0]).slice(0, 2).join("")}</span><div><strong>{post.author}</strong><small>{timeLabel(post.createdAt)}</small></div><span className={styles.category}>{post.category}</span></div><h3>{post.title}</h3>{post.replies.map((reply) => <div className={styles.reply} key={reply.id}><strong>{reply.author}</strong><p>{reply.text}</p></div>)}<div className={styles.postActions}><button type="button" aria-pressed={liked} className={liked ? styles.liked : ""} onClick={() => savePosts(posts.map((item) => item.id === post.id ? { ...item, likes: liked ? item.likes.filter((id) => id !== user.id) : [...item.likes, user.id] } : item))}><Heart size={15} fill={liked ? "currentColor" : "none"} /> {post.likes.length} {post.likes.length === 1 ? "like" : "likes"}</button><button type="button" onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}><MessageCircle size={15} /> {post.replies.length} replies</button></div>{replyingTo === post.id && <form className={styles.replyForm} onSubmit={(event) => { event.preventDefault(); addReply(post.id); }}><input aria-label="Write a reply" value={replyText} onChange={(event) => setReplyText(event.target.value)} placeholder="Write a helpful reply…" maxLength={240} /><button type="submit" aria-label="Send reply"><Send size={15} /></button></form>}</article>;
           }) : <div className={styles.emptyFeed}><Sparkles size={22} /><strong>No {filter.toLowerCase()} posts just yet.</strong><p>Start the first conversation and help your community grow.</p><button type="button" onClick={() => setComposerOpen(true)}>Create a post</button></div>}
         </section>
-        <Link className={styles.dashboardLink} href="/lms/dashboard">Back to your learning dashboard <ArrowRight size={15} /></Link>
+        <Link className={styles.dashboardLink} href="/lms/courses">Back to your courses <ArrowRight size={15} /></Link>
       </div>
     </main>
   );

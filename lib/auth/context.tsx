@@ -120,10 +120,12 @@ function getStoredEnrolled(userId: string | undefined): string[] {
         return parsed;
       }
     }
-    return [];
+    const defaultStarter = ["fullstack-web-development", "data-science-machine-learning"];
+    localStorage.setItem(scopedKey, JSON.stringify(defaultStarter));
+    return defaultStarter;
   } catch (error) {
     console.error(`Unable to load course enrollments for ${userId}.`, error);
-    return [];
+    return ["fullstack-web-development", "data-science-machine-learning"];
   }
 }
 
@@ -226,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return enrolledCourses.includes(courseSlug);
   };
 
-  const loginWithPhone = async (phone: string, redirectTo = "/lms/select-course") => {
+  const loginWithPhone = async (phone: string, redirectTo = "/lms/courses") => {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
@@ -246,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithGoogle = async (redirectTo = "/lms/select-course") => {
+  const loginWithGoogle = async (redirectTo = "/lms/courses") => {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
@@ -268,7 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithCredentials = async (
     userData: { name?: string; email?: string; phone?: string },
-    redirectTo = "/lms/select-course"
+    redirectTo = "/lms/courses"
   ) => {
     setIsLoading(true);
     try {
@@ -293,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginAsDemo = async (redirectTo = "/lms/select-course") => {
+  const loginAsDemo = async (redirectTo = "/lms/courses") => {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));

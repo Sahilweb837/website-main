@@ -4,7 +4,7 @@ const routes = [
   { path: '/', label: 'Home Page' },
   { path: '/services', label: 'Services Page' },
   { path: '/lms', label: 'LMS Gateway' },
-  { path: '/lms/dashboard', label: 'Student LMS Dashboard' },
+  { path: '/lms/courses', label: 'Student My Courses Main Page' },
   { path: '/lms/courses/fullstack-web-development', label: 'Protected Classroom (DRM Guard)' },
   { path: '/admin/login', label: 'Admin Login' },
   { path: '/admin/dashboard', label: 'Admin Dashboard with DRM Tab' },

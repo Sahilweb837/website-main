@@ -141,7 +141,7 @@ export default function PracticeExperience({ initialView }: { initialView: "aren
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        <Link href="/lms/dashboard" className={styles.back}><ArrowLeft size={15} /> Learning dashboard</Link>
+        <Link href="/lms/courses" className={styles.back}><ArrowLeft size={15} /> My Courses</Link>
         <header className={styles.header}>
           <div><span className={styles.eyebrow}>YOUR PRACTICE SPACE</span><h1>{initialView === "arena" ? "Build a daily coding habit." : "Choose your next challenge."}</h1><p>Practice at your pace. Your drafts and solved challenges stay saved to your account.</p></div>
           {availableCourses.length > 1 ? (

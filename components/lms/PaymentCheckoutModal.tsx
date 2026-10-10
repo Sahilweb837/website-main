@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import CheckoutForm from "./payment/CheckoutForm";
+import PaymentProcessingOverlay from "./payment/PaymentProcessingOverlay";
 import { useCheckout } from "@/hooks/useCheckout";
 import type { CheckoutCourse } from "@/lib/payments";
 
@@ -17,19 +18,25 @@ export default function PaymentCheckoutModal({
   onClose: () => void;
 }) {
   const checkout = useCheckout(course);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState<any>(null);
 
   /* Lock scroll + Esc close */
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setIsProcessing(false);
+      setCreatedOrder(null);
+      return;
+    }
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !isProcessing && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isProcessing, onClose]);
 
   if (!isOpen || !course) return null;
 
@@ -37,13 +44,19 @@ export default function PaymentCheckoutModal({
     const order = await checkout.submit();
     if (!order) return;
 
-    // 🔒 For production: open your PG SDK here (Razorpay/Stripe).
-    // For now, redirect to the success page which verifies server-side.
+    // Show realistic payment processing gateway animation
+    setCreatedOrder(order);
+    setIsProcessing(true);
+  };
+
+  const handleProcessingComplete = () => {
+    if (!createdOrder || !course) return;
     onClose();
     window.location.href = `/lms/checkout/success?orderId=${encodeURIComponent(
-      order.orderId
+      createdOrder.orderId
     )}&course=${encodeURIComponent(course.slug)}`;
   };
+
 
   return (
     <div
@@ -98,6 +111,18 @@ export default function PaymentCheckoutModal({
             errorMsg={checkout.errorMsg}
           />
         </div>
+
+        {/* Realistic Payment Processing Overlay */}
+        {isProcessing && (
+          <PaymentProcessingOverlay
+            isProcessing={isProcessing}
+            courseTitle={course.title}
+            amountINR={checkout.totals?.totalINR || course.price}
+            method={checkout.method}
+            orderId={createdOrder?.orderId}
+            onComplete={handleProcessingComplete}
+          />
+        )}
       </div>
     </div>
   );

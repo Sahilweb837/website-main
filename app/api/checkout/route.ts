@@ -78,15 +78,31 @@ export async function POST(req: NextRequest) {
             createdAt: new Date().toISOString(),
         };
 
-        /* ---------- TODO: persist order to DB ---------- */
-        // await db.orders.insert(order);
-        // For Razorpay, also do:
-        //   const rzpOrder = await razorpay.orders.create({
-        //     amount: totals.totalINR * 100,
-        //     currency: "INR",
-        //     receipt: orderId,
-        //   });
-        //   return NextResponse.json({ order, rzpOrder });
+        /* ---------- Persist order & enrollment to Laravel SQL DB ---------- */
+        try {
+            const laravelBase = process.env.LARAVEL_API_URL || "http://127.0.0.1:8000";
+            const laravelRes = await fetch(`${laravelBase}/api/checkout/process`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                body: JSON.stringify({
+                    course_slug: course.slug,
+                    name: body.customer.fullName,
+                    email: body.customer.email,
+                    phone: body.customer.phone,
+                    amount: totals.totalINR,
+                    payment_method: body.method,
+                    track_type: "online",
+                }),
+            });
+            if (laravelRes.ok) {
+                const laravelData = await laravelRes.json();
+                if (laravelData?.orderId) {
+                    order.orderId = laravelData.orderId;
+                }
+            }
+        } catch (dbErr) {
+            console.warn("[checkout] Laravel SQL persistence error:", dbErr);
+        }
 
         return NextResponse.json({ order });
     } catch (err: any) {

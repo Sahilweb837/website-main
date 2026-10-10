@@ -194,12 +194,12 @@ export default function Header() {
           <div className="right-menu">
             {isAuthenticated && user ? (
               <Link
-                href="/lms/dashboard"
+                href="/lms/courses"
                 className="header-lms-btn logged-in"
-                title={`Logged in as ${user.name} - Open LMS Dashboard`}
+                title={`Logged in as ${user.name} - Open My Courses`}
               >
                 <i className="fa-solid fa-graduation-cap"></i>
-                <span>LMS Portal</span>
+                <span>My Courses</span>
                 <span className="lms-btn-dot"></span>
               </Link>
             ) : (
@@ -282,11 +282,11 @@ export default function Header() {
               </div>
               <div className="side-lms-btn-row">
                 <Link
-                  href="/lms/dashboard"
+                  href="/lms/courses"
                   className="side-lms-primary-btn"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <i className="fa-solid fa-gauge-high"></i> My Dashboard
+                  <i className="fa-solid fa-graduation-cap"></i> My Courses
                 </Link>
                 <button
                   type="button"

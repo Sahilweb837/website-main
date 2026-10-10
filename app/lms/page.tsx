@@ -14,7 +14,7 @@ export default function LMSLandingPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       const timer = setTimeout(() => {
-        router.push("/lms/explore");
+        router.push("/lms/courses");
       }, 1500);
       return () => clearTimeout(timer);
     }
@@ -24,7 +24,7 @@ export default function LMSLandingPage() {
     setIsDemoLoading(true);
     try {
       await loginAsDemo();
-      router.push("/lms/explore");
+      router.push("/lms/courses");
     } finally {
       setIsDemoLoading(false);
     }
@@ -65,11 +65,11 @@ export default function LMSLandingPage() {
               </div>
               <div className="lms-session-meta">
                 <h3>Welcome back, {user.name}!</h3>
-                <p>You are logged in. Redirecting to your LMS student dashboard...</p>
+                <p>You are logged in. Redirecting to your enrolled courses...</p>
               </div>
             </div>
-            <Link href="/lms/dashboard" className="lms-session-btn">
-              Go to LMS Dashboard <i className="fa-solid fa-arrow-right"></i>
+            <Link href="/lms/courses" className="lms-session-btn">
+              Go to My Courses <i className="fa-solid fa-arrow-right"></i>
             </Link>
           </div>
         )}

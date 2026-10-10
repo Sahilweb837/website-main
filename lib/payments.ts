@@ -1,6 +1,6 @@
 // lib/payments.ts
 
-export type PaymentMethod = "upi" | "card" | "netbanking" | "wallet";
+export type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "emi";
 
 export interface CheckoutCourse {
     slug: string;

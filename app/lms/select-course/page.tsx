@@ -28,6 +28,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Lock,
+  CreditCard,
+  Sparkles,
+  QrCode,
 } from "lucide-react";
 import { readLmsCart, writeLmsCart } from "@/lib/lms-cart";
 
@@ -486,7 +490,7 @@ function SelectCourseContent() {
             </div>
 
             <div className="sc-featured-art">
-              <img src={activeCategory.image} alt={`${approvedCourse?.title || legacyCourse?.title || activeCategory.title} course`} />
+              <img src={activeCategory.image} alt={`${approvedCourse?.title || legacyCourse?.title || activeCategory.title} course`} loading="lazy" />
               <span className="sc-featured-art-label">{activeCategory.label}</span>
             </div>
           </article>
@@ -577,11 +581,118 @@ function SelectCourseContent() {
               src="/images/modernheroimg.jpg"
               alt="Student exploring interactive programming and coding tools"
               className="sc-hero-image"
+              loading="lazy"
             />
             <div className="sc-hero-image-caption">
               <span className="sc-hero-image-live"><span className="sc-live-dot" /> LIVE LEARNING</span>
               <span>Learn together. Build together.</span>
             </div>
+          </div>
+        </section>
+
+        {/* ── Supported Payment Methods & Security Guarantee Strip ── */}
+        <section
+          aria-label="Supported Payment Methods"
+          style={{
+            margin: "1.75rem 0 1.25rem",
+            padding: "1rem 1.4rem",
+            borderRadius: "16px",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "0.82rem",
+                fontWeight: 800,
+                color: "#0f172a",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+            >
+              <ShieldCheck style={{ width: 18, height: 18, color: "#16a34a" }} />
+              Supported Payment Methods:
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#fff7f5",
+                  color: "#ff5532",
+                  border: "1px solid #ffe0d9",
+                  padding: "4px 10px",
+                  borderRadius: "999px",
+                  fontWeight: 700,
+                  fontSize: "0.78rem",
+                }}
+              >
+                <Zap style={{ width: 13, height: 13 }} /> Instant UPI &amp; QR (GPay, PhonePe, Paytm, BHIM)
+              </span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#f8fafc",
+                  color: "#334155",
+                  border: "1px solid #e2e8f0",
+                  padding: "4px 10px",
+                  borderRadius: "999px",
+                  fontWeight: 700,
+                  fontSize: "0.78rem",
+                }}
+              >
+                <CreditCard style={{ width: 13, height: 13 }} /> Credit &amp; Debit Cards (Visa, RuPay, MC)
+              </span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#f8fafc",
+                  color: "#334155",
+                  border: "1px solid #e2e8f0",
+                  padding: "4px 10px",
+                  borderRadius: "999px",
+                  fontWeight: 700,
+                  fontSize: "0.78rem",
+                }}
+              >
+                Net Banking (50+ Banks)
+              </span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "#f0fdf4",
+                  color: "#16a34a",
+                  border: "1px solid #bbf7d0",
+                  padding: "4px 10px",
+                  borderRadius: "999px",
+                  fontWeight: 700,
+                  fontSize: "0.78rem",
+                }}
+              >
+                <Sparkles style={{ width: 13, height: 13 }} /> 0% No Cost EMI &amp; PayLater
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>
+            <Lock style={{ width: 14, height: 14, color: "#16a34a" }} />
+            <span>256-Bit SSL Encrypted · Instant LMS License</span>
           </div>
         </section>
 

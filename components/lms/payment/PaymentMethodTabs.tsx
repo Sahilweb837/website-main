@@ -2,11 +2,12 @@
 
 import type { PaymentMethod } from "@/lib/payments";
 
-const TABS: { id: PaymentMethod; label: string; icon: string }[] = [
-    { id: "upi", label: "UPI", icon: "qr_code_2" },
-    { id: "card", label: "Card", icon: "credit_card" },
+const TABS: { id: PaymentMethod; label: string; icon: string; badge?: string }[] = [
+    { id: "upi", label: "UPI & QR", icon: "qr_code_2", badge: "Instant" },
+    { id: "card", label: "Cards", icon: "credit_card" },
     { id: "netbanking", label: "Net Banking", icon: "account_balance" },
-    { id: "wallet", label: "Wallet", icon: "wallet" },
+    { id: "wallet", label: "Wallets", icon: "wallet" },
+    { id: "emi", label: "0% EMI", icon: "payments", badge: "No Cost" },
 ];
 
 export default function PaymentMethodTabs({
@@ -17,7 +18,7 @@ export default function PaymentMethodTabs({
     onChange: (v: PaymentMethod) => void;
 }) {
     return (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             {TABS.map((tab) => {
                 const active = value === tab.id;
                 return (

@@ -37,8 +37,7 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
   const [successText, setSuccessText] = useState<string | null>(null);
 
   const redirectParam = searchParams.get("redirect") || searchParams.get("return_to");
-  const targetRedirect =
-    redirectParam || (isAuthLoaded && enrolledCourses.length > 0 ? "/lms/dashboard" : "/lms/select-course");
+  const targetRedirect = redirectParam || "/lms/courses";
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 350);

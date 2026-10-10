@@ -30,6 +30,33 @@ export default function MasterclassesPage() {
 
     async function loadData() {
       try {
+        const mcRes = await api.getMasterclasses().catch(() => null);
+        if (active && mcRes && Array.isArray(mcRes.data) && mcRes.data.length > 0) {
+          const formatted: LiveClass[] = mcRes.data.map((mc: any) => ({
+            id: mc.id,
+            courseSlug: "fullstack-web-development",
+            courseTitle: `Industry Masterclass · ${mc.topic || "Advanced Tech"}`,
+            title: mc.title,
+            mentorName: mc.mentorName || "Faculty Lead",
+            mentorEmail: "mentor@netcoder.in",
+            mentorAvatar: mc.mentorAvatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+            date: mc.sessionDate || new Date().toISOString().split("T")[0],
+            startTime: "19:00",
+            endTime: "20:30",
+            time: mc.sessionTime || "07:00 PM - 08:30 PM IST",
+            platform: mc.platform || "Google Meet",
+            meetingLink: mc.meetingLink || "",
+            recordingUrl: mc.recordingUrl || mc.recordingLink || null,
+            recordingLink: mc.recordingLink || mc.recordingUrl || null,
+            status: mc.status || "upcoming",
+            agenda: Array.isArray(mc.agenda) ? mc.agenda : [],
+            cohortCode: "ALL-BATCHES",
+            batch: "All Batches",
+          }));
+          setClasses(formatted);
+          return;
+        }
+
         const res = await api.getLiveClasses();
         if (active && res && Array.isArray(res.data)) {
           setClasses(res.data);
@@ -305,16 +332,22 @@ export default function MasterclassesPage() {
                     </div>
 
                     {/* Title */}
-                    <h3 style={{
-                      fontSize: "17px",
-                      fontWeight: 800,
-                      color: "#172033",
-                      margin: "0 0 12px",
-                      lineHeight: 1.35,
-                      letterSpacing: "-0.3px",
-                    }}>
-                      {item.title}
-                    </h3>
+                    <Link
+                      href={`/lms/masterclasses/${item.id}`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <h3 style={{
+                        fontSize: "17px",
+                        fontWeight: 800,
+                        color: "#172033",
+                        margin: "0 0 12px",
+                        lineHeight: 1.35,
+                        letterSpacing: "-0.3px",
+                        cursor: "pointer",
+                      }}>
+                        {item.title}
+                      </h3>
+                    </Link>
 
                     {/* Speaker Info */}
                     <div style={{
@@ -368,83 +401,87 @@ export default function MasterclassesPage() {
 
                   {/* Actions */}
                   <div style={{ paddingTop: "14px", borderTop: "1px solid #f1f5f9" }}>
-                    {isLive && item.meetingLink ? (
-                      <a
-                        href={item.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          width: "100%",
-                          padding: "10px 16px",
-                          borderRadius: "10px",
-                          background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-                          color: "#ffffff",
-                          fontSize: "12px",
-                          fontWeight: 750,
-                          textDecoration: "none",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          boxShadow: "0 4px 14px rgba(239, 68, 68, 0.3)",
-                        }}
-                      >
-                        <Radio size={14} /> Join Live {item.platform} Room <ExternalLink size={12} />
-                      </a>
-                    ) : item.meetingLink ? (
-                      <a
-                        href={item.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          width: "100%",
-                          padding: "10px 16px",
-                          borderRadius: "10px",
-                          background: isZoom ? "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)" : "linear-gradient(135deg, #ff5532 0%, #ff7354 100%)",
-                          color: "#ffffff",
-                          fontSize: "12px",
-                          fontWeight: 750,
-                          textDecoration: "none",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          boxShadow: "0 4px 14px rgba(255, 85, 50, 0.25)",
-                        }}
-                      >
-                        <Video size={14} /> Launch {item.platform} Class <ExternalLink size={12} />
-                      </a>
-                    ) : hasRec ? (
-                      <a
-                        href={item.recordingUrl || item.recordingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          width: "100%",
-                          padding: "10px 16px",
-                          borderRadius: "10px",
-                          background: "#0f172a",
-                          color: "#ffffff",
-                          fontSize: "12px",
-                          fontWeight: 750,
-                          textDecoration: "none",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                        }}
-                      >
-                        <Play size={14} fill="currentColor" /> Watch Recording
-                      </a>
-                    ) : (
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: (item.meetingLink || hasRec) ? "1fr 1fr" : "1fr",
+                      gap: "8px",
+                    }}>
+                      {isLive && item.meetingLink ? (
+                        <a
+                          href={item.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "10px",
+                            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 750,
+                            textDecoration: "none",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            boxShadow: "0 4px 14px rgba(239, 68, 68, 0.3)",
+                          }}
+                        >
+                          <Radio size={13} /> Join Live
+                        </a>
+                      ) : item.meetingLink ? (
+                        <a
+                          href={item.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "10px",
+                            background: isZoom ? "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)" : "linear-gradient(135deg, #ff5532 0%, #ff7354 100%)",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 750,
+                            textDecoration: "none",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            boxShadow: "0 4px 14px rgba(255, 85, 50, 0.25)",
+                          }}
+                        >
+                          <Video size={13} /> Launch Class
+                        </a>
+                      ) : hasRec ? (
+                        <a
+                          href={item.recordingUrl || item.recordingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "10px",
+                            background: "#0f172a",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 750,
+                            textDecoration: "none",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <Play size={13} fill="currentColor" /> Recording
+                        </a>
+                      ) : null}
+
+                      {/* View Inner Detail Page */}
                       <Link
-                        href={`/lms/courses/${item.courseSlug}`}
+                        href={`/lms/masterclasses/${item.id}`}
                         style={{
-                          width: "100%",
-                          padding: "10px 16px",
+                          padding: "10px 12px",
                           borderRadius: "10px",
-                          background: "#f1f5f9",
-                          color: "#334155",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          color: "#1e293b",
                           fontSize: "12px",
                           fontWeight: 750,
                           textDecoration: "none",
@@ -452,11 +489,12 @@ export default function MasterclassesPage() {
                           alignItems: "center",
                           justifyContent: "center",
                           gap: "6px",
+                          transition: "all 140ms ease",
                         }}
                       >
-                        Session Syllabus <ArrowRight size={13} />
+                        Details & Agenda <ArrowRight size={13} />
                       </Link>
-                    )}
+                    </div>
                   </div>
                 </article>
               );

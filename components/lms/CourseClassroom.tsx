@@ -462,10 +462,6 @@ export default function CourseClassroom({ slug, initialLessonId }: CourseClassro
         <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-wrap items-start lg:items-center justify-between gap-4">
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <Link href="/lms/dashboard" className="hover:text-orange-600 transition">
-                Dashboard
-              </Link>
-              <span>/</span>
               <Link href="/lms/courses" className="hover:text-orange-600 transition">
                 My Courses
               </Link>

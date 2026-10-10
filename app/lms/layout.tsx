@@ -6,8 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { api } from "@/lib/api";
 import { calculateAutomatedClassStatus, getLiveClassStartAt, INITIAL_CLASSES, type LiveClass } from "@/data/lms-mentor-data";
+import { LMS_COURSES } from "@/data/lms-courses";
+import {
+  getActiveCourseSlug,
+  setActiveCourseSlug,
+  isTodayAttended,
+  markTodayAttendance,
+  getLearningStreak,
+  getWeeklyAttendance,
+} from "@/lib/lms-progress";
 
- 
 const ACCENT = "#ff6b1a";    
 const ACCENT_SOFT = "#fff3ea";    
 const ACCENT_DARK = "#c94f0e";    
@@ -21,7 +29,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/lms/dashboard", icon: "dashboard", matchExact: true },
+  { label: "My Courses", href: "/lms/courses", icon: "school" },
   { label: "My Cohorts", href: "/lms/cohorts", icon: "groups" },
   { label: "My Masterclasses", href: "/lms/masterclasses", icon: "video_library" },
   { label: "Live Masterclasses", href: "/lms/live-masterclasses", icon: "sensors", badge: "LIVE" },
@@ -326,7 +334,67 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(0);
   const [clockReady, setClockReady] = useState(false);
   const pathname = usePathname();
-  const { user, isAuthLoaded, logout } = useAuth();
+  const { user, isAuthLoaded, logout, enrolledCourses } = useAuth();
+
+  const [selectedCourseSlug, setSelectedCourseSlug] = useState<string>("fullstack-web-development");
+  const [courseDropdownOpen, setCourseDropdownOpen] = useState(false);
+  const [attendanceMarked, setAttendanceMarked] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [weeklyAttendance, setWeeklyAttendance] = useState<{ day: string; date: string; attended: boolean; isToday: boolean }[]>([]);
+
+  // Synchronize Active Course with localStorage & events
+  useEffect(() => {
+    const active = getActiveCourseSlug();
+    if (active) setSelectedCourseSlug(active);
+
+    const handleCourseChange = (e: any) => {
+      if (e.detail && typeof e.detail === "string") {
+        setSelectedCourseSlug(e.detail);
+      }
+    };
+    window.addEventListener("lms_course_change", handleCourseChange);
+    return () => window.removeEventListener("lms_course_change", handleCourseChange);
+  }, []);
+
+  // Synchronize Attendance & Streak
+  useEffect(() => {
+    if (!user) {
+      setAttendanceMarked(false);
+      setCurrentStreak(0);
+      setWeeklyAttendance([]);
+      return;
+    }
+
+    setAttendanceMarked(isTodayAttended(user.id));
+    setCurrentStreak(getLearningStreak(user.id));
+    setWeeklyAttendance(getWeeklyAttendance(user.id));
+
+    const handleAttendanceChange = () => {
+      setAttendanceMarked(isTodayAttended(user.id));
+      setCurrentStreak(getLearningStreak(user.id));
+      setWeeklyAttendance(getWeeklyAttendance(user.id));
+    };
+
+    window.addEventListener("lms_attendance_marked", handleAttendanceChange);
+    return () => window.removeEventListener("lms_attendance_marked", handleAttendanceChange);
+  }, [user]);
+
+  const handleMarkAttendance = () => {
+    if (!user) return;
+    const res = markTodayAttendance(user.id);
+    setAttendanceMarked(true);
+    setCurrentStreak(res.streak);
+    setWeeklyAttendance(getWeeklyAttendance(user.id));
+  };
+
+  const activeCourse = LMS_COURSES.find((c) => c.slug === selectedCourseSlug)
+    || (enrolledCourses.length > 0 ? LMS_COURSES.find((c) => enrolledCourses.includes(c.slug)) : null)
+    || LMS_COURSES.find((c) => c.slug === "fullstack-web-development")
+    || LMS_COURSES[0];
+
+  const studentEnrolledList = enrolledCourses.length > 0
+    ? LMS_COURSES.filter((c) => enrolledCourses.includes(c.slug))
+    : [activeCourse];
 
   // Initialize desktop sidebar open state
   useEffect(() => {
@@ -556,7 +624,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
         <div style={S.sidebarInner}>
           {/* Brand row with LOGO */}
           <div style={S.brandRow}>
-            <Link href="/lms/dashboard" style={S.brandLink}>
+            <Link href="/lms/courses" style={S.brandLink}>
               <img
                 src="https://www.netcoder.in/images/logo.png"
                 alt="NetCoder"
@@ -616,6 +684,336 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
             </Link>
           )}
 
+          {/* 1. SELECT COURSE / ACTIVE PROGRAM WIDGET */}
+          <div style={{ marginBottom: 12 }}>
+            <div
+              style={{
+                position: "relative",
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "14px",
+                padding: "8px 10px",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}
+                onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "8px",
+                      background: "#fff2ef",
+                      color: ACCENT,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                      school
+                    </span>
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: "9px", fontWeight: 800, color: ACCENT, letterSpacing: "0.6px", textTransform: "uppercase" }}>
+                      Active Course
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 750,
+                        color: "#0f172a",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: "145px",
+                      }}
+                      title={activeCourse.title}
+                    >
+                      {activeCourse.title}
+                    </div>
+                  </div>
+                </div>
+
+                <span
+                  className="material-symbols-outlined"
+                  style={{
+                    fontSize: "20px",
+                    color: "#64748b",
+                    transform: courseDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.2s ease",
+                  }}
+                >
+                  expand_more
+                </span>
+              </div>
+
+              {/* DROPDOWN MENU */}
+              {courseDropdownOpen && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    paddingTop: "8px",
+                    borderTop: "1px solid #e2e8f0",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px",
+                  }}
+                >
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", padding: "2px 4px", textTransform: "uppercase" }}>
+                    Switch Enrolled Course
+                  </div>
+
+                  {studentEnrolledList.map((c) => {
+                    const isSelected = c.slug === activeCourse.slug;
+                    return (
+                      <button
+                        type="button"
+                        key={c.slug}
+                        onClick={() => {
+                          setActiveCourseSlug(c.slug);
+                          setSelectedCourseSlug(c.slug);
+                          setCourseDropdownOpen(false);
+                          router.push(`/lms/courses`);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "6px 8px",
+                          borderRadius: "8px",
+                          border: isSelected ? "1px solid #ff795b" : "1px solid transparent",
+                          background: isSelected ? "#fff2ef" : "#ffffff",
+                          color: isSelected ? ACCENT : "#334155",
+                          fontSize: "11px",
+                          fontWeight: isSelected ? 750 : 600,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          width: "100%",
+                        }}
+                      >
+                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }}>
+                          {c.title}
+                        </span>
+                        {isSelected && (
+                          <span className="material-symbols-outlined" style={{ fontSize: "15px", color: ACCENT }}>
+                            check
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {/* Preview Other Courses */}
+                  {LMS_COURSES.filter((c) => !studentEnrolledList.some((e) => e.slug === c.slug)).length > 0 && (
+                    <>
+                      <div style={{ fontSize: "9.5px", fontWeight: 750, color: "#94a3b8", padding: "6px 4px 2px", textTransform: "uppercase" }}>
+                        Preview Other Courses
+                      </div>
+                      {LMS_COURSES.filter((c) => !studentEnrolledList.some((e) => e.slug === c.slug)).slice(0, 3).map((c) => {
+                        const isSelected = c.slug === activeCourse.slug;
+                        return (
+                          <button
+                            type="button"
+                            key={c.slug}
+                            onClick={() => {
+                              setActiveCourseSlug(c.slug);
+                              setSelectedCourseSlug(c.slug);
+                              setCourseDropdownOpen(false);
+                              router.push(`/lms/courses`);
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "6px 8px",
+                              borderRadius: "8px",
+                              border: isSelected ? "1px solid #ff795b" : "1px dashed #cbd5e1",
+                              background: isSelected ? "#fff2ef" : "#fafafa",
+                              color: isSelected ? ACCENT : "#64748b",
+                              fontSize: "11px",
+                              fontWeight: isSelected ? 750 : 600,
+                              textAlign: "left",
+                              cursor: "pointer",
+                              width: "100%",
+                            }}
+                          >
+                            <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "140px" }}>
+                              🔒 {c.title}
+                            </span>
+                            <span style={{ fontSize: "10px", fontWeight: 800, color: ACCENT }}>
+                              ₹{c.price ?? 79}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  <Link
+                    href="/lms/select-course"
+                    onClick={() => {
+                      setCourseDropdownOpen(false);
+                      setSidebarOpen(false);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "7px 8px",
+                      marginTop: "4px",
+                      borderRadius: "8px",
+                      background: "#fff2ef",
+                      color: ACCENT,
+                      fontSize: "11px",
+                      fontWeight: 750,
+                      textDecoration: "none",
+                      justifyContent: "center",
+                      border: "1px dashed #ffb4a2",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
+                      add_circle
+                    </span>
+                    <span>Explore &amp; Enroll More</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 2. DAILY ATTENDANCE & LOGIN STREAK WIDGET */}
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #fee2e2",
+              borderRadius: "14px",
+              padding: "10px 10px",
+              marginBottom: "14px",
+              boxShadow: "0 2px 8px rgba(255, 85, 50, 0.04)",
+            }}
+          >
+            {/* Top row: Date & Streak */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+              <div style={{ fontSize: "10.5px", fontWeight: 700, color: "#64748b" }}>
+                {new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short" }).format(new Date())}
+              </div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  padding: "2px 7px",
+                  borderRadius: "10px",
+                  background: "#fff2ef",
+                  color: "#ea580c",
+                  fontSize: "10.5px",
+                  fontWeight: 800,
+                }}
+              >
+                <span>🔥</span>
+                <span>{currentStreak > 0 ? `${currentStreak}d Streak` : "Daily Streak"}</span>
+              </div>
+            </div>
+
+            {/* Attendance Status */}
+            <div style={{ marginBottom: "6px" }}>
+              {attendanceMarked ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "5px",
+                    padding: "5px",
+                    borderRadius: "8px",
+                    background: "#ecfdf5",
+                    color: "#065f46",
+                    fontSize: "10.5px",
+                    fontWeight: 750,
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "#10b981" }}>
+                    verified
+                  </span>
+                  <span>Attendance Marked ✓</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleMarkAttendance}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "5px",
+                    padding: "6px 8px",
+                    borderRadius: "8px",
+                    background: "linear-gradient(135deg, #ff5532 0%, #ff7354 100%)",
+                    color: "#ffffff",
+                    fontSize: "11px",
+                    fontWeight: 750,
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(255, 85, 50, 0.2)",
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                    how_to_reg
+                  </span>
+                  <span>Mark Today&apos;s Attendance</span>
+                </button>
+              )}
+            </div>
+
+            {/* Weekly 7-day mini attendance dots */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "5px", borderTop: "1px solid #f1f5f9" }}>
+              {(weeklyAttendance.length > 0 ? weeklyAttendance : [
+                { day: "M", attended: true, isToday: false },
+                { day: "T", attended: true, isToday: false },
+                { day: "W", attended: true, isToday: false },
+                { day: "T", attended: true, isToday: false },
+                { day: "F", attended: attendanceMarked, isToday: true },
+                { day: "S", attended: false, isToday: false },
+                { day: "S", attended: false, isToday: false },
+              ]).map((w, idx) => (
+                <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                  <span style={{ fontSize: "8.5px", color: w.isToday ? ACCENT : "#94a3b8", fontWeight: w.isToday ? 800 : 600 }}>
+                    {typeof w.day === "string" ? w.day.slice(0, 1) : "•"}
+                  </span>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "13px",
+                      borderRadius: "50%",
+                      background: w.attended ? "#10b981" : "#f1f5f9",
+                      border: w.isToday ? `1.5px solid ${ACCENT}` : "1px solid #e2e8f0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#ffffff",
+                      fontSize: "8.5px",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {w.attended && "✓"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* NAV */}
           <nav style={S.nav}>
             {navItems.map((item) => {
@@ -665,7 +1063,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
           <Link
-            href="/lms/dashboard#upcoming-classes"
+            href="/lms/live-masterclasses"
             onClick={() => setSidebarOpen(false)}
             style={{
               display: "flex",
@@ -763,7 +1161,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
                 </button>
               )}
 
-              <Link href="/lms/dashboard" className="lms-header-brand" aria-label="NetCoder LMS home">
+              <Link href="/lms/courses" className="lms-header-brand" aria-label="NetCoder LMS home">
                 <img src="/images/logo.png" alt="NetCoder" />
               </Link>
             </div>
@@ -786,7 +1184,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
                     console.error("The live-class meeting link is invalid.", error);
                   }
                 }
-                router.push("/lms/dashboard#upcoming-classes");
+                router.push("/lms/live-masterclasses");
               }}
               aria-label={featuredClass?.status === "live" ? "Join the live masterclass" : "View upcoming masterclasses"}
             >

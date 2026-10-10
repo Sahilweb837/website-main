@@ -13,14 +13,15 @@ export async function GET(request: Request) {
 
     // Attempt to pull live classes directly from Laravel REST Backend
     try {
-      const laravelUrl = `http://localhost:8000/api/lms/classes${courseSlug ? `?courseSlug=${encodeURIComponent(courseSlug)}` : ""}`;
+      const laravelBase = process.env.LARAVEL_API_URL || "http://127.0.0.1:8000";
+      const laravelUrl = `${laravelBase}/api/lms/classes${courseSlug ? `?courseSlug=${encodeURIComponent(courseSlug)}` : ""}`;
       const laravelRes = await fetch(laravelUrl, {
         headers: { Accept: "application/json" },
         cache: "no-store",
       });
       if (laravelRes.ok) {
         const json = await laravelRes.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           let classes = json.data;
           if (status) {
             classes = classes.filter((c: LiveClass) => c.status === status);

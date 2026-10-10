@@ -87,7 +87,26 @@ export async function GET(request: Request) {
     const slug = searchParams.get("slug");
     const level = searchParams.get("level");
 
-    const all = getAllCourses();
+    // Fetch authoritative courses from Laravel SQLite backend
+    let all: any[] = [];
+    try {
+      const laravelRes = await fetch("http://127.0.0.1:8000/api/courses", {
+        cache: "no-store",
+        headers: { Accept: "application/json" }
+      });
+      if (laravelRes.ok) {
+        const json = await laravelRes.json();
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          all = json.data;
+        }
+      }
+    } catch (e) {
+      console.warn("[Courses API] Could not reach Laravel backend directly:", e);
+    }
+
+    if (all.length === 0) {
+      all = getAllCourses();
+    }
 
     if (slug) {
       const course = all.find(
