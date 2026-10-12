@@ -47,15 +47,43 @@ interface NavItem {
   matchExact?: boolean;
 }
 
-const navItems: NavItem[] = [
-  { label: "My Courses", href: "/lms/courses", icon: "school" },
-  { label: "My Cohorts", href: "/lms/cohorts", icon: "groups" },
-  { label: "My Masterclasses", href: "/lms/masterclasses", icon: "video_library" },
-  { label: "Live Masterclasses", href: "/lms/live-masterclasses", icon: "sensors", badge: "LIVE" },
-  { label: "Free Resources", href: "/lms/resources", icon: "menu_book", badge: "PDF" },
-  { label: "Coding Challenges", href: "/lms/challenges", icon: "code", matchExact: true },
-  { label: "Community Hub", href: "/lms/community", icon: "forum", matchExact: true },
-  { label: "Certificates & Milestones", href: "/lms/profile?tab=certificates", icon: "workspace_premium", matchExact: true },
+interface NavGroup {
+  id: string;
+  title: string;
+  icon: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    id: "learning",
+    title: "My Learning",
+    icon: "school",
+    items: [
+      { label: "My Courses", href: "/lms/courses", icon: "school" },
+      { label: "My Cohorts", href: "/lms/cohorts", icon: "groups" },
+      { label: "My Masterclasses", href: "/lms/masterclasses", icon: "video_library" },
+      { label: "Live Masterclasses", href: "/lms/live-masterclasses", icon: "sensors", badge: "LIVE" },
+    ],
+  },
+  {
+    id: "resources",
+    title: "Resources & Practice",
+    icon: "menu_book",
+    items: [
+      { label: "Free Resources", href: "/lms/resources", icon: "menu_book", badge: "PDF" },
+      { label: "Coding Challenges", href: "/lms/challenges", icon: "code", matchExact: true },
+      { label: "Community Hub", href: "/lms/community", icon: "forum", matchExact: true },
+    ],
+  },
+  {
+    id: "achievements",
+    title: "Achievements",
+    icon: "workspace_premium",
+    items: [
+      { label: "Certificates & Milestones", href: "/lms/profile?tab=certificates", icon: "workspace_premium", matchExact: true },
+    ],
+  },
 ];
 
  const S: Record<string, CSSProperties> = {
@@ -362,6 +390,12 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
   const [currentStreak, setCurrentStreak] = useState(1);
   const [weeklyAttendance, setWeeklyAttendance] = useState<{ day: string; date: string; attended: boolean; isToday: boolean }[]>([]);
 
+  // Collapsible dropdown state for sidebar nav groups
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  // Determine if student has any enrolled courses
+  const hasEnrolledCourses = enrolledCourses.length > 0;
+
   // Synchronize Active Course with localStorage & events
   useEffect(() => {
     const active = getActiveCourseSlug();
@@ -415,12 +449,28 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
     ? LMS_COURSES.filter((c) => enrolledCourses.includes(c.slug))
     : [activeCourse];
 
-  // Initialize desktop sidebar open state
+  // Initialize desktop sidebar open state (only if enrolled)
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024 && hasEnrolledCourses) {
       setSidebarOpen(true);
     }
-  }, []);
+  }, [hasEnrolledCourses]);
+
+  // Auto-expand the dropdown group that contains the active page
+  useEffect(() => {
+    const newExpanded: Record<string, boolean> = {};
+    for (const group of navGroups) {
+      const hasActive = group.items.some((item) => {
+        const [itemPath] = item.href.split("#");
+        const isCertificates = item.href.includes("?tab=certificates");
+        if (isCertificates) return pathname === "/lms/profile" && activeProfileTab === "certificates";
+        if (item.matchExact) return pathname === itemPath;
+        return pathname.startsWith(itemPath);
+      });
+      if (hasActive) newExpanded[group.id] = true;
+    }
+    setExpandedGroups((prev) => ({ ...prev, ...newExpanded }));
+  }, [pathname, activeProfileTab]);
 
   useEffect(() => {
     const syncProfileTab = () => {
@@ -634,11 +684,12 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
         rel="stylesheet"
       />
 
-      {sidebarOpen && (
+      {sidebarOpen && hasEnrolledCourses && (
         <div className="lms-overlay-resp" style={S.overlay} onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR — only shown when student has enrolled courses */}
+      {hasEnrolledCourses && (
       <aside className={`lms-sidebar-resp ${sidebarOpen ? "open" : ""}`} style={S.sidebar}>
         <div style={S.sidebarInner}>
           {/* Brand row with LOGO */}
@@ -852,51 +903,114 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {/* NAV */}
+          {/* NAV — Collapsible Dropdown Groups */}
           <nav style={S.nav}>
-            {navItems.map((item) => {
-              const [itemPath] = item.href.split("#");
-              const isCertificates = item.href.includes("?tab=certificates");
-              const isActive = isCertificates
-                ? pathname === "/lms/profile" && activeProfileTab === "certificates"
-                : item.matchExact
-                  ? pathname === itemPath
-                  : pathname.startsWith(itemPath);
+            {navGroups.map((group) => {
+              const isExpanded = expandedGroups[group.id] ?? false;
+              const groupHasActive = group.items.some((item) => {
+                const [itemPath] = item.href.split("#");
+                const isCertificates = item.href.includes("?tab=certificates");
+                if (isCertificates) return pathname === "/lms/profile" && activeProfileTab === "certificates";
+                if (item.matchExact) return pathname === itemPath;
+                return pathname.startsWith(itemPath);
+              });
 
               return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => {
-                    setActiveProfileTab(new URLSearchParams(item.href.split("?")[1] ?? "").get("tab") ?? "");
-                    setSidebarOpen(false);
-                  }}
-                  style={{
-                    ...S.navLink,
-                    ...(isActive ? S.navLinkActive : {}),
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                    {item.icon}
-                  </span>
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                  {item.badge && (
+                <div key={group.id}>
+                  {/* Dropdown Heading */}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      color: groupHasActive ? ACCENT_DARK : "#64748b",
+                      background: groupHasActive ? "rgba(255,107,26,0.06)" : "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      width: "100%",
+                      textAlign: "left",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: groupHasActive ? ACCENT : "#94a3b8" }}>
+                      {group.icon}
+                    </span>
+                    <span style={{ flex: 1 }}>{group.title}</span>
                     <span
+                      className="material-symbols-outlined"
                       style={{
-                        fontSize: "9px",
-                        fontWeight: 800,
-                        letterSpacing: "0.5px",
-                        padding: "2px 7px",
-                        borderRadius: "6px",
-                        background: item.badge === "LIVE" ? "#ff3b14" : ACCENT_SOFT,
-                        color: item.badge === "LIVE" ? "#ffffff" : ACCENT_DARK,
-                        boxShadow: item.badge === "LIVE" ? "0 0 8px rgba(255, 59, 20, 0.4)" : "none",
+                        fontSize: 18,
+                        color: "#94a3b8",
+                        transition: "transform 0.2s",
+                        transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
                       }}
                     >
-                      {item.badge}
+                      expand_more
                     </span>
+                  </button>
+
+                  {/* Dropdown Children */}
+                  {isExpanded && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2, paddingLeft: 12, marginTop: 2, marginBottom: 6 }}>
+                      {group.items.map((item) => {
+                        const [itemPath] = item.href.split("#");
+                        const isCertificates = item.href.includes("?tab=certificates");
+                        const isActive = isCertificates
+                          ? pathname === "/lms/profile" && activeProfileTab === "certificates"
+                          : item.matchExact
+                            ? pathname === itemPath
+                            : pathname.startsWith(itemPath);
+
+                        return (
+                          <Link
+                            key={item.label}
+                            href={item.href}
+                            onClick={() => {
+                              setActiveProfileTab(new URLSearchParams(item.href.split("?")[1] ?? "").get("tab") ?? "");
+                              setSidebarOpen(false);
+                            }}
+                            style={{
+                              ...S.navLink,
+                              ...(isActive ? S.navLinkActive : {}),
+                              padding: "9px 12px",
+                              fontSize: "0.85rem",
+                              borderRadius: 8,
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                              {item.icon}
+                            </span>
+                            <span style={{ flex: 1 }}>{item.label}</span>
+                            {item.badge && (
+                              <span
+                                style={{
+                                  fontSize: "9px",
+                                  fontWeight: 800,
+                                  letterSpacing: "0.5px",
+                                  padding: "2px 7px",
+                                  borderRadius: "6px",
+                                  background: item.badge === "LIVE" ? "#ff3b14" : ACCENT_SOFT,
+                                  color: item.badge === "LIVE" ? "#ffffff" : ACCENT_DARK,
+                                  boxShadow: item.badge === "LIVE" ? "0 0 8px rgba(255, 59, 20, 0.4)" : "none",
+                                }}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
-                </Link>
+                </div>
               );
             })}
           </nav>
@@ -971,13 +1085,14 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
           )}
         </div>
       </aside>
+      )}
 
       {/* MAIN */}
-      <div className={`lms-mainwrap-resp ${sidebarOpen ? "sidebar-open" : ""}`} style={S.mainWrap}>
-        <header className={`lms-header-resp ${sidebarOpen ? "sidebar-open" : ""}`} style={S.header}>
+      <div className={`lms-mainwrap-resp ${sidebarOpen && hasEnrolledCourses ? "sidebar-open" : ""}`} style={S.mainWrap}>
+        <header className={`lms-header-resp ${sidebarOpen && hasEnrolledCourses ? "sidebar-open" : ""}`} style={S.header}>
           <div className="lms-header-inner" style={S.headerInner}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              {!sidebarOpen && (
+              {(!sidebarOpen || !hasEnrolledCourses) && hasEnrolledCourses && (
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(true)}

@@ -379,6 +379,122 @@ export default function MyCoursesPage() {
       )}
 
       <div style={{ maxWidth: 1160, margin: "0 auto", padding: "24px 20px 80px" }}>
+  {/* Hero Section */}
+  <div style={{
+    background: "#0a0a0a",
+    borderRadius: T.radius,
+    padding: 0,
+    marginBottom: "28px",
+    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+    overflow: "hidden",
+    display: "flex",
+    flexWrap: "wrap" as const,
+    minHeight: 340,
+  }}>
+    {/* Left: Text Content */}
+    <div style={{
+      flex: "1 1 340px",
+      padding: "44px 40px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      gap: "18px",
+      position: "relative",
+      zIndex: 2,
+    }}>
+      <div style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "5px 14px",
+        borderRadius: 999,
+        background: "rgba(255,85,50,0.15)",
+        border: "1px solid rgba(255,85,50,0.3)",
+        color: T.primary,
+        fontSize: 11,
+        fontWeight: 800,
+        textTransform: "uppercase" as const,
+        letterSpacing: "0.08em",
+        width: "fit-content",
+      }}>
+        <Sparkles size={12} />
+        Netcoder LMS
+      </div>
+      <h1 style={{
+        fontSize: "clamp(26px, 3.5vw, 38px)",
+        fontWeight: 900,
+        margin: 0,
+        lineHeight: 1.15,
+        color: "#ffffff",
+        letterSpacing: "-0.03em",
+      }}>
+        Unlock Your Future with{" "}
+        <span style={{ color: T.primary }}>Tailored Courses</span>
+      </h1>
+      <p style={{
+        fontSize: 14.5,
+        margin: 0,
+        color: "rgba(255,255,255,0.65)",
+        lineHeight: 1.7,
+        maxWidth: 420,
+      }}>
+        Choose your passion and dive into curated learning paths designed for real‑world success.
+      </p>
+      <button
+        type="button"
+        onClick={() => setPlacementModalOpen(true)}
+        style={{
+          background: T.primary,
+          color: "#ffffff",
+          border: "none",
+          borderRadius: 10,
+          padding: "13px 28px",
+          fontWeight: 800,
+          fontSize: 13.5,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          width: "fit-content",
+          boxShadow: "0 8px 24px rgba(255,85,50,0.35)",
+          transition: "transform 0.2s, box-shadow 0.2s",
+          letterSpacing: "0.02em",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(255,85,50,0.45)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(255,85,50,0.35)"; }}
+      >
+        <GraduationCap size={16} />
+        100% Placement Program
+        <ArrowRight size={14} />
+      </button>
+    </div>
+    {/* Right: Hero Image */}
+    <div style={{
+      flex: "1 1 320px",
+      position: "relative",
+      minHeight: 280,
+      overflow: "hidden",
+    }}>
+      <img
+        src="/images/modernheroimg.jpg"
+        alt="Modern tech learning at Netcoder"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
+          display: "block",
+        }}
+      />
+      {/* Gradient overlay for blend */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "linear-gradient(90deg, #0a0a0a 0%, transparent 40%, transparent 100%)",
+        pointerEvents: "none",
+      }} />
+    </div>
+  </div>
         
         {/* ═══════════════════════════════════════════════
             TOP BANNER: LMS HUB & ACTION BUTTONS

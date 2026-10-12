@@ -2,14 +2,90 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/context";
+
+export const INTEREST_TRACKS = [
+  {
+    id: "fullstack",
+    title: "Full-Stack Web Development",
+    short: "Full-Stack Web",
+    badge: "Highest Demand",
+    icon: "code",
+    color: "#ff5532",
+    bgSoft: "#fff7f5",
+    border: "#ffd8cf",
+    desc: "Build production Next.js 15 apps, modern React dashboards, Node.js APIs & SQL databases.",
+    tags: ["Next.js", "React", "Node.js", "TypeScript", "PostgreSQL"],
+  },
+  {
+    id: "ai",
+    title: "AI & Machine Learning (GenAI)",
+    short: "AI & GenAI",
+    badge: "Trending 2026",
+    icon: "psychology",
+    color: "#8b5cf6",
+    bgSoft: "#f5f3ff",
+    border: "#ddd6fe",
+    desc: "Master Agentic AI, OpenAI Agents SDK, CrewAI, LangGraph, LLMs & Model Context Protocol.",
+    tags: ["Autonomous Agents", "MCP", "LangGraph", "Python", "RAG"],
+  },
+  {
+    id: "cloud",
+    title: "Cloud Computing & DevOps",
+    short: "Cloud & DevOps",
+    badge: "Enterprise Scale",
+    icon: "cloud",
+    color: "#0284c7",
+    bgSoft: "#f0f9ff",
+    border: "#bae6fd",
+    desc: "Architect multi-cloud infrastructures with AWS, Docker, Kubernetes, CI/CD & Terraform.",
+    tags: ["AWS", "Docker", "Kubernetes", "CI/CD", "Terraform"],
+  },
+  {
+    id: "cyber",
+    title: "Cyber Security & Ethical Hacking",
+    short: "Cyber Security",
+    badge: "Defense & SecOps",
+    icon: "security",
+    color: "#10b981",
+    bgSoft: "#f0fdf4",
+    border: "#bbf7d0",
+    desc: "Defend against digital threats, conduct penetration tests, vulnerability audits & SOC ops.",
+    tags: ["Pen Testing", "Kali Linux", "Network Security", "SOC"],
+  },
+  {
+    id: "systems",
+    title: "Data Engineering & Systems",
+    short: "Data & Systems",
+    badge: "High Throughput",
+    icon: "hub",
+    color: "#f59e0b",
+    bgSoft: "#fffbeb",
+    border: "#fde68a",
+    desc: "Design real-time streaming architectures, distributed pipelines, Kafka clusters & Big Data.",
+    tags: ["Apache Kafka", "Distributed DBs", "Spark", "Go", "Big Data"],
+  },
+  {
+    id: "all",
+    title: "All Specializations (Explore All)",
+    short: "All Tracks",
+    badge: "Complete Library",
+    icon: "explore",
+    color: "#475569",
+    bgSoft: "#f8fafc",
+    border: "#e2e8f0",
+    desc: "Browse our complete catalog across all disciplines, masterclasses & placement tracks.",
+    tags: ["30+ Courses", "Masterclasses", "Placement Guarantee"],
+  },
+];
 
 interface AuthViewProps {
   initialMode?: "login" | "register";
 }
 
 function AuthForm({ initialMode = "login" }: AuthViewProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const {
     user,
@@ -36,6 +112,14 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successText, setSuccessText] = useState<string | null>(null);
 
+  // Interest Selection Step
+  const [showInterestStep, setShowInterestStep] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<string>("fullstack");
+  const [pendingAuth, setPendingAuth] = useState<{
+    type: "credentials" | "demo" | "google";
+    data?: { name?: string; email?: string; phone?: string };
+  } | null>(null);
+
   const redirectParam = searchParams.get("redirect") || searchParams.get("return_to");
   const targetRedirect = redirectParam || "/lms/courses";
 
@@ -48,30 +132,55 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
     const qMode = searchParams.get("mode");
     if (qMode === "register") setMode("register");
     else if (qMode === "login") setMode("login");
+
+    // Load any saved interest
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("student_interest");
+      if (saved) setSelectedTrack(saved);
+    }
   }, [searchParams]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setSuccessText("Authenticating session…");
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      setSuccessText("Welcome back! Redirecting to course track…");
-      await loginWithCredentials({ email, phone }, targetRedirect);
-    } catch {
-      setIsSubmitting(false);
-      setSuccessText(null);
-    }
+    setPendingAuth({
+      type: "credentials",
+      data: { email, phone },
+    });
+    setShowInterestStep(true);
   };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPendingAuth({
+      type: "credentials",
+      data: { name, email, phone },
+    });
+    setShowInterestStep(true);
+  };
+
+  const handleProceedWithInterest = async (trackId = selectedTrack) => {
     setIsSubmitting(true);
-    setSuccessText("Creating your workspace…");
+    const chosenTrack = INTEREST_TRACKS.find((t) => t.id === trackId) || INTEREST_TRACKS[0];
+    setSuccessText(`Personalizing your ${chosenTrack.short} courses…`);
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("student_interest", trackId);
+    }
+
+    const destination = trackId === "all" ? "/lms/courses" : `/lms/courses?category=${trackId}`;
+
     try {
-      await new Promise((r) => setTimeout(r, 700));
-      setSuccessText("Account created! Selecting specialization track…");
-      await loginWithCredentials({ name, email, phone }, targetRedirect);
+      await new Promise((r) => setTimeout(r, 500));
+      if (pendingAuth?.type === "demo") {
+        await loginAsDemo(destination);
+      } else if (pendingAuth?.type === "credentials" && pendingAuth.data) {
+        await loginWithCredentials(pendingAuth.data, destination);
+      } else if (user) {
+        router.push(destination);
+      } else {
+        // Fallback demo login if no pending data
+        await loginAsDemo(destination);
+      }
     } catch {
       setIsSubmitting(false);
       setSuccessText(null);
@@ -296,10 +405,10 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
         </div>
 
         {/* Form container */}
-        <div style={{ maxWidth: "440px", width: "100%", margin: "0 auto", paddingTop: "16px", paddingBottom: "16px" }}>
+        <div style={{ maxWidth: showInterestStep ? "520px" : "440px", width: "100%", margin: "0 auto", paddingTop: "16px", paddingBottom: "16px", transition: "max-width 0.3s ease" }}>
 
           {/* Active Session Card if user is already logged in */}
-          {user && isAuthLoaded && (
+          {user && isAuthLoaded && !showInterestStep && (
             <div style={{
               background: "linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)",
               border: "1.5px solid #86efac",
@@ -348,6 +457,23 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
                 >
                   Open LMS Dashboard →
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowInterestStep(true)}
+                  style={{
+                    padding: "9px 12px",
+                    background: "#ff5532",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(255,85,50,0.25)"
+                  }}
+                >
+                  🎯 Switch Track
+                </button>
                 <Link
                   href="/"
                   style={{
@@ -383,17 +509,32 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
             </div>
           )}
 
-          {/* Mode tabs */}
-          <div style={{
-            display: "flex", padding: "4px", borderRadius: "14px",
-            background: "#f3f4f6", marginBottom: "28px",
-            border: "1px solid #e5e7eb"
-          }}>
-            {(["login", "register"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => { setMode(m); setSuccessText(null); }}
+          {showInterestStep ? (
+            <InterestSelectionCard
+              selectedTrack={selectedTrack}
+              onSelectTrack={(id) => setSelectedTrack(id)}
+              onProceed={handleProceedWithInterest}
+              onBack={() => {
+                setShowInterestStep(false);
+                setIsSubmitting(false);
+                setSuccessText(null);
+              }}
+              isSubmitting={isSubmitting}
+              successText={successText}
+            />
+          ) : (
+            <>
+              {/* Mode tabs */}
+              <div style={{
+                display: "flex", padding: "4px", borderRadius: "14px",
+                background: "#f3f4f6", marginBottom: "28px",
+                border: "1px solid #e5e7eb"
+              }}>
+                {(["login", "register"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => { setMode(m); setSuccessText(null); }}
                 style={{
                   flex: 1, padding: "10px 0",
                   borderRadius: "10px", border: "none",
@@ -749,6 +890,8 @@ function AuthForm({ initialMode = "login" }: AuthViewProps) {
               </p>
             </form>
           )}
+            </>
+          )}
         </div>
 
         {/* Footer */}
@@ -877,6 +1020,256 @@ const submitBtnStyle: React.CSSProperties = {
   letterSpacing: "0.02em",
   marginTop: "4px",
 };
+
+interface InterestSelectionCardProps {
+  selectedTrack: string;
+  onSelectTrack: (trackId: string) => void;
+  onProceed: (trackId?: string) => void;
+  onBack?: () => void;
+  isSubmitting: boolean;
+  successText: string | null;
+}
+
+function InterestSelectionCard({
+  selectedTrack,
+  onSelectTrack,
+  onProceed,
+  onBack,
+  isSubmitting,
+  successText,
+}: InterestSelectionCardProps) {
+  const activeTrackObj = INTEREST_TRACKS.find((t) => t.id === selectedTrack) || INTEREST_TRACKS[0];
+
+  return (
+    <div
+      style={{
+        background: "#ffffff",
+        border: "1.5px solid #ff5532",
+        borderRadius: "20px",
+        padding: "26px 22px",
+        boxShadow: "0 18px 40px rgba(255,85,50,0.12)",
+        animation: "slideIn 0.3s ease-out",
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "4px 10px",
+            borderRadius: "999px",
+            background: "rgba(255,85,50,0.1)",
+            color: "#ff5532",
+            fontSize: "11px",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+            stars
+          </span>
+          Personalize Learning Track
+        </div>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#64748b",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            <i className="fa-solid fa-arrow-left" style={{ fontSize: "10px" }}></i>
+            Back
+          </button>
+        )}
+      </div>
+
+      <h2
+        style={{
+          margin: "0 0 6px",
+          fontSize: "22px",
+          fontWeight: 800,
+          color: "#0f172a",
+          fontFamily: "'Space Grotesk', sans-serif",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.25,
+        }}
+      >
+        What is your field of interest?
+      </h2>
+      <p
+        style={{
+          margin: "0 0 20px",
+          fontSize: "13px",
+          color: "#64748b",
+          lineHeight: 1.5,
+        }}
+      >
+        Choose your primary engineering track so we can curate your courses, projects, and career roadmap.
+      </p>
+
+      {/* Tracks List */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+        {INTEREST_TRACKS.map((track) => {
+          const isSelected = selectedTrack === track.id;
+          return (
+            <div
+              key={track.id}
+              onClick={() => onSelectTrack(track.id)}
+              style={{
+                padding: "13px 15px",
+                borderRadius: "14px",
+                border: isSelected ? `2px solid ${track.color}` : "1.5px solid #e2e8f0",
+                background: isSelected ? track.bgSoft : "#ffffff",
+                cursor: "pointer",
+                transition: "all 0.18s ease",
+                boxShadow: isSelected ? `0 6px 18px ${track.color}22` : "none",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+              }}
+            >
+              {/* Radio indicator */}
+              <div
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "50%",
+                  border: isSelected ? `5px solid ${track.color}` : "2px solid #cbd5e1",
+                  background: "#ffffff",
+                  flexShrink: 0,
+                  marginTop: "2px",
+                  transition: "all 0.2s ease",
+                }}
+              />
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                    marginBottom: "3px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "13.5px",
+                      fontWeight: 750,
+                      color: isSelected ? "#0f172a" : "#1e293b",
+                      fontFamily: "'Space Grotesk', sans-serif",
+                    }}
+                  >
+                    {track.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 800,
+                      padding: "2px 7px",
+                      borderRadius: "999px",
+                      background: isSelected ? `${track.color}20` : "#f1f5f9",
+                      color: isSelected ? track.color : "#64748b",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {track.badge}
+                  </span>
+                </div>
+
+                <p style={{ margin: "0 0 6px", fontSize: "11.5px", color: "#64748b", lineHeight: 1.4 }}>
+                  {track.desc}
+                </p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                  {track.tags.slice(0, 4).map((tag) => (
+                    <span
+                      key={tag}
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        padding: "1px 6px",
+                        borderRadius: "4px",
+                        background: isSelected ? "#ffffff" : "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        color: "#475569",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Action Button */}
+      <button
+        type="button"
+        onClick={() => onProceed(selectedTrack)}
+        disabled={isSubmitting}
+        style={{
+          ...submitBtnStyle,
+          background: isSubmitting ? "#ea4321" : "#ff5532",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          padding: "13px",
+        }}
+      >
+        <span>
+          {successText || `Continue to ${activeTrackObj.short} Courses`}
+        </span>
+        {isSubmitting ? (
+          <span className="material-symbols-outlined" style={{ fontSize: "18px", animation: "spin 1s linear infinite" }}>
+            progress_activity
+          </span>
+        ) : (
+          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+            arrow_forward
+          </span>
+        )}
+      </button>
+
+      <div style={{ textAlign: "center", marginTop: "12px" }}>
+        <button
+          type="button"
+          onClick={() => onProceed("all")}
+          disabled={isSubmitting}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "12px",
+            color: "#64748b",
+            fontWeight: 600,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          Skip and explore all courses →
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function AuthView({ initialMode = "login" }: AuthViewProps) {
   return (
