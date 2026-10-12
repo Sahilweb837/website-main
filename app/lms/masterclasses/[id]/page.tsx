@@ -3,29 +3,55 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Copy,
-  Check,
-  ExternalLink,
-  Flame,
-  Globe,
-  GraduationCap,
-  Layers,
-  Linkedin,
-  Play,
-  Radio,
-  Share2,
-  ShieldCheck,
-  Sparkles,
-  Tv,
-  Users,
-  Video,
-  Zap,
-} from "lucide-react";
+  faArrowLeft,
+  faCalendarDays,
+  faCircleCheck,
+  faClock,
+  faCopy,
+  faCheck,
+  faArrowUpRightFromSquare,
+  faFire,
+  faGlobe,
+  faGraduationCap,
+  faLayerGroup,
+  faPlay,
+  faTowerBroadcast,
+  faShareNodes,
+  faShieldHalved,
+  faStar,
+  faTv,
+  faUsers,
+  faVideo,
+  faBolt,
+} from "@fortawesome/free-solid-svg-icons";
+
+const ArrowLeft = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faArrowLeft} style={{ width: size, height: size, ...style }} {...props} />;
+const Calendar = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faCalendarDays} style={{ width: size, height: size, ...style }} {...props} />;
+const CheckCircle2 = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faCircleCheck} style={{ width: size, height: size, ...style }} {...props} />;
+const Clock = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faClock} style={{ width: size, height: size, ...style }} {...props} />;
+const Copy = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faCopy} style={{ width: size, height: size, ...style }} {...props} />;
+const Check = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faCheck} style={{ width: size, height: size, ...style }} {...props} />;
+const ExternalLink = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ width: size, height: size, ...style }} {...props} />;
+const Flame = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faFire} style={{ width: size, height: size, ...style }} {...props} />;
+const Globe = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faGlobe} style={{ width: size, height: size, ...style }} {...props} />;
+const GraduationCap = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faGraduationCap} style={{ width: size, height: size, ...style }} {...props} />;
+const Layers = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faLayerGroup} style={{ width: size, height: size, ...style }} {...props} />;
+const Linkedin = ({ size = 16, style, ...props }: any) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style} {...props}>
+    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+  </svg>
+);
+const Play = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faPlay} style={{ width: size, height: size, ...style }} {...props} />;
+const Radio = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faTowerBroadcast} style={{ width: size, height: size, ...style }} {...props} />;
+const Share2 = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faShareNodes} style={{ width: size, height: size, ...style }} {...props} />;
+const ShieldCheck = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faShieldHalved} style={{ width: size, height: size, ...style }} {...props} />;
+const Sparkles = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faStar} style={{ width: size, height: size, ...style }} {...props} />;
+const Tv = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faTv} style={{ width: size, height: size, ...style }} {...props} />;
+const Users = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faUsers} style={{ width: size, height: size, ...style }} {...props} />;
+const Video = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faVideo} style={{ width: size, height: size, ...style }} {...props} />;
+const Zap = ({ size = 16, style, ...props }: any) => <FontAwesomeIcon icon={faBolt} style={{ width: size, height: size, ...style }} {...props} />;
 import { api } from "@/lib/api";
 
 interface MasterclassDetail {
@@ -977,7 +1003,7 @@ export default function MasterclassDetailPage() {
                       boxShadow: "0 6px 18px rgba(239, 68, 68, 0.35)",
                     }}
                   >
-                    <Radio size={16} /> Enter Live {masterclass.platform} Room <ExternalLink size={13} />
+                    <Radio size={16} /> Join Live Class <ExternalLink size={13} />
                   </a>
                 ) : masterclass.meetingLink ? (
                   <a
@@ -1000,7 +1026,7 @@ export default function MasterclassDetailPage() {
                       boxShadow: "0 6px 18px rgba(255, 85, 50, 0.28)",
                     }}
                   >
-                    <Video size={16} /> Launch {masterclass.platform} Webinar <ExternalLink size={13} />
+                    <Video size={16} /> Join Class <ExternalLink size={13} />
                   </a>
                 ) : null}
 

@@ -542,7 +542,7 @@ function CheckoutContent() {
                                     <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mb-1.5">
                                         Save{" "}
                                         {Math.round(
-                                            ((course.originalPrice - course.price) / course.originalPrice) * 100
+                                            (((course.originalPrice || course.price) - course.price) / (course.originalPrice || 1)) * 100
                                         )}
                                         %
                                     </span>

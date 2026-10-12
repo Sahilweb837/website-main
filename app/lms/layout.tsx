@@ -3,6 +3,25 @@
 import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCalendarDays,
+  faCheck,
+  faCircleCheck,
+  faFire,
+  faUserCheck,
+  faCircleInfo,
+  faXmark,
+  faPhone,
+  faEnvelope,
+  faLocationDot,
+  faGraduationCap,
+  faArrowRight,
+  faHeadset,
+  faVideo,
+  faShieldHalved,
+  faComments,
+} from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/lib/auth/context";
 import { api } from "@/lib/api";
 import { calculateAutomatedClassStatus, getLiveClassStartAt, INITIAL_CLASSES, type LiveClass } from "@/data/lms-mentor-data";
@@ -329,6 +348,7 @@ const navItems: NavItem[] = [
 export default function LMSLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState("");
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>(INITIAL_CLASSES);
   const [now, setNow] = useState(0);
@@ -339,7 +359,7 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
   const [selectedCourseSlug, setSelectedCourseSlug] = useState<string>("fullstack-web-development");
   const [courseDropdownOpen, setCourseDropdownOpen] = useState(false);
   const [attendanceMarked, setAttendanceMarked] = useState(false);
-  const [currentStreak, setCurrentStreak] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(1);
   const [weeklyAttendance, setWeeklyAttendance] = useState<{ day: string; date: string; attended: boolean; isToday: boolean }[]>([]);
 
   // Synchronize Active Course with localStorage & events
@@ -358,21 +378,19 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
 
   // Synchronize Attendance & Streak
   useEffect(() => {
-    if (!user) {
-      setAttendanceMarked(false);
-      setCurrentStreak(0);
-      setWeeklyAttendance([]);
-      return;
-    }
-
-    setAttendanceMarked(isTodayAttended(user.id));
-    setCurrentStreak(getLearningStreak(user.id));
-    setWeeklyAttendance(getWeeklyAttendance(user.id));
+    const studentId = user?.id || "student_user";
+    const attended = isTodayAttended(studentId);
+    const streak = getLearningStreak(studentId);
+    setAttendanceMarked(attended);
+    setCurrentStreak(Math.max(1, streak));
+    setWeeklyAttendance(getWeeklyAttendance(studentId));
 
     const handleAttendanceChange = () => {
-      setAttendanceMarked(isTodayAttended(user.id));
-      setCurrentStreak(getLearningStreak(user.id));
-      setWeeklyAttendance(getWeeklyAttendance(user.id));
+      const isAttended = isTodayAttended(studentId);
+      const curStreak = getLearningStreak(studentId);
+      setAttendanceMarked(isAttended);
+      setCurrentStreak(Math.max(1, curStreak));
+      setWeeklyAttendance(getWeeklyAttendance(studentId));
     };
 
     window.addEventListener("lms_attendance_marked", handleAttendanceChange);
@@ -380,11 +398,12 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
   }, [user]);
 
   const handleMarkAttendance = () => {
-    if (!user) return;
-    const res = markTodayAttendance(user.id);
+    const studentId = user?.id || "student_user";
+    const res = markTodayAttendance(studentId);
+    if (!res.success) return;
     setAttendanceMarked(true);
-    setCurrentStreak(res.streak);
-    setWeeklyAttendance(getWeeklyAttendance(user.id));
+    setCurrentStreak(Math.max(1, res.streak));
+    setWeeklyAttendance(getWeeklyAttendance(studentId));
   };
 
   const activeCourse = LMS_COURSES.find((c) => c.slug === selectedCourseSlug)
@@ -684,333 +703,152 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
             </Link>
           )}
 
-          {/* 1. SELECT COURSE / ACTIVE PROGRAM WIDGET */}
-          <div style={{ marginBottom: 12 }}>
-            <div
-              style={{
-                position: "relative",
-                background: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                borderRadius: "14px",
-                padding: "8px 10px",
-                transition: "all 0.15s ease",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  cursor: "pointer",
-                  userSelect: "none",
-                }}
-                onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "8px",
-                      background: "#fff2ef",
-                      color: ACCENT,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
-                      school
-                    </span>
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "9px", fontWeight: 800, color: ACCENT, letterSpacing: "0.6px", textTransform: "uppercase" }}>
-                      Active Course
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: 750,
-                        color: "#0f172a",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        maxWidth: "145px",
-                      }}
-                      title={activeCourse.title}
-                    >
-                      {activeCourse.title}
-                    </div>
-                  </div>
-                </div>
-
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: "20px",
-                    color: "#64748b",
-                    transform: courseDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.2s ease",
-                  }}
-                >
-                  expand_more
-                </span>
-              </div>
-
-              {/* DROPDOWN MENU */}
-              {courseDropdownOpen && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    paddingTop: "8px",
-                    borderTop: "1px solid #e2e8f0",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "4px",
-                  }}
-                >
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", padding: "2px 4px", textTransform: "uppercase" }}>
-                    Switch Enrolled Course
-                  </div>
-
-                  {studentEnrolledList.map((c) => {
-                    const isSelected = c.slug === activeCourse.slug;
-                    return (
-                      <button
-                        type="button"
-                        key={c.slug}
-                        onClick={() => {
-                          setActiveCourseSlug(c.slug);
-                          setSelectedCourseSlug(c.slug);
-                          setCourseDropdownOpen(false);
-                          router.push(`/lms/courses`);
-                        }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "6px 8px",
-                          borderRadius: "8px",
-                          border: isSelected ? "1px solid #ff795b" : "1px solid transparent",
-                          background: isSelected ? "#fff2ef" : "#ffffff",
-                          color: isSelected ? ACCENT : "#334155",
-                          fontSize: "11px",
-                          fontWeight: isSelected ? 750 : 600,
-                          textAlign: "left",
-                          cursor: "pointer",
-                          width: "100%",
-                        }}
-                      >
-                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }}>
-                          {c.title}
-                        </span>
-                        {isSelected && (
-                          <span className="material-symbols-outlined" style={{ fontSize: "15px", color: ACCENT }}>
-                            check
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {/* Preview Other Courses */}
-                  {LMS_COURSES.filter((c) => !studentEnrolledList.some((e) => e.slug === c.slug)).length > 0 && (
-                    <>
-                      <div style={{ fontSize: "9.5px", fontWeight: 750, color: "#94a3b8", padding: "6px 4px 2px", textTransform: "uppercase" }}>
-                        Preview Other Courses
-                      </div>
-                      {LMS_COURSES.filter((c) => !studentEnrolledList.some((e) => e.slug === c.slug)).slice(0, 3).map((c) => {
-                        const isSelected = c.slug === activeCourse.slug;
-                        return (
-                          <button
-                            type="button"
-                            key={c.slug}
-                            onClick={() => {
-                              setActiveCourseSlug(c.slug);
-                              setSelectedCourseSlug(c.slug);
-                              setCourseDropdownOpen(false);
-                              router.push(`/lms/courses`);
-                            }}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "6px 8px",
-                              borderRadius: "8px",
-                              border: isSelected ? "1px solid #ff795b" : "1px dashed #cbd5e1",
-                              background: isSelected ? "#fff2ef" : "#fafafa",
-                              color: isSelected ? ACCENT : "#64748b",
-                              fontSize: "11px",
-                              fontWeight: isSelected ? 750 : 600,
-                              textAlign: "left",
-                              cursor: "pointer",
-                              width: "100%",
-                            }}
-                          >
-                            <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "140px" }}>
-                              🔒 {c.title}
-                            </span>
-                            <span style={{ fontSize: "10px", fontWeight: 800, color: ACCENT }}>
-                              ₹{c.price ?? 79}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </>
-                  )}
-
-                  <Link
-                    href="/lms/select-course"
-                    onClick={() => {
-                      setCourseDropdownOpen(false);
-                      setSidebarOpen(false);
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "7px 8px",
-                      marginTop: "4px",
-                      borderRadius: "8px",
-                      background: "#fff2ef",
-                      color: ACCENT,
-                      fontSize: "11px",
-                      fontWeight: 750,
-                      textDecoration: "none",
-                      justifyContent: "center",
-                      border: "1px dashed #ffb4a2",
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>
-                      add_circle
-                    </span>
-                    <span>Explore &amp; Enroll More</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 2. DAILY ATTENDANCE & LOGIN STREAK WIDGET */}
+          {/* DAILY ATTENDANCE & LOGIN STREAK WIDGET */}
           <div
             style={{
-              background: "#ffffff",
-              border: "1px solid #fee2e2",
-              borderRadius: "14px",
-              padding: "10px 10px",
+              background: "linear-gradient(145deg, #ffffff 0%, #fffaf7 100%)",
+              border: "1px solid #f4d8ca",
+              borderRadius: "16px",
+              padding: "13px 12px",
               marginBottom: "14px",
-              boxShadow: "0 2px 8px rgba(255, 85, 50, 0.04)",
+              boxShadow: "0 8px 22px rgba(147, 74, 39, 0.06)",
             }}
           >
-            {/* Top row: Date & Streak */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-              <div style={{ fontSize: "10.5px", fontWeight: 700, color: "#64748b" }}>
-                {new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short" }).format(new Date())}
+            {/* Row 1: Date & Streak Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 11 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#475569", fontSize: 11.5, fontWeight: 750 }}>
+                <FontAwesomeIcon icon={faCalendarDays} style={{ color: ACCENT, fontSize: 13 }} />
+                <span>on, {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" }).format(new Date())}</span>
               </div>
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "3px",
-                  padding: "2px 7px",
-                  borderRadius: "10px",
-                  background: "#fff2ef",
-                  color: "#ea580c",
-                  fontSize: "10.5px",
+                  gap: 5,
+                  padding: "4px 9px",
+                  borderRadius: 999,
+                  background: "#fff0e8",
+                  color: "#c94f0e",
+                  fontSize: 11,
                   fontWeight: 800,
+                  boxShadow: "0 2px 6px rgba(255, 107, 26, 0.12)",
                 }}
               >
-                <span>🔥</span>
-                <span>{currentStreak > 0 ? `${currentStreak}d Streak` : "Daily Streak"}</span>
+                <FontAwesomeIcon icon={faFire} style={{ color: "#ff5532" }} />
+                <span>{currentStreak > 0 ? `${currentStreak}d Streak` : "1d Streak"}</span>
               </div>
             </div>
 
-            {/* Attendance Status */}
-            <div style={{ marginBottom: "6px" }}>
+            {/* Row 2: Attendance Action / Verified State */}
+            <div style={{ marginBottom: 11 }}>
               {attendanceMarked ? (
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: "5px",
-                    padding: "5px",
-                    borderRadius: "8px",
+                    justifyContent: "space-between",
+                    padding: "8px 10px",
+                    borderRadius: 10,
                     background: "#ecfdf5",
-                    color: "#065f46",
-                    fontSize: "10.5px",
-                    fontWeight: 750,
+                    border: "1px solid #a7f3d0",
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "#10b981" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#065f46", fontSize: 11.5, fontWeight: 750 }}>
+                    <FontAwesomeIcon icon={faCircleCheck} style={{ color: "#10b981", fontSize: 13 }} />
+                    <span>Attendance Marked ✓</span>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 800,
+                      color: "#059669",
+                      background: "#d1fae5",
+                      padding: "2px 7px",
+                      borderRadius: 999,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
                     verified
                   </span>
-                  <span>Attendance Marked ✓</span>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={handleMarkAttendance}
+                  aria-label="Mark today's attendance"
                   style={{
                     width: "100%",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "5px",
-                    padding: "6px 8px",
-                    borderRadius: "8px",
+                    gap: 7,
+                    padding: "8.5px 12px",
+                    borderRadius: 10,
                     background: "linear-gradient(135deg, #ff5532 0%, #ff7354 100%)",
                     color: "#ffffff",
-                    fontSize: "11px",
+                    fontSize: 11.5,
                     fontWeight: 750,
                     border: "none",
                     cursor: "pointer",
-                    boxShadow: "0 2px 8px rgba(255, 85, 50, 0.2)",
+                    boxShadow: "0 5px 14px rgba(255, 85, 50, 0.25)",
+                    transition: "transform 0.15s ease",
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
-                    how_to_reg
-                  </span>
+                  <FontAwesomeIcon icon={faUserCheck} />
                   <span>Mark Today&apos;s Attendance</span>
                 </button>
               )}
             </div>
 
-            {/* Weekly 7-day mini attendance dots */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "5px", borderTop: "1px solid #f1f5f9" }}>
-              {(weeklyAttendance.length > 0 ? weeklyAttendance : [
-                { day: "M", attended: true, isToday: false },
-                { day: "T", attended: true, isToday: false },
-                { day: "W", attended: true, isToday: false },
-                { day: "T", attended: true, isToday: false },
-                { day: "F", attended: attendanceMarked, isToday: true },
-                { day: "S", attended: false, isToday: false },
-                { day: "S", attended: false, isToday: false },
-              ]).map((w, idx) => (
-                <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                  <span style={{ fontSize: "8.5px", color: w.isToday ? ACCENT : "#94a3b8", fontWeight: w.isToday ? 800 : 600 }}>
-                    {typeof w.day === "string" ? w.day.slice(0, 1) : "•"}
-                  </span>
+            {/* Row 3: 7-Day Attendance Strip (T W T ✓ F ✓ S S M ✓) */}
+            <div
+              aria-label="Attendance for the last seven days"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+                gap: 4,
+                paddingTop: 10,
+                borderTop: "1px solid #f1e6e1",
+              }}
+            >
+              {weeklyAttendance.map((day) => {
+                const isAttended = day.attended || (day.isToday && attendanceMarked);
+                return (
                   <div
-                    style={{
-                      width: "13px",
-                      height: "13px",
-                      borderRadius: "50%",
-                      background: w.attended ? "#10b981" : "#f1f5f9",
-                      border: w.isToday ? `1.5px solid ${ACCENT}` : "1px solid #e2e8f0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#ffffff",
-                      fontSize: "8.5px",
-                      fontWeight: 800,
-                    }}
+                    key={day.date}
+                    title={`${day.day}, ${day.date}${isAttended ? " — attended" : " — not marked"}`}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}
                   >
-                    {w.attended && "✓"}
+                    <span
+                      style={{
+                        fontSize: 9.5,
+                        color: day.isToday ? ACCENT_DARK : "#64748b",
+                        fontWeight: day.isToday ? 800 : 700,
+                      }}
+                    >
+                      {day.day.slice(0, 1)}
+                    </span>
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: "50%",
+                        background: isAttended ? "#10b981" : day.isToday ? "#fff1ec" : "#f1f5f9",
+                        border: day.isToday ? `1.5px solid ${ACCENT}` : "1px solid #e2e8f0",
+                        display: "grid",
+                        placeItems: "center",
+                        color: isAttended ? "#ffffff" : day.isToday ? ACCENT : "#94a3b8",
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      {isAttended ? <FontAwesomeIcon icon={faCheck} /> : null}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -1091,12 +929,26 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
 
         {/* BOTTOM */}
         <div style={S.bottomBox}>
-          <Link href="/lms/profile?tab=help" style={S.bottomLink} onClick={() => { setActiveProfileTab("help"); setSidebarOpen(false); }}>
+          <button
+            type="button"
+            onClick={() => {
+              setHelpModalOpen(true);
+              setSidebarOpen(false);
+            }}
+            style={{
+              ...S.bottomLink,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
               help_outline
             </span>
             <span>Help &amp; Support</span>
-          </Link>
+          </button>
           <Link href="/lms/profile?tab=settings" style={S.bottomLink} onClick={() => { setActiveProfileTab("settings"); setSidebarOpen(false); }}>
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
               settings
@@ -1227,6 +1079,292 @@ export default function LMSLayout({ children }: { children: ReactNode }) {
 
         <main style={S.main}>{children}</main>
       </div>
+
+      {/* ═══════════════════════════════════════════════
+          HELP & SUPPORT DETAILED INFO MODAL
+      ═══════════════════════════════════════════════ */}
+      {helpModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.72)",
+            backdropFilter: "blur(8px)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+          onClick={() => setHelpModalOpen(false)}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 22,
+              maxWidth: 620,
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 25px 60px rgba(0, 0, 0, 0.35)",
+              padding: "26px 28px",
+              position: "relative",
+              border: "1px solid #e2e8f0",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 16, borderBottom: "1px solid #f1f5f9", paddingBottom: 14 }}>
+              <div>
+                <span
+                  style={{
+                    display: "inline-block",
+                    background: "#fff2ef",
+                    color: ACCENT,
+                    fontSize: 10.5,
+                    fontWeight: 800,
+                    padding: "3px 9px",
+                    borderRadius: 6,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.6px",
+                    marginBottom: 6,
+                  }}
+                >
+                  Page Guide &amp; Student Helpdesk
+                </span>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", margin: "2px 0 4px" }}>
+                  {getPageDetailedInfo(pathname).title}
+                </h2>
+                <p style={{ fontSize: 12.5, color: "#64748b", margin: 0, fontWeight: 600 }}>
+                  {getPageDetailedInfo(pathname).subtitle}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setHelpModalOpen(false)}
+                style={{
+                  background: "#f1f5f9",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: 34,
+                  height: 34,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  color: "#475569",
+                  fontSize: 18,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                }}
+                aria-label="Close help modal"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Current Page Explanation */}
+            <div style={{ background: "#f8fafc", borderRadius: 14, padding: "14px 16px", marginBottom: 18, border: "1px solid #e2e8f0" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#334155", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 5 }}>
+                About This Page
+              </div>
+              <p style={{ fontSize: 13, color: "#475569", lineHeight: 1.6, margin: "0 0 10px" }}>
+                {getPageDetailedInfo(pathname).desc}
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {getPageDetailedInfo(pathname).highlights.map((h, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "#1e293b", fontWeight: 600 }}>
+                    <FontAwesomeIcon icon={faCheck} style={{ color: "#10b981", fontSize: 11 }} />
+                    <span>{h}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Mentorship & Contact Channels */}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>
+                Direct Faculty Mentors &amp; Assistance
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+                {/* WhatsApp */}
+                <a
+                  href="https://wa.me/919876543210"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    background: "#ecfdf5",
+                    border: "1px solid #a7f3d0",
+                    textDecoration: "none",
+                    color: "#065f46",
+                  }}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: "#10b981", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+                    <FontAwesomeIcon icon={faPhone} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 800 }}>WhatsApp Mentor Desk</div>
+                    <div style={{ fontSize: 11, color: "#047857" }}>+91 98765 43210 • 9am - 9pm</div>
+                  </div>
+                </a>
+
+                {/* Email Support */}
+                <a
+                  href="mailto:hello@netcoder.in"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    textDecoration: "none",
+                    color: "#1e293b",
+                  }}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: ACCENT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>
+                    <FontAwesomeIcon icon={faEnvelope} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 800 }}>Email Helpdesk</div>
+                    <div style={{ fontSize: 11, color: "#64748b" }}>hello@netcoder.in</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            {/* Offline Campus Address */}
+            <div style={{ padding: "12px 14px", borderRadius: 12, background: "#fff7ed", border: "1px solid #fed7aa", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
+              <FontAwesomeIcon icon={faLocationDot} style={{ color: "#ea580c", fontSize: 16 }} />
+              <div style={{ fontSize: 12, color: "#9a3412" }}>
+                <strong>Dharamshala Mountain Campus:</strong> Netcoder Technology Lab, Kangra Valley, Himachal Pradesh. In-person workstations &amp; faculty 1-on-1 desks available daily.
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, borderTop: "1px solid #f1f5f9", paddingTop: 14 }}>
+              <Link
+                href="/lms/profile?tab=help"
+                onClick={() => setHelpModalOpen(false)}
+                style={{
+                  fontSize: 12.5,
+                  fontWeight: 750,
+                  color: ACCENT,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <span>Open Full Student Help &amp; FAQs</span>
+                <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: 11 }} />
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setHelpModalOpen(false)}
+                style={{
+                  padding: "9px 20px",
+                  borderRadius: 8,
+                  background: ACCENT,
+                  color: "#ffffff",
+                  fontSize: 12.5,
+                  fontWeight: 750,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function getPageDetailedInfo(path: string) {
+  if (path.startsWith("/lms/courses")) {
+    return {
+      title: "My Courses & Career Tracks",
+      subtitle: "Full-Stack Web Development, AI Engineering, Cloud & Security",
+      desc: "This page shows all your enrolled courses, active progress bars, video lectures, and live cohort tracks. You can also explore and compare the 100% Online Live Track and the Offline Dharamshala Mountain Campus Track with dedicated workstations and 1-on-1 mentor desks.",
+      highlights: [
+        "Track individual module & lecture completion",
+        "Switch between Online Live & In-Person Campus learning tracks",
+        "Watch video testimonials from students who landed 12+ LPA offers",
+        "Directly enroll or request advisory calls for upcoming batches",
+      ],
+    };
+  }
+  if (path.startsWith("/lms/live-masterclasses") || path.startsWith("/lms/masterclasses")) {
+    return {
+      title: "Industry Masterclasses & Workshops",
+      subtitle: "Interactive Zoom & Google Meet webinars with tech leads",
+      desc: "Live masterclasses give you direct access to staff engineers and architects from top tech companies. You can join happening live webinars, view upcoming agendas, or access full HD recorded archives.",
+      highlights: [
+        "One-click 'Join Class' to enter live Zoom / Google Meet rooms",
+        "Lifetime access to high-definition session recordings",
+        "Interactive Q&A and code architecture walkthroughs",
+        "Detailed session syllabus, speaker profiles, and prerequisites",
+      ],
+    };
+  }
+  if (path.startsWith("/lms/cohorts")) {
+    return {
+      title: "Active Learning Cohorts",
+      subtitle: "Batch schedules, weekend labs & peer project reviews",
+      desc: "Your cohort groups you with fellow engineers for daily accountability, collaborative git repos, and weekly code reviews with faculty mentors.",
+      highlights: [
+        "Track upcoming cohort deadlines and weekly deliverables",
+        "Sync with your dedicated cohort faculty mentor",
+        "Collaborate in peer study groups and sprint retrospectives",
+      ],
+    };
+  }
+  if (path.startsWith("/lms/challenges")) {
+    return {
+      title: "Coding Challenges & Labs",
+      subtitle: "Hands-on algorithmic challenges and system design drills",
+      desc: "Sharpen your problem-solving skills with practical coding exercises, test cases, and real interview challenges designed for top product firms.",
+      highlights: [
+        "Multi-language code runner with instant test feedback",
+        "Curated challenges from Easy to Hard",
+        "Points, badges, and ranking on the global student leaderboard",
+      ],
+    };
+  }
+  if (path.startsWith("/lms/online-track")) {
+    return {
+      title: "100% Online Live Track",
+      subtitle: "Remote, flexible mentor-led cohort program",
+      desc: "Comprehensive roadmap from fundamentals to production capstones and placement preparation, with daily live Zoom/Meet sessions, lifetime recordings, and code reviews.",
+      highlights: [
+        "Structured 4-phase engineering roadmap",
+        "Dedicated mentor desk assistance & code reviews",
+        "Online cloud coding environments",
+        "Direct inquiry form to talk with an admissions advisor",
+      ],
+    };
+  }
+  return {
+    title: "Netcoder Learning Management Platform",
+    subtitle: "Your comprehensive portal for modern software engineering",
+    desc: "Welcome to the Netcoder student portal. Here you can access all your enrolled courses, live mentor masterclasses, coding sandboxes, daily attendance streaks, and verified certificates.",
+    highlights: [
+      "Access interactive courses and practice challenges",
+      "Attend live masterclasses and review recorded sessions",
+      "Keep up your daily attendance streak to unlock milestones",
+      "Connect with faculty mentors via WhatsApp and Discord",
+    ],
+  };
 }

@@ -1854,6 +1854,40 @@ function ProfileContent() {
 
             <div
               style={{
+                padding: 18,
+                borderRadius: 14,
+                border: `1px solid ${T.border}`,
+                background: "#fafafa",
+              }}
+            >
+              <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800, color: T.text }}>
+                Quick guide to your learning dashboard
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
+                {[
+                  {
+                    title: "Courses and progress",
+                    detail: "Open My Courses to continue lessons, review your learning progress, and explore available learning tracks.",
+                  },
+                  {
+                    title: "Live masterclasses",
+                    detail: "Find upcoming sessions, join a class from its session card, and open the details page for its agenda.",
+                  },
+                  {
+                    title: "Attendance and streak",
+                    detail: "Use the attendance card in the sidebar to mark today. The weekly row reflects your recorded activity.",
+                  },
+                ].map((item) => (
+                  <div key={item.title} style={{ padding: 13, borderRadius: 11, background: "#fff", border: `1px solid ${T.border}` }}>
+                    <div style={{ marginBottom: 5, color: T.text, fontSize: 12, fontWeight: 800 }}>{item.title}</div>
+                    <p style={{ margin: 0, color: T.textMuted, fontSize: 11.5, lineHeight: 1.55 }}>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                 gap: 16,

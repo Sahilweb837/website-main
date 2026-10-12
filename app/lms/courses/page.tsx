@@ -39,56 +39,10 @@ const T = {
   shadowHover: "0 14px 28px rgba(255, 85, 50, 0.12)",
 };
 
-/* Real Student Video Reels Data */
-const STUDENT_REELS = [
-  {
-    id: "reel-1",
-    name: "Arjun Verma",
-    role: "Full Stack Engineer @ Amazon",
-    salary: "₹18 LPA",
-    hike: "+240% Hike",
-    duration: "0:45",
-    views: "18.4K",
-    videoThumbnail: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500",
-    quote: "From mechanical engineering background with zero coding knowledge to landing Amazon SDE in 6 months at Netcoder.",
-    company: "Amazon",
-  },
-  {
-    id: "reel-2",
-    name: "Priya Sharma",
-    role: "AI & ML Engineer @ Microsoft",
-    salary: "₹22 LPA",
-    hike: "+310% Hike",
-    duration: "0:52",
-    views: "24.9K",
-    videoThumbnail: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500",
-    quote: "The hands-on capstone projects and mentor 1-on-1 interview drills at Netcoder Dharamshala campus gave me the edge.",
-    company: "Microsoft",
-  },
-  {
-    id: "reel-3",
-    name: "Siddharth Rana",
-    role: "Cloud DevOps Architect @ Infosys",
-    salary: "₹14 LPA",
-    hike: "+180% Hike",
-    duration: "0:38",
-    views: "12.1K",
-    videoThumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500",
-    quote: "Production Kubernetes & multi-cloud automation. Live class debugging with faculty mentors changed my career.",
-    company: "Infosys",
-  },
-  {
-    id: "reel-4",
-    name: "Mehak Chawla",
-    role: "Cyber Security Analyst @ TCS",
-    salary: "₹12.5 LPA",
-    hike: "+160% Hike",
-    duration: "0:41",
-    views: "15.8K",
-    videoThumbnail: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500",
-    quote: "Netcoder placement drive scheduled 4 interviews in a single week. Received offer letter on graduation day!",
-    company: "TCS",
-  },
+/* Real Student Video Testimonials Data */
+const VIDEO_TESTIMONIALS = [
+  { name: "Pallvi Sharma", videoId: "pxlXyaw5Hag" },
+  { name: "Shivani", videoId: "9xIhO56gEsY" },
 ];
 
 /* Hiring Partners */
@@ -138,8 +92,17 @@ export default function MyCoursesPage() {
   const [placementSubmitting, setPlacementSubmitting] = useState(false);
   const [placementSuccessData, setPlacementSuccessData] = useState<any>(null);
 
-  // Reel Preview Modal
-  const [activeReel, setActiveReel] = useState<typeof STUDENT_REELS[0] | null>(null);
+  // Video Testimonial Popup State
+  const [popupVideo, setPopupVideo] = useState<{ name: string; videoId: string } | null>(null);
+
+  useEffect(() => {
+    if (!popupVideo) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopupVideo(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [popupVideo]);
 
   // Auth Guard
   useEffect(() => {
@@ -1057,73 +1020,219 @@ export default function MyCoursesPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════
-            STUDENT REELS & VIDEO TESTIMONIALS SECTION
+            SUCCESS STORIES (VIDEO TESTIMONIALS)
         ═══════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 48, background: "#f8fafc", borderRadius: 20, padding: "28px 24px", border: "1px solid #e2e8f0" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ background: "#fee2e2", color: "#dc2626", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 6, textTransform: "uppercase" }}>
-                  Student Reels
-                </span>
-                <span style={{ fontSize: 12, color: T.textMuted }}>Real Career Transformations</span>
-              </div>
-              <h2 style={{ fontSize: 22, fontWeight: 800, margin: "6px 0 0", color: T.text }}>
-                Watch How Students Landed 12+ LPA Offers
-              </h2>
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.textMuted }}>
-              94% Placement Rate &bull; 500+ Alumni Across Top MNCs
-            </span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {STUDENT_REELS.map((reel) => (
+        <div className="testimonials-wrap">
+          <style>{`
+            .testimonials-wrap {
+              --primary: #ff5532;
+              --primary-dark: #c2410c;
+              --card: #ffffff;
+              --radius-md: 14px;
+              --radius-lg: 18px;
+              --line: #e2e8f0;
+              --ease: cubic-bezier(0.16, 1, 0.3, 1);
+              --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.08);
+              --ink-soft: #64748b;
+              --primary-glow: rgba(255, 85, 50, 0.35);
+              max-width: 1240px;
+              margin: 0 auto 48px;
+              padding: 32px 24px;
+              background: #f8fafc;
+              border-radius: 20px;
+              border: 1px solid #e2e8f0;
+            }
+            .section-eyebrow {
+              font-size: 12px;
+              letter-spacing: 0.09em;
+              text-transform: uppercase;
+              color: var(--primary-dark);
+              font-weight: 700;
+              display: inline-block;
+              margin-bottom: 12px;
+              padding: 6px 16px;
+              border-radius: 100px;
+              border: 1px solid rgba(255, 85, 50, 0.22);
+              background: #fff3f0;
+            }
+            .section-title {
+              font-size: 24px;
+              font-weight: 800;
+              margin: 0 0 4px;
+              color: #0f172a;
+              letter-spacing: -0.5px;
+            }
+            .testimonials-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+              gap: 24px;
+              margin: 28px 0;
+            }
+            .video-card {
+              background: var(--card);
+              border-radius: var(--radius-md);
+              overflow: hidden;
+              border: 1px solid var(--line);
+              cursor: pointer;
+              transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            }
+            .video-card:hover {
+              transform: translateY(-4px);
+              box-shadow: var(--shadow-soft);
+            }
+            .video-card img {
+              width: 100%;
+              aspect-ratio: 16/9;
+              object-fit: cover;
+              display: block;
+            }
+            .watch-row {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 14px 16px 6px;
+              font-weight: 600;
+              font-size: 13px;
+            }
+            .play-badge {
+              width: 32px;
+              height: 32px;
+              background: var(--primary);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #fff;
+              flex: none;
+              box-shadow: 0 4px 10px rgba(255, 85, 50, 0.35);
+            }
+            .play-badge svg {
+              width: 16px;
+              height: 16px;
+              fill: #fff;
+            }
+            .watch-label {
+              color: var(--ink-soft);
+              font-weight: 600;
+            }
+            .card-footer {
+              padding: 4px 16px 16px;
+            }
+            .person-name {
+              font-weight: 750;
+              font-size: 14px;
+              color: #0f172a;
+              margin: 0;
+            }
+            .more-wrap {
+              text-align: center;
+              margin-top: 30px;
+            }
+            .color-btn {
+              display: inline-block;
+              padding: 12px 32px;
+              background: var(--primary);
+              color: #fff;
+              border-radius: 8px;
+              font-weight: 700;
+              font-size: 13.5px;
+              text-decoration: none;
+              transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+              box-shadow: 0 12px 28px -10px var(--primary-glow);
+            }
+            .color-btn:hover {
+              transform: translateY(-3px);
+              box-shadow: 0 18px 36px -8px var(--primary-glow);
+              color: #fff;
+            }
+            .popup-overlay {
+              position: fixed;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.75);
+              backdrop-filter: blur(8px);
+              -webkit-backdrop-filter: blur(8px);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 9999;
+              padding: 20px;
+              transition: opacity 0.3s var(--ease);
+            }
+            .popup-box {
+              position: relative;
+              width: 100%;
+              max-width: 780px;
+              background: #000;
+              border-radius: var(--radius-lg);
+              overflow: hidden;
+              aspect-ratio: 16/9;
+              box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            }
+            .popup-box iframe {
+              width: 100%;
+              height: 100%;
+              border: none;
+              display: block;
+            }
+            .popup-close {
+              position: absolute;
+              top: 12px;
+              right: 16px;
+              background: rgba(0, 0, 0, 0.65);
+              color: #fff;
+              border: none;
+              font-size: 28px;
+              width: 44px;
+              height: 44px;
+              border-radius: 50%;
+              transition: background 0.25s;
+              z-index: 10;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+            }
+            .popup-close:hover {
+              background: var(--primary);
+            }
+          `}</style>
+          <span className="section-eyebrow">Success Stories</span>
+          <h2 className="section-title">Hear it from our students</h2>
+          <div className="testimonials-grid" id="testimonialsGrid">
+            {VIDEO_TESTIMONIALS.map((t) => (
               <div
-                key={reel.id}
-                onClick={() => setActiveReel(reel)}
-                style={{
-                  background: "#ffffff",
-                  borderRadius: 14,
-                  border: "1px solid #e2e8f0",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                  position: "relative",
-                }}
+                key={t.videoId}
+                className="video-card"
+                onClick={() => setPopupVideo(t)}
               >
-                <div style={{ position: "relative", height: 170 }}>
-                  <img
-                    src={reel.videoThumbnail}
-                    alt={reel.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                  <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", justifyContent: "center", color: T.primary, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
-                      <Play size={18} fill={T.primary} />
-                    </div>
+                <img
+                  src={`https://img.youtube.com/vi/${t.videoId}/hqdefault.jpg`}
+                  alt={`${t.name} testimonial video thumbnail`}
+                />
+                <div className="watch-row">
+                  <div className="play-badge">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
                   </div>
-                  <span style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
-                    {reel.duration}
-                  </span>
-                  <span style={{ position: "absolute", top: 8, left: 8, background: "#10b981", color: "#fff", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>
-                    {reel.hike}
-                  </span>
+                  <span className="watch-label">Watch video</span>
                 </div>
-                <div style={{ padding: "12px 14px" }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: T.text, margin: 0 }}>
-                    {reel.name}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: T.textMuted, margin: "2px 0 6px" }}>
-                    {reel.role}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, fontWeight: 700, color: "#ea580c" }}>
-                    <span>{reel.salary}</span>
-                    <span style={{ color: T.textMuted }}>{reel.views} views</span>
-                  </div>
+                <div className="card-footer">
+                  <p className="person-name">{t.name}</p>
                 </div>
               </div>
             ))}
+          </div>
+          <div className="more-wrap">
+            <a
+              className="color-btn"
+              href="https://www.youtube.com/@netcodertechnology/videos"
+              target="_blank"
+              rel="noopener"
+            >
+              View more testimonials
+            </a>
           </div>
         </div>
 
@@ -1228,7 +1337,7 @@ export default function MyCoursesPage() {
               </div>
 
               <Link
-                href="/lms/checkout?course=data-science-machine-learning-ai"
+                href="/lms/online-track"
                 style={{
                   display: "block",
                   textAlign: "center",
@@ -1280,9 +1389,10 @@ export default function MyCoursesPage() {
                 </ul>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setPlacementModalOpen(true)}
+              <a
+                href="https://www.netcoder.in/contact"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   display: "block",
                   width: "100%",
@@ -1295,11 +1405,12 @@ export default function MyCoursesPage() {
                   fontWeight: 750,
                   border: "none",
                   cursor: "pointer",
+                  textDecoration: "none",
                   boxShadow: "0 4px 12px rgba(16,185,129,0.25)",
                 }}
               >
                 Apply for Campus & Placement Program
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -1568,54 +1679,31 @@ export default function MyCoursesPage() {
       )}
 
       {/* ═══════════════════════════════════════════════
-          STUDENT REEL VIDEO MODAL
+          SUCCESS STORIES VIDEO POPUP MODAL
       ═══════════════════════════════════════════════ */}
-      {activeReel && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.8)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#ffffff", borderRadius: 20, maxWidth: 440, width: "100%", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.3)" }}>
-            <div style={{ position: "relative", height: 260 }}>
-              <img
-                src={activeReel.videoThumbnail}
-                alt={activeReel.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ width: 60, height: 60, borderRadius: "50%", background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", justifyContent: "center", color: T.primary, boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
-                  <Play size={26} fill={T.primary} />
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveReel(null)}
-                style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", width: 32, height: 32, borderRadius: "50%", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-              >
-                &times;
-              </button>
-            </div>
-
-            <div style={{ padding: "20px 22px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: "#ea580c", textTransform: "uppercase", background: "#fff7ed", padding: "3px 8px", borderRadius: 4 }}>
-                  {activeReel.company} &bull; {activeReel.salary}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#16a34a", background: "#dcfce7", padding: "3px 8px", borderRadius: 4 }}>
-                  {activeReel.hike}
-                </span>
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, margin: "0 0 4px", color: T.text }}>{activeReel.name}</h3>
-              <p style={{ fontSize: 12.5, color: T.textMuted, margin: "0 0 12px" }}>{activeReel.role}</p>
-              <blockquote style={{ fontSize: 13, color: T.text, fontStyle: "italic", margin: "0 0 16px", padding: "10px 14px", background: "#f8fafc", borderRadius: 8, borderLeft: `3px solid ${T.primary}` }}>
-                "{activeReel.quote}"
-              </blockquote>
-
-              <button
-                type="button"
-                onClick={() => { setActiveReel(null); setPlacementModalOpen(true); }}
-                style={{ width: "100%", padding: "10px", borderRadius: 8, background: T.primary, color: "#fff", border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
-              >
-                Enroll in Career Program Like {activeReel.name.split(" ")[0]} →
-              </button>
-            </div>
+      {popupVideo && (
+        <div
+          className="popup-overlay open"
+          onClick={() => setPopupVideo(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="popup-box" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="popup-close"
+              onClick={() => setPopupVideo(null)}
+              aria-label="Close testimonial video"
+            >
+              &times;
+            </button>
+            <iframe
+              src={`https://www.youtube.com/embed/${popupVideo.videoId}?autoplay=1&rel=0&playsinline=1`}
+              title={`${popupVideo.name} testimonial video`}
+              referrerPolicy="strict-origin-when-cross-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </div>
       )}

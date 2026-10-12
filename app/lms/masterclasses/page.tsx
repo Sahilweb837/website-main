@@ -2,21 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  ArrowRight,
-  Calendar,
-  CalendarDays,
-  Clock,
-  Clock3,
-  ExternalLink,
-  Flame,
-  Play,
-  Radio,
-  Sparkles,
-  Users,
-  Video,
-  Zap,
-} from "lucide-react";
+  faArrowRight,
+  faCircle,
+  faClock,
+  faPlay,
+  faStar,
+  faVideo,
+} from "@fortawesome/free-solid-svg-icons";
 import { api } from "@/lib/api";
 import { calculateAutomatedClassStatus, type LiveClass } from "@/data/lms-mentor-data";
 
@@ -123,7 +117,7 @@ export default function MasterclassesPage() {
             letterSpacing: "0.8px",
             marginBottom: "12px",
           }}>
-            <Video size={13} />
+            <FontAwesomeIcon icon={faVideo} />
             <span>INDUSTRY MASTERCLASSES & SESSIONS</span>
           </div>
           <h1 style={{
@@ -156,7 +150,7 @@ export default function MasterclassesPage() {
         }}>
           {[
             { id: "all", label: "All Masterclasses" },
-            { id: "live", label: "🔴 Happening Live" },
+            { id: "live", label: "Happening Live", icon: faCircle },
             { id: "upcoming", label: "Upcoming Zoom Labs" },
             { id: "recording", label: "Recorded Sessions" },
           ].map((tab) => {
@@ -179,6 +173,12 @@ export default function MasterclassesPage() {
                   boxShadow: active ? "0 4px 12px rgba(255, 85, 50, 0.25)" : "none",
                 }}
               >
+                {tab.icon && (
+                  <FontAwesomeIcon
+                    icon={tab.icon}
+                    style={{ color: active ? "#ffffff" : "#ef4444", marginRight: 6 }}
+                  />
+                )}
                 {tab.label}
               </button>
             );
@@ -224,7 +224,7 @@ export default function MasterclassesPage() {
             padding: "50px 24px",
             textAlign: "center",
           }}>
-            <Video size={32} color="#ff5532" style={{ margin: "0 auto 12px" }} />
+            <FontAwesomeIcon icon={faVideo} style={{ fontSize: 32, color: "#ff5532", margin: "0 auto 12px" }} />
             <h3 style={{ fontSize: "17px", fontWeight: 800, margin: "0 0 6px" }}>
               No Masterclasses in this Category
             </h3>
@@ -307,14 +307,14 @@ export default function MasterclassesPage() {
                         gap: "5px",
                       }}>
                         {isLive ? (
-                          <><Radio size={12} /> LIVE NOW</>
+                          <><FontAwesomeIcon icon={faCircle} style={{ fontSize: 9 }} /> LIVE NOW</>
                         ) : (
-                          <><Video size={12} /> {item.platform.toUpperCase()}</>
+                          <><FontAwesomeIcon icon={faVideo} /> {item.platform.toUpperCase()}</>
                         )}
                       </span>
 
                       <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 650 }}>
-                        <Clock3 size={13} style={{ verticalAlign: "middle", marginRight: "3px" }} />
+                        <FontAwesomeIcon icon={faClock} style={{ marginRight: "5px" }} />
                         {item.date}
                       </span>
                     </div>
@@ -392,7 +392,7 @@ export default function MasterclassesPage() {
                               borderRadius: "6px",
                             }}
                           >
-                            ✦ {typeof a === "string" ? a.replace(/^\d+\.\s*/, "") : a}
+                            <><FontAwesomeIcon icon={faStar} style={{ marginRight: 5, color: "#f59e0b" }} />{typeof a === "string" ? a.replace(/^\d+\.\s*/, "") : a}</>
                           </span>
                         ))}
                       </div>
@@ -426,7 +426,7 @@ export default function MasterclassesPage() {
                             boxShadow: "0 4px 14px rgba(239, 68, 68, 0.3)",
                           }}
                         >
-                          <Radio size={13} /> Join Live
+                          <><FontAwesomeIcon icon={faCircle} style={{ fontSize: 10 }} /> Join Live</>
                         </a>
                       ) : item.meetingLink ? (
                         <a
@@ -448,7 +448,7 @@ export default function MasterclassesPage() {
                             boxShadow: "0 4px 14px rgba(255, 85, 50, 0.25)",
                           }}
                         >
-                          <Video size={13} /> Launch Class
+                          <><FontAwesomeIcon icon={faVideo} /> Join Class</>
                         </a>
                       ) : hasRec ? (
                         <a
@@ -469,7 +469,8 @@ export default function MasterclassesPage() {
                             gap: "6px",
                           }}
                         >
-                          <Play size={13} fill="currentColor" /> Recording
+                          <FontAwesomeIcon icon={faPlay} />
+                          Recording
                         </a>
                       ) : null}
 
@@ -492,7 +493,7 @@ export default function MasterclassesPage() {
                           transition: "all 140ms ease",
                         }}
                       >
-                        Details & Agenda <ArrowRight size={13} />
+                        Details & Agenda <FontAwesomeIcon icon={faArrowRight} />
                       </Link>
                     </div>
                   </div>
