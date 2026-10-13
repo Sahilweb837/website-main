@@ -1,98 +1,42 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/context";
-import { getLearningStreak, readCourseProgress } from "@/lib/lms-progress";
+import { getLearningStreak } from "@/lib/lms-progress";
+import { LMS_COURSES } from "@/data/lms-courses";
+import PaymentModal from "@/components/PaymentModal";
 import {
-  BookOpen, Clock, CheckCircle2, PlayCircle, Lock,
-  ArrowRight, Flame, Trophy, GraduationCap, Search, Plus,
-  Sparkles, Filter, Check, Award, Layers, ChevronDown, ChevronUp, Star,
-  Video, Radio, Users, Building, Briefcase, MapPin, Laptop, ShieldCheck,
-  Play, PhoneCall, ExternalLink, Calendar, Info, X, Zap, ChevronLeft,
-  Code, Palette, BarChart3, Rocket, Target, TrendingUp, Globe, Pause
+  BookOpen, Clock, CheckCircle2, ArrowRight, Flame, Trophy, GraduationCap,
+  Search, Sparkles, Check, Award, Layers, Radio, Video, PhoneCall,
+  ExternalLink, Calendar, Info, X, Code, Play, Star, Shield, Briefcase,
 } from "lucide-react";
 
-/* ─────────────────────────────────────────────────────────
-   STYLE TOKENS
-───────────────────────────────────────────────────────── */
-const T = {
-  bg: "#ffffff",
-  surface: "#ffffff",
-  surfaceMuted: "#fafafa",
-  text: "#0f172a",
-  textMuted: "#64748b",
-  primary: "#ff5532",
-  primarySoft: "#fff5f2",
-  primaryBorder: "#ffe0d6",
-  primaryDeep: "#c2381e",
-  border: "#e9edf2",
-  borderLight: "#f4f6f9",
-  success: "#10b981",
-  successSoft: "#ecfdf5",
-  successBorder: "#a7f3d0",
-  warning: "#f59e0b",
-  warningSoft: "#fffbeb",
-  radius: 16,
-  radiusSm: 10,
-  shadow: "0 4px 16px rgba(15, 23, 42, 0.04)",
-  shadowHover: "0 12px 32px rgba(255, 85, 50, 0.14)",
+/* ─────────────── Design tokens ─────────────── */
+const C = {
+  ink: "#0b1020",
+  ink2: "#111827",
+  muted: "#64748b",
+  line: "#e6eaf2",
+  bg: "#f6f7fb",
+  card: "#ffffff",
+  brand: "#ff5532",
+  brandDeep: "#c2381e",
+  brandSoft: "#fff1ec",
+  green: "#10b981",
+  greenSoft: "#ecfdf5",
+  red: "#ef4444",
 };
 
-/* Real Student Video Reels Data */
-const STUDENT_REELS = [
-  {
-    id: "reel-1",
-    name: "Arjun Verma",
-    role: "Full Stack Engineer @ Amazon",
-    salary: "₹18 LPA",
-    hike: "+240% Hike",
-    duration: "0:45",
-    views: "18.4K",
-    videoThumbnail: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80",
-    quote: "From mechanical engineering background with zero coding knowledge to landing Amazon SDE in 6 months at Netcoder.",
-    company: "Amazon",
-  },
-  {
-    id: "reel-2",
-    name: "Priya Sharma",
-    role: "AI & ML Engineer @ Microsoft",
-    salary: "₹22 LPA",
-    hike: "+310% Hike",
-    duration: "0:52",
-    views: "24.9K",
-    videoThumbnail: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80",
-    quote: "The hands-on capstone projects and mentor 1-on-1 interview drills at Netcoder Dharamshala campus gave me the edge.",
-    company: "Microsoft",
-  },
-  {
-    id: "reel-3",
-    name: "Siddharth Rana",
-    role: "Cloud DevOps Architect @ Infosys",
-    salary: "₹14 LPA",
-    hike: "+180% Hike",
-    duration: "0:38",
-    views: "12.1K",
-    videoThumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80",
-    quote: "Production Kubernetes & multi-cloud automation. Live class debugging with faculty mentors changed my career.",
-    company: "Infosys",
-  },
-  {
-    id: "reel-4",
-    name: "Mehak Chawla",
-    role: "Cyber Security Analyst @ TCS",
-    salary: "₹12.5 LPA",
-    hike: "+160% Hike",
-    duration: "0:41",
-    views: "15.8K",
-    videoThumbnail: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500&q=80",
-    quote: "Netcoder placement drive scheduled 4 interviews in a single week. Received offer letter on graduation day!",
-    company: "TCS",
-  },
+const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
+
+/* ─────────────── Static content (presentation only) ─────────────── */
+const VIDEO_TESTIMONIALS = [
+  { name: "Pallvi Sharma", videoId: "pxlXyaw5Hag" },
+  { name: "Shivani", videoId: "9xIhO56gEsY" },
 ];
 
-/* Hiring Partners */
 const HIRING_COMPANIES = [
   { name: "Google", logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" },
   { name: "Microsoft", logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" },
@@ -102,721 +46,43 @@ const HIRING_COMPANIES = [
   { name: "Wipro", logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" },
 ];
 
-/* ═══════════════════════════════════════════════════════════════
-   HERO SLIDES
-   ═══════════════════════════════════════════════════════════════ */
-type HeroSlide = {
-  id: number;
-  eyebrow: string;
-  eyebrowIcon: React.ElementType;
-  titleTop: string;
-  titleHighlight: string;
-  subtitle: string;
-  ctaPrimary: { label: string; href: string; icon: React.ElementType };
-  ctaSecondary: { label: string; icon: React.ElementType };
-  image: string;
-  imageAlt: string;
-  stats: { value: string; label: string }[];
-  gradient: string;
-  accentSolid: string;
-  tag: string;
-};
-
-const HERO_SLIDES: HeroSlide[] = [
-  {
-    id: 1,
-    eyebrow: "New Batch Enrolling",
-    eyebrowIcon: Zap,
-    titleTop: "Learn Live with",
-    titleHighlight: "Expert Mentors",
-    subtitle:
-      "Join India's fastest-growing online coding bootcamp. Live classes, real projects, and 100% placement support — all from the comfort of your home.",
-    ctaPrimary: { label: "Join Online Course", href: "/online-courses", icon: Rocket },
-    ctaSecondary: { label: "Talk to Advisor", icon: PhoneCall },
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&q=85",
-    imageAlt: "Students attending live online coding class with mentor",
-    stats: [
-      { value: "63+", label: "Live Courses" },
-      { value: "36", label: "States" },
-      { value: "100%", label: "Placement" },
-    ],
-    gradient: "linear-gradient(135deg, #ff5532 0%, #ff8a5c 55%, #ffb088 100%)",
-    accentSolid: "#ff5532",
-    tag: "Online Live Track",
-  },
-  {
-    id: 2,
-    eyebrow: "Limited Seats Available",
-    eyebrowIcon: Flame,
-    titleTop: "Master Full Stack",
-    titleHighlight: "Development",
-    subtitle:
-      "From zero to job-ready in 6 months. React, Node.js, PostgreSQL, and AWS — taught live by engineers from top product companies.",
-    ctaPrimary: { label: "Explore Curriculum", href: "/online-courses", icon: BookOpen },
-    ctaSecondary: { label: "Free Demo Class", icon: Play },
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1400&q=85",
-    imageAlt: "Full stack developer coding on multiple monitors",
-    stats: [
-      { value: "6", label: "Months" },
-      { value: "40+", label: "Projects" },
-      { value: "₹8 LPA", label: "Avg Package" },
-    ],
-    gradient: "linear-gradient(135deg, #059669 0%, #10b981 55%, #34d399 100%)",
-    accentSolid: "#059669",
-    tag: "Full Stack Program",
-  },
-  {
-    id: 3,
-    eyebrow: "Placement Guaranteed",
-    eyebrowIcon: Award,
-    titleTop: "Get Placed in",
-    titleHighlight: "Top Companies",
-    subtitle:
-      "Dedicated placement cell, mock interviews, resume building, and direct referrals to 500+ hiring partners across India.",
-    ctaPrimary: { label: "Start Learning Now", href: "/online-courses", icon: Rocket },
-    ctaSecondary: { label: "View Placements", icon: TrendingUp },
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1400&q=85",
-    imageAlt: "Students celebrating job placement success in office",
-    stats: [
-      { value: "500+", label: "Partners" },
-      { value: "92%", label: "Placed" },
-      { value: "24/7", label: "Support" },
-    ],
-    gradient: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 55%, #60a5fa 100%)",
-    accentSolid: "#1d4ed8",
-    tag: "Placement Track",
-  },
+/* Tech stack cards shown in the "Pick your stack" row */
+const STACKS = [
+  { id: "all", label: "All Stacks", icon: "🌐", color: "#334155", tags: "Everything" },
+  { id: "Python", label: "Python", icon: "🐍", color: "#3776ab", tags: "AI · FastAPI · ML" },
+  { id: "JavaScript", label: "JavaScript / TS", icon: "⚡", color: "#f59e0b", tags: "Next.js · React 19" },
+  { id: "Java", label: "Java", icon: "☕", color: "#dc2626", tags: "Spring Boot 3" },
+  { id: "C++", label: "C++", icon: "⚙️", color: "#0ea5e9", tags: "Systems · DSA" },
+  { id: "PHP", label: "PHP / Laravel", icon: "🐘", color: "#7c3aed", tags: "Laravel 11" },
+  { id: "Go", label: "Go / DevOps", icon: "🚀", color: "#06b6d4", tags: "Kubernetes · Cloud" },
 ];
 
-/* ═══════════════════════════════════════════════════════════════
-   PREMIUM HERO SLIDER
-   ═══════════════════════════════════════════════════════════════ */
-function HeroSlider({ onAdvisorClick }: { onAdvisorClick: () => void }) {
-  const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [direction, setDirection] = useState<"next" | "prev">("next");
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-  const SLIDE_DURATION = 7000;
+const LEARNING_STEPS = [
+  { icon: Video, title: "Learn live", text: "Daily mentor-led batches with live debugging and code reviews." },
+  { icon: Code, title: "Build real projects", text: "Capstones and hands-on labs you can show recruiters." },
+  { icon: Briefcase, title: "Get placed", text: "Resume reviews, mock interviews and hiring partner drives." },
+];
 
-  const goTo = useCallback((idx: number, dir: "next" | "prev" = "next") => {
-    setDirection(dir);
-    setCurrent(idx);
-  }, []);
-
-  const next = useCallback(() => {
-    setDirection("next");
-    setCurrent((prev) => (prev + 1) % HERO_SLIDES.length);
-  }, []);
-
-  const prev = useCallback(() => {
-    setDirection("prev");
-    setCurrent((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
-  }, []);
-
-  /* Auto-advance */
-  useEffect(() => {
-    if (isPaused) return;
-    const timer = setTimeout(next, SLIDE_DURATION);
-    return () => clearTimeout(timer);
-  }, [current, isPaused, next]);
-
-  /* Keyboard nav */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev]);
-
-  /* Touch / swipe */
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.changedTouches[0].screenX;
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    touchEndX.current = e.changedTouches[0].screenX;
-    const dx = (touchStartX.current ?? 0) - (touchEndX.current ?? 0);
-    if (Math.abs(dx) > 50) {
-      if (dx > 0) next();
-      else prev();
-    }
-  };
-
-  const slide = HERO_SLIDES[current];
-  const total = HERO_SLIDES.length;
-
-  return (
-    <div
-      className="hero-shell"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      style={{
-        position: "relative",
-        borderRadius: 32,
-        overflow: "hidden",
-        marginBottom: 32,
-        minHeight: 540,
-        background: "#0f172a",
-        boxShadow: "0 24px 60px -20px rgba(15, 23, 42, 0.35)",
-        isolation: "isolate",
-      }}
-    >
-      {/* Background layers */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: slide.gradient,
-          transition: "background 1s cubic-bezier(0.4, 0, 0.2, 1)",
-          zIndex: 0,
-        }}
-      />
-
-      {/* Texture overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.15), transparent 45%), radial-gradient(circle at 85% 80%, rgba(255,255,255,0.1), transparent 50%)",
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Grid pattern */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-          WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Content Grid */}
-      <div
-        className="hero-grid"
-        style={{
-          position: "relative",
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          minHeight: 540,
-          zIndex: 2,
-        }}
-      >
-        {/* ─────────── LEFT: Content ─────────── */}
-        <div
-          className="hero-left"
-          style={{
-            padding: "56px 44px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            position: "relative",
-            zIndex: 3,
-            maxWidth: 680,
-          }}
-        >
-          {/* Eyebrow + live pill */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 22 }}>
-            <span
-              key={`eyebrow-${slide.id}`}
-              className="anim-slide-up"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                background: "rgba(255,255,255,0.98)",
-                color: slide.accentSolid,
-                fontSize: 11,
-                fontWeight: 900,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                padding: "8px 14px",
-                borderRadius: 999,
-                boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-              }}
-            >
-              <slide.eyebrowIcon size={13} />
-              {slide.eyebrow}
-            </span>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(12px)",
-                color: "#ffffff",
-                fontSize: 11,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                padding: "8px 14px",
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.3)",
-              }}
-            >
-              <span className="live-pulse-dot" />
-              Live Now
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1
-            key={`title-${slide.id}`}
-            className="anim-slide-up hero-title"
-            style={{
-              fontSize: "clamp(34px, 5.6vw, 64px)",
-              fontWeight: 900,
-              color: "#ffffff",
-              lineHeight: 1.02,
-              margin: "0 0 22px",
-              letterSpacing: "-0.035em",
-              animationDelay: "0.08s",
-              textShadow: "0 4px 24px rgba(0,0,0,0.18)",
-            }}
-          >
-            {slide.titleTop}
-            <br />
-            <span
-              style={{
-                background: "linear-gradient(90deg, #ffffff 0%, #ffe8dd 90%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              {slide.titleHighlight}
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p
-            key={`sub-${slide.id}`}
-            className="anim-slide-up"
-            style={{
-              fontSize: "clamp(14.5px, 1.6vw, 17px)",
-              color: "rgba(255,255,255,0.94)",
-              lineHeight: 1.65,
-              margin: "0 0 32px",
-              maxWidth: 540,
-              fontWeight: 500,
-              animationDelay: "0.16s",
-            }}
-          >
-            {slide.subtitle}
-          </p>
-
-          {/* Stats row */}
-          <div
-            key={`stats-${slide.id}`}
-            className="anim-slide-up"
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 0,
-              marginBottom: 36,
-              animationDelay: "0.24s",
-            }}
-          >
-            {slide.stats.map((stat, i) => (
-              <div
-                key={`${slide.id}-${i}`}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  paddingRight: 28,
-                  marginRight: 28,
-                  borderRight: i < slide.stats.length - 1 ? "1px solid rgba(255,255,255,0.25)" : "none",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "clamp(24px, 3vw, 34px)",
-                    fontWeight: 900,
-                    color: "#ffffff",
-                    lineHeight: 1.05,
-                    letterSpacing: "-0.03em",
-                    textShadow: "0 2px 12px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  {stat.value}
-                </span>
-                <span
-                  style={{
-                    fontSize: 10.5,
-                    fontWeight: 800,
-                    color: "rgba(255,255,255,0.78)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    marginTop: 5,
-                  }}
-                >
-                  {stat.label}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA row */}
-          <div
-            className="anim-slide-up"
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 12,
-              animationDelay: "0.32s",
-            }}
-          >
-            <Link
-              href={slide.ctaPrimary.href}
-              className="hero-primary-cta"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                background: "#ffffff",
-                color: slide.accentSolid,
-                fontSize: 14.5,
-                fontWeight: 800,
-                padding: "15px 26px",
-                borderRadius: 14,
-                textDecoration: "none",
-                boxShadow: "0 12px 32px rgba(0,0,0,0.22)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              <slide.ctaPrimary.icon size={18} />
-              {slide.ctaPrimary.label}
-              <ArrowRight size={17} className="hero-cta-arrow" />
-            </Link>
-
-            <button
-              type="button"
-              onClick={onAdvisorClick}
-              className="hero-secondary-cta"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                background: "rgba(255,255,255,0.14)",
-                backdropFilter: "blur(12px)",
-                border: "1.5px solid rgba(255,255,255,0.38)",
-                color: "#ffffff",
-                fontSize: 14,
-                fontWeight: 750,
-                padding: "15px 22px",
-                borderRadius: 14,
-                cursor: "pointer",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              <slide.ctaSecondary.icon size={17} />
-              {slide.ctaSecondary.label}
-            </button>
-          </div>
-        </div>
-
-        {/* ─────────── RIGHT: Image ─────────── */}
-        <div
-          className="hero-right"
-          style={{
-            position: "relative",
-            overflow: "hidden",
-            minHeight: 320,
-          }}
-        >
-          {HERO_SLIDES.map((s, idx) => (
-            <div
-              key={s.id}
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: idx === current ? 1 : 0,
-                transition: "opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
-                pointerEvents: idx === current ? "auto" : "none",
-              }}
-            >
-              <img
-                src={s.image}
-                alt={s.imageAlt}
-                loading={idx === 0 ? "eager" : "lazy"}
-                className={idx === current ? "hero-image-active" : ""}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-            </div>
-          ))}
-
-          {/* Left blend into content area */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(90deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.5) 35%, transparent 75%)",
-              pointerEvents: "none",
-            }}
-          />
-          {/* Bottom vignette */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(180deg, transparent 55%, rgba(15,23,42,0.55) 100%)",
-              pointerEvents: "none",
-            }}
-          />
-
-          {/* Floating verified card */}
-          <div className="float-anim" style={{
-            position: "absolute",
-            bottom: 92,
-            right: 28,
-            background: "rgba(255,255,255,0.97)",
-            backdropFilter: "blur(14px)",
-            borderRadius: 18,
-            padding: "16px 20px",
-            boxShadow: "0 20px 48px rgba(0,0,0,0.28)",
-            border: "1px solid rgba(255,255,255,0.7)",
-            maxWidth: 240,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 11,
-                  background: T.successSoft,
-                  color: T.success,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CheckCircle2 size={18} />
-              </div>
-              <div>
-                <div style={{ fontSize: 9.5, fontWeight: 900, color: T.success, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Verified
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted }}>Govt. Certified</div>
-              </div>
-            </div>
-            <p style={{ fontSize: 12, fontWeight: 800, color: T.text, lineHeight: 1.4, margin: 0 }}>
-              Skill India & NSDC Certified Programs
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════════ BOTTOM CONTROL BAR ═══════════ */}
-      <div
-        className="hero-control-bar"
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: "18px 44px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          background: "linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.55) 100%)",
-          zIndex: 10,
-        }}
-      >
-        {/* Left: Slide counter */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 22, fontWeight: 900, color: "#ffffff", letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>
-            {String(current + 1).padStart(2, "0")}
-          </span>
-          <div style={{ width: 32, height: 1, background: "rgba(255,255,255,0.4)" }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.6)", fontVariantNumeric: "tabular-nums" }}>
-            {String(total).padStart(2, "0")}
-          </span>
-        </div>
-
-        {/* Center: Dot indicators with progress */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {HERO_SLIDES.map((s, idx) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => goTo(idx, idx > current ? "next" : "prev")}
-              aria-label={`Go to slide ${idx + 1}: ${s.titleHighlight}`}
-              className="hero-dot"
-              style={{
-                position: "relative",
-                width: idx === current ? 56 : 10,
-                height: 10,
-                borderRadius: 999,
-                background: idx === current ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.35)",
-                border: "none",
-                cursor: "pointer",
-                overflow: "hidden",
-                padding: 0,
-              }}
-            >
-              {idx === current && (
-                <span
-                  key={`progress-${current}-${isPaused}`}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "#ffffff",
-                    transformOrigin: "left center",
-                    borderRadius: 999,
-                    animation: isPaused ? "none" : `heroProgress ${SLIDE_DURATION}ms linear forwards`,
-                    transform: isPaused ? "scaleX(1)" : undefined,
-                  }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Right: Arrows + pause */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            type="button"
-            onClick={() => setIsPaused((p) => !p)}
-            aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
-            className="hero-icon-btn"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              background: "rgba(255,255,255,0.14)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,255,255,0.28)",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            {isPaused ? <Play size={15} fill="#fff" /> : <Pause size={15} fill="#fff" />}
-          </button>
-
-          <button
-            type="button"
-            onClick={prev}
-            aria-label="Previous slide"
-            className="hero-icon-btn"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              background: "rgba(255,255,255,0.14)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,255,255,0.28)",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            <ChevronLeft size={18} />
-          </button>
-
-          <button
-            type="button"
-            onClick={next}
-            aria-label="Next slide"
-            className="hero-icon-btn hero-icon-btn-primary"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              background: "#ffffff",
-              border: "none",
-              color: slide.accentSolid,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.22)",
-            }}
-          >
-            <ArrowRight size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* ═══════════ SIDE TAG (desktop) ═══════════ */}
-      <div
-        className="hero-side-tag"
-        style={{
-          position: "absolute",
-          top: 32,
-          right: 32,
-          zIndex: 10,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          background: "rgba(0,0,0,0.35)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.2)",
-          color: "#ffffff",
-          padding: "8px 14px",
-          borderRadius: 999,
-          fontSize: 11,
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-        }}
-      >
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 12px #34d399" }} />
-        {slide.tag}
-      </div>
-    </div>
-  );
-}
-
-export default function MyCoursesPage() {
+/* ─────────────── Page ─────────────── */
+function MyCoursesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated, isAuthLoaded, enrolledCourses, enrollCourse } = useAuth();
 
   const [courses, setCourses] = useState<any[]>([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
-
   const [learningStreak, setLearningStreak] = useState(0);
   const [activeTab, setActiveTab] = useState<"all" | "enrolled" | "explore" | "live">("all");
+  const [selectedLanguageFilter, setSelectedLanguageFilter] = useState("all");
+  const [learningTrackFilter, setLearningTrackFilter] = useState<"all" | "live">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const [liveSessionsMap, setLiveSessionsMap] = useState<Record<string, any>>({});
 
   const [placementModalOpen, setPlacementModalOpen] = useState(false);
   const [placementForm, setPlacementForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    location: "",
+    name: "", email: "", phone: "", location: "",
     qualification: "B.Tech / BCA / Graduate",
     course_slug: "data-science-machine-learning-ai",
     target_role: "Data Scientist & AI Specialist",
@@ -828,39 +94,84 @@ export default function MyCoursesPage() {
   const [placementSubmitting, setPlacementSubmitting] = useState(false);
   const [placementSuccessData, setPlacementSuccessData] = useState<any>(null);
 
-  const [activeReel, setActiveReel] = useState<typeof STUDENT_REELS[0] | null>(null);
+  const [popupVideo, setPopupVideo] = useState<{ name: string; videoId: string } | null>(null);
+  const [paymentCourse, setPaymentCourse] = useState<any | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handlePaymentSuccess = ({ method, transactionId }: { method: string; transactionId: string }) => {
+    if (paymentCourse) {
+      enrollCourse(paymentCourse.slug);
+      showToast(`Payment successful (${method.toUpperCase()}: ${transactionId})! Enrolled in "${paymentCourse.title}".`);
+      setPaymentCourse(null);
+    }
+  };
 
   useEffect(() => {
-    if (isAuthLoaded && !isAuthenticated) {
-      router.push("/login");
-    }
+    if (!popupVideo) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPopupVideo(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [popupVideo]);
+
+  useEffect(() => {
+    if (isAuthLoaded && !isAuthenticated) router.push("/login");
   }, [isAuthLoaded, isAuthenticated, router]);
 
   useEffect(() => {
     if (user?.id) {
       setLearningStreak(getLearningStreak(user.id));
-      setPlacementForm((prev) => ({
-        ...prev,
-        name: user.name || "",
-        email: user.email || "",
-        phone: user.phone || "",
-      }));
+      setPlacementForm((p) => ({ ...p, name: user.name || "", email: user.email || "", phone: user.phone || "" }));
     }
   }, [user]);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    const trackParam = searchParams.get("track");
+    const langParam = searchParams.get("language");
+    const catParam = searchParams.get("category");
+
+    if (tabParam === "live") { setActiveTab("live"); setLearningTrackFilter("live"); }
+    else if (tabParam === "enrolled") setActiveTab("enrolled");
+    else if (tabParam === "explore") setActiveTab("explore");
+    else if (tabParam === "all") setActiveTab("all");
+
+    if (trackParam === "live") { setLearningTrackFilter("live"); setActiveTab("live"); }
+    if (langParam && langParam.trim()) setSelectedLanguageFilter(langParam);
+    if (catParam && catParam.trim()) setCategoryFilter(catParam);
+  }, [searchParams]);
 
   useEffect(() => {
     async function fetchBackendCourses() {
       setIsLoadingCourses(true);
       try {
-        const res = await fetch("/api/courses");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            setCourses(json.data);
-          }
+        const [resCourses] = await Promise.allSettled([
+          fetch("/api/courses").then((r) => (r.ok ? r.json() : null)),
+        ]);
+        let combined: any[] = [];
+        if (resCourses.status === "fulfilled" && resCourses.value?.data && Array.isArray(resCourses.value.data)) {
+          combined = resCourses.value.data.map((c: any) => {
+            let lang = c.programming_language;
+            if (!lang) {
+              const text = `${c.title} ${c.slug} ${c.subtitle || ""}`.toLowerCase();
+              if (text.includes("python") || text.includes("data science") || text.includes("ai") || text.includes("predictive")) lang = "Python";
+              else if (text.includes("react") || text.includes("next") || text.includes("full-stack") || text.includes("fullstack") || text.includes("javascript")) lang = "JavaScript";
+              else if (text.includes("kubernetes") || text.includes("devops") || text.includes("cloud") || text.includes("go")) lang = "Go";
+              else if (text.includes("java") && !text.includes("javascript")) lang = "Java";
+              else if (text.includes("c++") || text.includes("cpp") || text.includes("dsa")) lang = "C++";
+              else if (text.includes("php") || text.includes("laravel")) lang = "PHP";
+              else lang = "Python";
+            }
+            return { ...c, programming_language: lang, has_live_option: c.has_live_option ?? true };
+          });
         }
+        setCourses(combined.length > 0 ? combined : LMS_COURSES);
       } catch (err) {
         console.warn("Could not load backend courses:", err);
+        setCourses(LMS_COURSES);
       } finally {
         setIsLoadingCourses(false);
       }
@@ -877,10 +188,8 @@ export default function MyCoursesPage() {
           if (json.data && Array.isArray(json.data)) {
             const map: Record<string, any> = {};
             json.data.forEach((item: any) => {
-              if (item.courseSlug) {
-                if (!map[item.courseSlug] || item.status === "live") {
-                  map[item.courseSlug] = item;
-                }
+              if (item.courseSlug && (!map[item.courseSlug] || item.status === "live")) {
+                map[item.courseSlug] = item;
               }
             });
             setLiveSessionsMap(map);
@@ -893,55 +202,50 @@ export default function MyCoursesPage() {
     fetchLiveClasses();
   }, []);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
-
-  const effectiveEnrolledSlugs = useMemo(() => {
-    if (!user) return [];
-    if (enrolledCourses && enrolledCourses.length > 0) {
-      return enrolledCourses;
-    }
-    return ["the-complete-agentic-ai-engineering-course", "fullstack-web-development"];
-  }, [user, enrolledCourses]);
+  const effectiveEnrolledSlugs = useMemo(() => (user ? enrolledCourses : []), [user, enrolledCourses]);
 
   const displayedCourses = useMemo(() => {
     return courses.filter((c) => {
       const isEnrolled = effectiveEnrolledSlugs.includes(c.slug);
-
       if (activeTab === "enrolled" && !isEnrolled) return false;
       if (activeTab === "explore" && isEnrolled) return false;
       if (activeTab === "live") {
         const session = liveSessionsMap[c.slug];
-        if (!session) return false;
+        if (!session && !c.has_live_option) return false;
       }
-
-      if (categoryFilter !== "all") {
-        const cat = (c.category || "").toLowerCase();
-        if (!cat.includes(categoryFilter.toLowerCase())) return false;
+      if (learningTrackFilter === "live") {
+        const session = liveSessionsMap[c.slug];
+        if (!session && !c.has_live_option) return false;
       }
-
+      if (selectedLanguageFilter !== "all") {
+        const lang = selectedLanguageFilter.toLowerCase();
+        const cLang = ((c as any).programming_language || "").toLowerCase();
+        const cTitle = (c.title || "").toLowerCase();
+        const cSub = (c.subtitle || "").toLowerCase();
+        const cCat = (c.category || "").toLowerCase();
+        const isMatch =
+          cLang.includes(lang) || cTitle.includes(lang) || cSub.includes(lang) || cCat.includes(lang) ||
+          (lang === "javascript" && (cTitle.includes("react") || cTitle.includes("next") || cTitle.includes("full-stack") || cTitle.includes("fullstack") || cCat.includes("web"))) ||
+          (lang === "python" && (cTitle.includes("ai") || cTitle.includes("data science") || cTitle.includes("machine learning") || cCat.includes("data science") || cCat.includes("predictive"))) ||
+          (lang === "go" && (cTitle.includes("kubernetes") || cTitle.includes("devops") || cTitle.includes("cloud") || cCat.includes("cloud"))) ||
+          (lang === "java" && (cTitle.includes("spring") || cTitle.includes("enterprise"))) ||
+          (lang === "c++" && (cTitle.includes("cpp") || cTitle.includes("dsa") || cTitle.includes("algorithms"))) ||
+          (lang === "php" && (cTitle.includes("laravel") || cTitle.includes("fullstack")));
+        if (!isMatch) return false;
+      }
+      if (categoryFilter !== "all" && !(c.category || "").toLowerCase().includes(categoryFilter.toLowerCase())) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchesTitle = (c.title || "").toLowerCase().includes(q);
-        const matchesSub = (c.subtitle || "").toLowerCase().includes(q);
-        const matchesCat = (c.category || "").toLowerCase().includes(q);
-        if (!matchesTitle && !matchesSub && !matchesCat) return false;
+        const hit =
+          (c.title || "").toLowerCase().includes(q) ||
+          (c.subtitle || "").toLowerCase().includes(q) ||
+          (c.category || "").toLowerCase().includes(q) ||
+          ((c as any).programming_language || "").toLowerCase().includes(q);
+        if (!hit) return false;
       }
-
       return true;
     });
-  }, [courses, effectiveEnrolledSlugs, activeTab, categoryFilter, searchQuery, liveSessionsMap]);
-
-  const handleEnrollClick = (courseSlug: string, courseTitle: string) => {
-    const success = enrollCourse(courseSlug);
-    if (success) {
-      showToast(`Enrolled in "${courseTitle}"! Access granted in LMS.`);
-    } else {
-      showToast(`Already enrolled in "${courseTitle}".`);
-    }
-  };
+  }, [courses, effectiveEnrolledSlugs, activeTab, categoryFilter, searchQuery, liveSessionsMap, selectedLanguageFilter, learningTrackFilter]);
 
   const handlePlacementSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -949,7 +253,7 @@ export default function MyCoursesPage() {
     try {
       const res = await fetch("/api/placement/apply", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           full_name: placementForm.name,
           email: placementForm.email,
@@ -967,7 +271,7 @@ export default function MyCoursesPage() {
       if (res.ok && data.success) {
         setPlacementSuccessData(data);
         setPlacementSubmitted(true);
-        showToast("Application submitted successfully to backend database!");
+        showToast("Application submitted successfully!");
       } else {
         setPlacementSuccessData({ application_id: Math.floor(Math.random() * 800) + 100 });
         setPlacementSubmitted(true);
@@ -981,921 +285,611 @@ export default function MyCoursesPage() {
     }
   };
 
-  if (!isAuthLoaded || isLoadingCourses) {
-    return (
-      <div style={{ background: "#ffffff", minHeight: "100vh", padding: "32px 20px 80px", fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-        <style>{`
-          @keyframes skeletonShimmer {
-            0% { opacity: 0.55; }
-            50% { opacity: 1; }
-            100% { opacity: 0.55; }
-          }
-          .skeleton-box {
-            animation: skeletonShimmer 1.4s ease-in-out infinite;
-            background: linear-gradient(90deg, #fff5f2 0%, #ffe0d6 50%, #fff5f2 100%);
-            border-radius: 12px;
-          }
-        `}</style>
-        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
-          <div style={{ height: 540, borderRadius: 32, marginBottom: 32 }} className="skeleton-box" />
-          <div style={{ height: 130, borderRadius: 20, marginBottom: 24 }} className="skeleton-box" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 28 }}>
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} style={{ height: 86, borderRadius: 16 }} className="skeleton-box" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
+  if (!isAuthLoaded || isLoadingCourses) return <PageSkeleton />;
   if (!isAuthenticated || !user) return null;
 
+  const enrolledCount = effectiveEnrolledSlugs.length;
+  const liveCount = Object.keys(liveSessionsMap).length;
+
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", color: T.text, fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div style={{ background: C.bg, minHeight: "100vh", color: C.ink, fontFamily: FONT, scrollBehavior: "smooth" }}>
       <style>{`
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .reveal { animation: fadeUp .7s cubic-bezier(.2,.8,.2,1) both; }
+        .tech-card { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+        .tech-card:hover { transform: translateY(-4px); box-shadow: 0 22px 44px rgba(11,16,32,.12); border-color: #ffd3c6 !important; }
+        .stack-chip { transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+        .stack-chip:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(11,16,32,.10); }
+        .btn-brand { transition: transform .2s ease, filter .2s ease; }
+        .btn-brand:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .nav-link:hover { color: #ffffff !important; }
+        .stack-row::-webkit-scrollbar { display: none; }
+        .stack-row { scrollbar-width: none; }
+        .pulse-dot { animation: pulseDot 1.6s ease-in-out infinite; }
+        .sk { background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+        .catalog-section { scroll-margin-top: 76px; }
+        .catalog-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 28px; }
+        .catalog-search { display: flex; align-items: center; gap: 10px; width: min(100%, 370px); padding: 13px 16px; border: 1px solid #e6eaf2; border-radius: 14px; background: #f8fafc; transition: border-color .2s, box-shadow .2s, background .2s; }
+        .catalog-search:focus-within { background: #fff; border-color: #ff9a83; box-shadow: 0 0 0 4px rgba(255,85,50,.10); }
+        .catalog-search input { width: 100%; border: 0; outline: none; background: transparent; color: #0b1020; font: 500 13px ${FONT}; }
+        .catalog-filters { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0 22px; margin-bottom: 22px; border-bottom: 1px solid #e6eaf2; }
+        .catalog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+        .catalog-course-media { height: auto !important; aspect-ratio: 16 / 10; }
+        .catalog-course-card { border-radius: 20px !important; box-shadow: 0 8px 26px rgba(15,23,42,.055) !important; }
+        .catalog-course-card:hover { box-shadow: 0 18px 38px rgba(15,23,42,.12) !important; }
+        @media (max-width: 720px) {
+          .hero-h1 { font-size: 34px !important; }
+          .nav-links { display: none !important; }
+          .catalog-heading { align-items: stretch; flex-direction: column; gap: 18px; }
+          .catalog-search { width: auto; }
+          .catalog-filters { align-items: flex-start; flex-direction: column; }
+          .catalog-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
         }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: translateY(0); }
+        @media (min-width: 721px) and (max-width: 1020px) {
+          .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-        @keyframes heroSlideUp {
-          from { opacity: 0; transform: translateY(32px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes heroZoomIn {
-          from { transform: scale(1.15); opacity: 0.6; }
-          to { transform: scale(1); opacity: 1; }
-        }
-        @keyframes heroProgress {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-        @keyframes livePulseDot {
-          0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.85); }
-          70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
-        }
-        @keyframes floatCard {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes pulseLive {
-          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-          50% { opacity: 0.85; box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-        }
-
-        .anim-slide-up {
-          animation: heroSlideUp 0.85s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-        }
-        .hero-image-active {
-          animation: heroZoomIn 1.6s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .float-anim {
-          animation: floatCard 5s ease-in-out infinite;
-        }
-        .live-pulse-dot {
-          width: 7px; height: 7px; border-radius: 50%;
-          background: #34d399;
-          animation: livePulseDot 2s infinite;
-        }
-
-        .hero-primary-cta {
-          transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .hero-primary-cta:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 20px 42px rgba(0,0,0,0.32) !important;
-        }
-        .hero-primary-cta:hover .hero-cta-arrow {
-          transform: translateX(5px);
-        }
-        .hero-cta-arrow {
-          transition: transform 0.28s ease;
-        }
-        .hero-secondary-cta {
-          transition: all 0.28s ease;
-        }
-        .hero-secondary-cta:hover {
-          background: rgba(255,255,255,0.28) !important;
-          transform: translateY(-2px);
-        }
-        .hero-icon-btn {
-          transition: all 0.22s ease;
-        }
-        .hero-icon-btn:hover {
-          background: rgba(255,255,255,0.28) !important;
-          transform: scale(1.06);
-        }
-        .hero-icon-btn-primary:hover {
-          background: #ffffff !important;
-          transform: scale(1.06);
-          box-shadow: 0 12px 28px rgba(0,0,0,0.32) !important;
-        }
-        .hero-dot {
-          transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .hero-grid {
-          grid-template-columns: 1fr !important;
-        }
-
-        @media (min-width: 960px) {
-          .hero-grid {
-            grid-template-columns: 1.15fr 1fr !important;
-          }
-          .hero-right {
-            min-height: 540px !important;
-          }
-        }
-
-        @media (max-width: 959px) {
-          .hero-shell {
-            min-height: auto !important;
-          }
-          .hero-grid {
-            min-height: auto !important;
-          }
-          .hero-right {
-            height: 320px;
-            order: -1;
-          }
-          .hero-right img {
-            height: 320px !important;
-          }
-          .hero-left {
-            padding: 32px 24px 120px !important;
-          }
-          .hero-control-bar {
-            padding: 16px 24px !important;
-          }
-          .hero-side-tag {
-            top: 20px !important;
-            right: 20px !important;
-            font-size: 10px !important;
-          }
-          .float-anim {
-            bottom: 60px !important;
-            right: 16px !important;
-            padding: 12px 14px !important;
-            max-width: 200px !important;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .hero-control-bar {
-            flex-wrap: wrap;
-            gap: 10px !important;
-          }
-          .hero-side-tag {
-            display: none !important;
-          }
-        }
-
-        .course-card {
-          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
-        }
-        .course-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 40px rgba(255, 85, 50, 0.12) !important;
-        }
-        .course-card:hover .course-thumb {
-          transform: scale(1.05);
-        }
-        .course-thumb {
-          transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .cta-btn {
-          transition: all 0.2s ease;
-        }
-        .cta-btn:hover {
-          transform: translateY(-1px);
-          filter: brightness(1.05);
-        }
-        .reel-card {
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
-        }
-        .reel-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
-        }
-        .tab-btn {
-          transition: all 0.2s ease;
-        }
-        .tab-btn:hover {
-          background: #fff5f2 !important;
-          color: #c2381e !important;
+        @media (prefers-reduced-motion: reduce) {
+          .pulse-dot, .tech-card, .btn-brand { animation: none !important; transition: none !important; }
         }
       `}</style>
 
+      {/* ───────── Sticky top nav ───────── */}
+      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(11,16,32,.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <Link href="/" style={{ color: "#fff", fontWeight: 800, fontSize: 18, textDecoration: "none", letterSpacing: "-0.02em" }}>
+            Netcoder<span style={{ color: C.brand }}>.io</span>
+          </Link>
+          <nav className="nav-links" style={{ display: "flex", gap: 24, fontSize: 13, fontWeight: 600 }}>
+            {[["courses", "Courses"], ["live", "Live"], ["placement", "Placement"], ["stories", "Stories"]].map(([id, label]) => (
+              <button key={id} type="button" className="nav-link" onClick={() => scrollTo(id)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontFamily: FONT, fontWeight: 600, fontSize: 13 }}>
+                {label}
+              </button>
+            ))}
+          </nav>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ color: "#cbd5e1", fontSize: 12, fontWeight: 600 }}>Hi, {user.name?.split(" ")[0]}</span>
+            <button type="button" className="btn-brand" onClick={() => setPlacementModalOpen(true)} style={{ background: C.brand, color: "#fff", border: "none", borderRadius: 10, padding: "9px 14px", fontSize: 12.5, fontWeight: 800, cursor: "pointer" }}>
+              Apply now
+            </button>
+          </div>
+        </div>
+      </header>
+
       {toastMessage && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            zIndex: 9999,
-            background: "#0f172a",
-            color: "#ffffff",
-            padding: "14px 22px",
-            borderRadius: 14,
-            boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            fontSize: 13,
-            fontWeight: 600,
-            animation: "slideIn 0.3s ease-out",
-          }}
-        >
-          <Sparkles size={16} color={T.primary} />
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, background: C.ink, color: "#fff", padding: "13px 20px", borderRadius: 14, boxShadow: "0 18px 40px rgba(0,0,0,.25)", display: "flex", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 600, animation: "fadeUp .3s ease-out" }}>
+          <Sparkles size={16} color={C.brand} />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      <div style={{ maxWidth: 1160, margin: "0 auto", padding: "28px 20px 80px" }}>
+      {/* ───────── Hero ───────── */}
+      <section style={{ position: "relative", background: C.ink, color: "#fff", overflow: "hidden" }}>
+        <img src="/images/modernheroimg.jpg" alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.22 }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(11,16,32,.96) 35%, rgba(11,16,32,.55) 100%)" }} />
+        <div style={{ position: "absolute", top: -140, right: -120, width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,85,50,.35), transparent 70%)" }} />
 
-        {/* ═══════════════════════════════════════════════
-            HERO SLIDER — PREMIUM ANIMATED BANNER
-        ═══════════════════════════════════════════════ */}
-        <HeroSlider onAdvisorClick={() => setPlacementModalOpen(true)} />
-
-        {/* ═══════════════════════════════════════════════
-            LMS HUB BANNER
-        ═══════════════════════════════════════════════ */}
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 20,
-            flexWrap: "wrap",
-            padding: "28px 32px",
-            background: "linear-gradient(135deg, #fff5f2 0%, #ffffff 55%, #fffaf7 100%)",
-            borderRadius: 24,
-            border: `1px solid ${T.primaryBorder}`,
-            marginBottom: 28,
-            boxShadow: "0 8px 32px rgba(255, 85, 50, 0.06)",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: -60,
-              right: -60,
-              width: 200,
-              height: 200,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(255,85,50,0.15), transparent 70%)",
-              pointerEvents: "none",
-            }}
-          />
-
-          <div style={{ display: "flex", alignItems: "center", gap: 18, position: "relative", zIndex: 1 }}>
-            <div
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: 18,
-                background: "linear-gradient(135deg, #ff5532 0%, #ff8a5c 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff",
-                boxShadow: "0 10px 24px rgba(255, 85, 50, 0.32)",
-                flexShrink: 0,
-              }}
-            >
-              <GraduationCap size={32} />
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: T.text, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-                  My Courses & Live Learning Hub
-                </h1>
-                <span
-                  style={{
-                    fontSize: 10.5,
-                    fontWeight: 800,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    background: "linear-gradient(135deg, #ff5532, #ff8a5c)",
-                    color: "#ffffff",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    boxShadow: "0 4px 12px rgba(255, 85, 50, 0.28)",
-                  }}
-                >
-                  ● Live SQL DB
-                </span>
-              </div>
-              <p style={{ fontSize: 13.5, color: T.textMuted, margin: "6px 0 0", fontWeight: 500 }}>
-                Welcome back, <strong style={{ color: T.text }}>{user.name}</strong>! Active enrolled:{" "}
-                <strong style={{ color: T.primary }}>{effectiveEnrolledSlugs.length} courses</strong> &bull; Total catalog: <strong style={{ color: T.text }}>{courses.length} courses</strong>.
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
-            <button
-              type="button"
-              className="cta-btn"
-              onClick={() => setActiveTab("explore")}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "11px 18px",
-                borderRadius: 12,
-                background: "#ffffff",
-                color: T.primaryDeep,
-                border: `1.5px solid ${T.primaryBorder}`,
-                fontSize: 13,
-                fontWeight: 750,
-                cursor: "pointer",
-                boxShadow: "0 3px 10px rgba(255, 85, 50, 0.08)",
-              }}
-            >
-              <Plus size={16} color={T.primary} />
-              <span>Explore Courses</span>
-            </button>
-
-            <button
-              type="button"
-              className="cta-btn"
-              onClick={() => setPlacementModalOpen(true)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "11px 18px",
-                borderRadius: 12,
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                color: "#ffffff",
-                border: "none",
-                fontSize: 13,
-                fontWeight: 750,
-                cursor: "pointer",
-                boxShadow: "0 6px 18px rgba(16, 185, 129, 0.28)",
-              }}
-            >
-              <Award size={16} />
-              <span>100% Placement Program</span>
-            </button>
-
-            <Link
-              href="/lms/checkout?course=data-science-machine-learning-ai"
-              className="cta-btn"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "11px 18px",
-                borderRadius: 12,
-                background: "linear-gradient(135deg, #ff5532 0%, #ff8a5c 100%)",
-                color: "#ffffff",
-                textDecoration: "none",
-                fontSize: 13,
-                fontWeight: 750,
-                boxShadow: "0 6px 18px rgba(255, 85, 50, 0.28)",
-              }}
-            >
-              <PhoneCall size={15} />
-              <span>Talk to Advisor</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════
-            KEY METRICS
-        ═══════════════════════════════════════════════ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16, marginBottom: 28 }}>
-          <MiniStatCard icon={<BookOpen size={20} />} tint={T.primarySoft} color={T.primary} value={`${effectiveEnrolledSlugs.length}`} label="Enrolled Courses" />
-          <MiniStatCard icon={<Radio size={20} />} tint="#fef2f2" color="#ef4444" value={`${Object.keys(liveSessionsMap).length} Active`} label="Live Mentor Sessions" />
-          <MiniStatCard icon={<Trophy size={20} />} tint="#f0fdf4" color="#16a34a" value="100% Guaranteed" label="Career Placement Track" />
-          <MiniStatCard icon={<Flame size={20} />} tint={T.warningSoft} color={T.warning} value={`${learningStreak} Days`} label="Daily Learning Streak" />
-        </div>
-
-        {/* ═══════════════════════════════════════════════
-            CONTROLS
-        ═══════════════════════════════════════════════ */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 14,
-            marginBottom: 24,
-            paddingBottom: 18,
-            borderBottom: `1px solid ${T.borderLight}`,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <TabButton active={activeTab === "all"} label={`All Courses (${courses.length})`} onClick={() => setActiveTab("all")} />
-            <TabButton active={activeTab === "enrolled"} label={`My Enrolled (${effectiveEnrolledSlugs.length})`} onClick={() => setActiveTab("enrolled")} />
-            <TabButton active={activeTab === "live"} label={`Live Batches (${Object.keys(liveSessionsMap).length})`} onClick={() => setActiveTab("live")} />
-            <TabButton active={activeTab === "explore"} label="Explore & Add Courses" onClick={() => setActiveTab("explore")} highlight />
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "#ffffff",
-              border: `1.5px solid ${T.border}`,
-              padding: "9px 14px",
-              borderRadius: 12,
-              minWidth: 260,
-            }}
-          >
-            <Search size={16} color={T.textMuted} />
-            <input
-              type="text"
-              placeholder="Search courses, mentors, live classes…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ border: "none", outline: "none", fontSize: 13, color: T.text, background: "transparent", width: "100%", fontWeight: 500 }}
-            />
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════
-            COURSE CARDS GRID
-        ═══════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 48 }}>
-          {displayedCourses.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "70px 20px", background: "linear-gradient(135deg, #fff5f2 0%, #ffffff 100%)", borderRadius: 20, border: `1px dashed ${T.primaryBorder}` }}>
-              <div style={{ width: 64, height: 64, borderRadius: 18, background: "#ffffff", border: `1px solid ${T.primaryBorder}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", boxShadow: "0 6px 16px rgba(255, 85, 50, 0.1)" }}>
-                <BookOpen size={28} color={T.primary} />
-              </div>
-              <h3 style={{ fontSize: 17, fontWeight: 800, color: T.text, margin: 0 }}>No courses match your filter</h3>
-              <p style={{ fontSize: 13, color: T.textMuted, margin: "8px 0 20px" }}>Try adjusting your search terms or switch tabs to view all available courses.</p>
-              <button type="button" className="cta-btn" onClick={() => { setActiveTab("all"); setSearchQuery(""); }} style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#fff", border: "none", fontWeight: 750, fontSize: 13, cursor: "pointer", boxShadow: "0 6px 16px rgba(255, 85, 50, 0.25)" }}>
-                Reset Filters
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 24 }}>
-              {displayedCourses.map((c) => {
-                const isEnrolled = effectiveEnrolledSlugs.includes(c.slug);
-                const liveSession = liveSessionsMap[c.slug];
-                const isSessionLive = liveSession && liveSession.status === "live";
-                const isSessionUpcoming = liveSession && (liveSession.status === "scheduled" || liveSession.status === "upcoming");
-                const priceFormatted = Number(c.price || 0).toLocaleString("en-IN");
-                const originalPriceFormatted = Number(c.originalPrice || 0).toLocaleString("en-IN");
-
-                return (
-                  <div key={c.slug} className="course-card" style={{ background: "#ffffff", borderRadius: 20, border: isEnrolled ? `1.5px solid ${T.primaryBorder}` : `1px solid ${T.border}`, boxShadow: T.shadow, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                    <div>
-                      <div style={{ position: "relative", height: 190, overflow: "hidden", background: "#f1f5f9" }}>
-                        <img className="course-thumb" src={c.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80"} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(15,23,42,0.15) 0%, transparent 35%, transparent 65%, rgba(15,23,42,0.45) 100%)" }} />
-                        <div style={{ position: "absolute", top: 14, left: 14, background: "rgba(255, 255, 255, 0.95)", color: T.primaryDeep, padding: "5px 11px", borderRadius: 8, fontSize: 10.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", backdropFilter: "blur(8px)", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          {c.category || "Tech Track"}
-                        </div>
-                        {isEnrolled && (
-                          <div style={{ position: "absolute", top: 14, right: 14, background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", padding: "5px 11px", borderRadius: 20, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", gap: 5, boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)" }}>
-                            <Check size={12} strokeWidth={3} />
-                            <span>Enrolled</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div style={{ padding: "20px 22px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
-                            <Clock size={13} color={T.primary} />
-                            {c.duration || `${c.durationWeeks || 8} weeks`}
-                          </span>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
-                            <Layers size={13} color={T.primary} />
-                            {c.modulesCount || 2} Modules ({c.lessonsCount || 4} Lessons)
-                          </span>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, background: T.primarySoft, color: T.primaryDeep, padding: "3px 8px", borderRadius: 6, textTransform: "capitalize" }}>
-                            {c.level ? c.level.replace("_", " ") : "All Levels"}
-                          </span>
-                        </div>
-
-                        <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 8px", color: T.text, lineHeight: 1.35, letterSpacing: "-0.01em" }}>{c.title}</h3>
-                        <p style={{ fontSize: 12.5, color: T.textMuted, margin: "0 0 16px", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                          {c.subtitle || "Comprehensive hands-on training with industry mentors and placement assistance."}
-                        </p>
-
-                        {isSessionLive ? (
-                          <div style={{ background: "linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%)", border: "1.5px solid #fecaca", borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                              <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, fontWeight: 800, color: "#b91c1c", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", animation: "pulseLive 1.5s infinite" }}></span>
-                                Live Class In Progress
-                              </span>
-                              <span style={{ fontSize: 10.5, fontWeight: 800, background: "#fee2e2", color: "#991b1b", padding: "3px 8px", borderRadius: 6 }}>{liveSession.cohortCode || "FSWD-2026"}</span>
-                            </div>
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7f1d1d", marginBottom: 8 }}>{liveSession.title}</div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                              <span style={{ fontSize: 11, color: "#991b1b", fontWeight: 600 }}>Mentor: <strong>{liveSession.mentorName}</strong></span>
-                              <a href={liveSession.meetingLink} target="_blank" rel="noopener noreferrer" style={{ background: "linear-gradient(135deg, #dc2626, #ef4444)", color: "#ffffff", padding: "6px 14px", borderRadius: 8, fontSize: 11.5, fontWeight: 750, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5, boxShadow: "0 4px 10px rgba(220, 38, 38, 0.3)" }}>
-                                Join Live <ExternalLink size={12} />
-                              </a>
-                            </div>
-                          </div>
-                        ) : isSessionUpcoming ? (
-                          <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f7fef9 100%)", border: "1.5px solid #bbf7d0", borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 800, color: "#15803d", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                <Calendar size={13} color="#16a34a" />
-                                Scheduled Live Class
-                              </span>
-                              <span style={{ fontSize: 10.5, fontWeight: 800, background: "#dcfce7", color: "#166534", padding: "3px 8px", borderRadius: 6 }}>{liveSession.cohortCode || "DS-2026"}</span>
-                            </div>
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#14532d", marginBottom: 6 }}>{liveSession.title}</div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontSize: 11, color: "#166534" }}>
-                              <span style={{ fontWeight: 600 }}>{liveSession.date} &bull; {liveSession.time}</span>
-                              {liveSession.meetingLink && (
-                                <a href={liveSession.meetingLink} target="_blank" rel="noopener noreferrer" style={{ color: "#15803d", fontWeight: 750, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 3 }}>
-                                  Meet Link <ExternalLink size={11} />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ background: T.surfaceMuted, border: `1px solid ${T.borderLight}`, borderRadius: 10, padding: "10px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.textMuted }}>
-                            <Info size={14} color={T.textMuted} />
-                            <span><strong style={{ color: T.text }}>No Live Class Available right now.</strong> Next batch session scheduled soon.</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ padding: "16px 22px", background: "linear-gradient(180deg, #fafbfc 0%, #ffffff 100%)", borderTop: `1px solid ${T.borderLight}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                          <span style={{ fontSize: 20, fontWeight: 900, color: T.text, letterSpacing: "-0.02em" }}>₹{priceFormatted}</span>
-                          {c.originalPrice && c.originalPrice > c.price && (
-                            <span style={{ fontSize: 12, color: T.textMuted, textDecoration: "line-through" }}>₹{originalPriceFormatted}</span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: 10.5, color: "#16a34a", fontWeight: 750, marginTop: 2 }}>Online & Lab Track</div>
-                      </div>
-
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {isEnrolled ? (
-                          <Link href={`/lms/courses/${c.slug}`} className="cta-btn" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#ffffff", fontSize: 12.5, fontWeight: 750, textDecoration: "none", boxShadow: "0 4px 12px rgba(255, 85, 50, 0.28)" }}>
-                            <span>Open Course</span>
-                            <ArrowRight size={14} />
-                          </Link>
-                        ) : (
-                          <>
-                            <button type="button" className="cta-btn" onClick={() => handleEnrollClick(c.slug, c.title)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "10px 12px", borderRadius: 10, background: "#ffffff", color: T.primaryDeep, border: `1.5px solid ${T.primaryBorder}`, fontSize: 11.5, fontWeight: 750, cursor: "pointer" }} title="Instant 1-Click Enrollment">
-                              <Zap size={13} color={T.primary} />
-                              <span>1-Click</span>
-                            </button>
-                            <Link href={`/lms/checkout?course=${c.slug}`} className="cta-btn" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#ffffff", fontSize: 12.5, fontWeight: 750, textDecoration: "none", boxShadow: "0 4px 12px rgba(255, 85, 50, 0.28)" }}>
-                              <span>Enroll Now</span>
-                              <ArrowRight size={14} />
-                            </Link>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* ═══════════════════════════════════════════════
-            STUDENT REELS
-        ═══════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 48, background: "linear-gradient(135deg, #fff8f5 0%, #ffffff 50%, #fffaf7 100%)", borderRadius: 24, padding: "32px 28px", border: `1px solid ${T.primaryBorder}`, boxShadow: "0 6px 24px rgba(255, 85, 50, 0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, marginBottom: 24 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <span style={{ background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#ffffff", fontSize: 10.5, fontWeight: 800, padding: "4px 10px", borderRadius: 6, textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "0 4px 10px rgba(255, 85, 50, 0.25)" }}>
-                  ● Student Reels
-                </span>
-                <span style={{ fontSize: 12.5, color: T.textMuted, fontWeight: 600 }}>Real Career Transformations</span>
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: T.text, letterSpacing: "-0.02em" }}>Watch How Students Landed 12+ LPA Offers</h2>
-            </div>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: T.textMuted, background: "#ffffff", padding: "6px 14px", borderRadius: 999, border: `1px solid ${T.borderLight}` }}>
-              94% Placement Rate &bull; 500+ Alumni
+        <div className="reveal" style={{ position: "relative", maxWidth: 1200, margin: "0 auto", padding: "76px 20px 84px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 40, alignItems: "center" }}>
+          <div>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 999, background: "rgba(255,85,50,.14)", border: "1px solid rgba(255,85,50,.35)", color: "#ffb4a3", fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}>
+              <Sparkles size={12} /> Netcoder LMS
             </span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 18 }}>
-            {STUDENT_REELS.map((reel) => (
-              <div key={reel.id} className="reel-card" onClick={() => setActiveReel(reel)} style={{ background: "#ffffff", borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden", cursor: "pointer", position: "relative" }}>
-                <div style={{ position: "relative", height: 180 }}>
-                  <img src={reel.videoThumbnail} alt={reel.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(15,23,42,0.4) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(255,255,255,0.98)", display: "flex", alignItems: "center", justifyContent: "center", color: T.primary, boxShadow: "0 6px 16px rgba(0,0,0,0.25)" }}>
-                      <Play size={20} fill={T.primary} />
-                    </div>
-                  </div>
-                  <span style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 6, backdropFilter: "blur(4px)" }}>{reel.duration}</span>
-                  <span style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 6, boxShadow: "0 3px 8px rgba(16,185,129,0.35)" }}>{reel.hike}</span>
-                </div>
-                <div style={{ padding: "14px 16px" }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: T.text, margin: 0, letterSpacing: "-0.01em" }}>{reel.name}</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, margin: "3px 0 8px", fontWeight: 500 }}>{reel.role}</div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11.5, fontWeight: 750, color: T.primaryDeep }}>
-                    <span>{reel.salary}</span>
-                    <span style={{ color: T.textMuted, fontWeight: 600 }}>{reel.views} views</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════
-            HIRING PARTNERS
-        ═══════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 48, background: "#ffffff", borderRadius: 24, padding: "32px 28px", border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-          <div style={{ textAlign: "center", maxWidth: 620, margin: "0 auto 28px" }}>
-            <span style={{ background: T.successSoft, color: "#047857", fontSize: 10.5, fontWeight: 800, padding: "5px 12px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${T.successBorder}` }}>Our Alumni Network</span>
-            <h2 style={{ fontSize: 24, fontWeight: 800, margin: "10px 0 8px", color: T.text, letterSpacing: "-0.02em" }}>Hired by Global Tech Giants</h2>
-            <p style={{ fontSize: 13.5, color: T.textMuted, margin: 0, lineHeight: 1.6 }}>Graduates from Netcoder work across leading IT companies with average salary hikes exceeding 200%.</p>
-          </div>
-
-          <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 28, position: "relative", height: 220 }}>
-            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80" alt="Netcoder alumni celebrating placement success" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.65) 50%, rgba(15,23,42,0.15) 100%)", display: "flex", alignItems: "center", padding: "0 40px" }}>
-              <div style={{ color: "#ffffff", maxWidth: 480 }}>
-                <span style={{ background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "5px 12px", borderRadius: 6, textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "0 4px 10px rgba(255,85,50,0.35)" }}>100% Placement Record</span>
-                <h3 style={{ fontSize: 22, fontWeight: 800, margin: "12px 0 6px", letterSpacing: "-0.02em" }}>Dedicated Corporate Placement Cell</h3>
-                <p style={{ fontSize: 13, opacity: 0.92, margin: 0, lineHeight: 1.6 }}>Resume reviews, mock technical rounds, FAANG interview blueprints, and guaranteed interviews until placed.</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
-            {HIRING_COMPANIES.map((c) => (
-              <div key={c.name} style={{ background: "linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)", borderRadius: 14, padding: "20px 14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: `1px solid ${T.borderLight}`, gap: 10 }}>
-                <img src={c.logo} alt={c.name} style={{ height: 30, maxWidth: 95, objectFit: "contain" }} />
-                <span style={{ fontSize: 12.5, fontWeight: 750, color: T.text }}>{c.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════
-            ONLINE VS OFFLINE
-        ═══════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 48 }}>
-          <div style={{ textAlign: "center", maxWidth: 660, margin: "0 auto 32px" }}>
-            <span style={{ background: T.primarySoft, color: T.primaryDeep, fontSize: 10.5, fontWeight: 800, padding: "5px 12px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${T.primaryBorder}` }}>Flexible Learning Paths</span>
-            <h2 style={{ fontSize: 26, fontWeight: 800, margin: "10px 0 8px", color: T.text, letterSpacing: "-0.025em" }}>Choose Between Online Live & In-Person Campus</h2>
-            <p style={{ fontSize: 13.5, color: T.textMuted, margin: 0, lineHeight: 1.6 }}>Tailored learning designed around your schedule and location preferences.</p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 24 }}>
-            <div style={{ background: "#ffffff", borderRadius: 20, border: `1px solid ${T.border}`, padding: "28px", boxShadow: T.shadow, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: T.primary, textTransform: "uppercase", letterSpacing: "0.04em" }}>100% Online Live Track</span>
-                  <span style={{ background: T.surfaceMuted, color: T.textMuted, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.borderLight}` }}>Remote / Flexible</span>
-                </div>
-                <div style={{ fontSize: 36, fontWeight: 900, color: T.text, margin: "0 0 6px", letterSpacing: "-0.03em" }}>₹7,999 <span style={{ fontSize: 14, fontWeight: 600, color: T.textMuted }}>one-time</span></div>
-                <p style={{ fontSize: 13, color: T.textMuted, margin: "0 0 22px", lineHeight: 1.6 }}>Interactive live sessions with faculty mentors, online cloud code environments, and project reviews.</p>
-                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 11, fontSize: 13, color: T.text }}>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> Daily live interactive Zoom / Meet sessions</li>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> Full HD recorded archives for lifetime review</li>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> 1-on-1 code reviews by faculty mentors</li>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> 24/7 student community discord & chat</li>
-                </ul>
-              </div>
-              <Link href="/lms/checkout?course=data-science-machine-learning-ai" className="cta-btn" style={{ display: "block", textAlign: "center", padding: "13px 20px", borderRadius: 12, background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#ffffff", fontSize: 13.5, fontWeight: 750, textDecoration: "none", boxShadow: "0 6px 18px rgba(255,85,50,0.28)" }}>
-                Enroll in Online Track
-              </Link>
-            </div>
-
-            <div style={{ background: "#ffffff", borderRadius: 20, border: "2px solid #10b981", padding: "28px", boxShadow: "0 12px 32px rgba(16,185,129,0.12)", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-              <div style={{ position: "absolute", top: -14, right: 24, background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", fontSize: 10.5, fontWeight: 800, padding: "5px 14px", borderRadius: 999, letterSpacing: "0.04em", boxShadow: "0 6px 16px rgba(16,185,129,0.35)" }}>
-                100% PLACEMENT GUARANTEE
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: "#059669", textTransform: "uppercase", letterSpacing: "0.04em" }}>Offline Campus & Lab Track</span>
-                  <span style={{ background: T.successSoft, color: "#047857", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.successBorder}` }}>Dharamshala</span>
-                </div>
-                <div style={{ fontSize: 36, fontWeight: 900, color: T.text, margin: "0 0 6px", letterSpacing: "-0.03em" }}>₹12,999 <span style={{ fontSize: 14, fontWeight: 600, color: T.textMuted }}>one-time</span></div>
-                <p style={{ fontSize: 13, color: T.textMuted, margin: "0 0 18px", lineHeight: 1.6 }}>Immersive in-person learning at Netcoder Dharamshala campus with dedicated workstations and 1-on-1 mentor desks.</p>
-                <div style={{ borderRadius: 14, overflow: "hidden", marginBottom: 18 }}>
-                  <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="Dharamshala mountain campus computer lab with modern workstations" style={{ width: "100%", height: 130, objectFit: "cover" }} />
-                </div>
-                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: T.text }}>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> Dedicated high-speed dual-monitor code workstation</li>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> Daily in-person mentor desk assistance</li>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> Physical hackathons & capstone portfolio build</li>
-                  <li style={{ display: "flex", alignItems: "center", gap: 10 }}><Check size={16} color="#10b981" strokeWidth={3} /> PG / Hostel accommodation guidance included</li>
-                </ul>
-              </div>
-              <button type="button" className="cta-btn" onClick={() => setPlacementModalOpen(true)} style={{ display: "block", width: "100%", textAlign: "center", padding: "13px 20px", borderRadius: 12, background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", fontSize: 13.5, fontWeight: 750, border: "none", cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.28)" }}>
-                Apply for Campus & Placement Program
+            <h1 className="hero-h1" style={{ fontSize: 50, lineHeight: 1.08, fontWeight: 900, letterSpacing: "-0.035em", margin: "18px 0 14px" }}>
+              Learn tech.<br />Build real projects.<br /><span style={{ color: C.brand }}>Get placed.</span>
+            </h1>
+            <p style={{ fontSize: 15.5, color: "#94a3b8", lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
+              Mentor-led live batches and self-paced video tracks, with a placement cell that works until you are hired.
+            </p>
+            <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
+              <button type="button" className="btn-brand" onClick={() => scrollTo("courses")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.brand, color: "#fff", border: "none", borderRadius: 12, padding: "14px 22px", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 12px 28px rgba(255,85,50,.35)" }}>
+                Browse courses <ArrowRight size={16} />
+              </button>
+              <button type="button" className="btn-brand" onClick={() => setPlacementModalOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.08)", color: "#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 12, padding: "14px 22px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <GraduationCap size={16} /> 100% placement program
               </button>
             </div>
           </div>
+
+          {/* Hero stat tiles */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {[
+              { icon: BookOpen, value: enrolledCount, label: "Enrolled courses" },
+              { icon: Radio, value: `${liveCount} live`, label: "Mentor sessions" },
+              { icon: Trophy, value: "100%", label: "Placement track" },
+              { icon: Flame, value: `${learningStreak}d`, label: "Learning streak" },
+            ].map((s) => (
+              <div key={s.label} className="tech-card" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.10)", borderRadius: 18, padding: "18px 18px" }}>
+                <s.icon size={20} color={C.brand} />
+                <div style={{ fontSize: 24, fontWeight: 900, marginTop: 12, letterSpacing: "-0.02em" }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── How it works ───────── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "56px 20px 8px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+          {LEARNING_STEPS.map((s, i) => (
+            <div key={s.title} className="tech-card" style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 18, padding: 22, boxShadow: "0 6px 18px rgba(11,16,32,.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 13, background: C.brandSoft, color: C.brandDeep, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <s.icon size={20} />
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>0{i + 1}</span>
+              </div>
+              <h3 style={{ margin: "16px 0 6px", fontSize: 17, fontWeight: 800 }}>{s.title}</h3>
+              <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ───────── Stack picker (horizontal scroll tech cards) ───────── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 20px 0" }}>
+        <SectionHead eyebrow="Choose your stack" title="Pick a language to filter the catalog" />
+        <div className="stack-row" style={{ display: "flex", gap: 14, overflowX: "auto", padding: "6px 2px 14px" }}>
+          {STACKS.map((s) => {
+            const active = selectedLanguageFilter === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                className="stack-chip"
+                onClick={() => setSelectedLanguageFilter(s.id)}
+                style={{
+                  flex: "0 0 200px",
+                  textAlign: "left",
+                  background: C.card,
+                  border: active ? `2px solid ${C.brand}` : `1px solid ${C.line}`,
+                  borderRadius: 18,
+                  padding: 18,
+                  cursor: "pointer",
+                  fontFamily: FONT,
+                  boxShadow: active ? "0 12px 26px rgba(255,85,50,.18)" : "0 4px 12px rgba(11,16,32,.04)",
+                }}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: `${s.color}14`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{s.icon}</div>
+                <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 12, color: C.ink }}>{s.label}</div>
+                <div style={{ fontSize: 11.5, color: C.muted, marginTop: 4, fontWeight: 600 }}>{s.tags}</div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ───────── Live classes ───────── */}
+      <section id="live" style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 0" }}>
+        <div style={{ background: C.ink, color: "#fff", borderRadius: 24, padding: "30px 30px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "center", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", bottom: -120, left: -80, width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,85,50,.28), transparent 70%)" }} />
+          <div style={{ position: "relative" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 11, fontWeight: 800, color: "#fecaca", background: "rgba(239,68,68,.14)", padding: "5px 11px", borderRadius: 999, textTransform: "uppercase", letterSpacing: ".06em" }}>
+              <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: C.red }} /> Live batches enrolling
+            </span>
+            <h2 style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.025em", margin: "14px 0 8px" }}>Join live classes with senior mentors</h2>
+            <p style={{ margin: 0, fontSize: 13.5, color: "#94a3b8", lineHeight: 1.65 }}>Daily interactive sessions, live debugging, 1-on-1 code audits and hiring partner placements.</p>
+          </div>
+          <div style={{ position: "relative", display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button type="button" className="btn-brand" onClick={() => { setActiveTab("live"); setLearningTrackFilter("live"); scrollTo("courses"); showToast("Showing all active live classes"); }} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.brand, color: "#fff", border: "none", borderRadius: 12, padding: "13px 18px", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+              <Video size={16} /> Join live classes
+            </button>
+            <button type="button" className="btn-brand" onClick={() => setPlacementModalOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.08)", color: "#fff", border: "1px solid rgba(255,255,255,.2)", borderRadius: 12, padding: "13px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+              <PhoneCall size={15} /> Advisor call
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── Catalog ───────── */}
+      <section id="courses" className="catalog-section" style={{ maxWidth: "none", margin: "64px 0 0", padding: "68px max(20px, calc((100vw - 1200px) / 2)) 76px", background: "#fff", borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}` }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div className="catalog-heading">
+          <div>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: C.brandDeep, fontSize: 11, fontWeight: 850, letterSpacing: ".11em", textTransform: "uppercase" }}>
+              <span style={{ width: 22, height: 2, borderRadius: 99, background: C.brand }} /> Your next skill starts here
+            </span>
+            <h2 style={{ margin: "10px 0 7px", fontSize: "clamp(30px, 4vw, 42px)", lineHeight: 1.12, fontWeight: 900, letterSpacing: "-.045em", color: C.ink }}>Find your next course</h2>
+            <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>Explore mentor-led programs, build real projects, and take the next step in your career.</p>
+          </div>
+          <label className="catalog-search">
+            <Search size={17} color={C.muted} aria-hidden="true" />
+            <input aria-label="Search courses" type="search" placeholder="Search courses, mentors, live classes…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          </label>
         </div>
 
-      </div>
+        <div className="catalog-filters">
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Pill active={activeTab === "all"} onClick={() => setActiveTab("all")} label={`All (${courses.length})`} />
+            <Pill active={activeTab === "enrolled"} onClick={() => setActiveTab("enrolled")} label={`My enrolled (${enrolledCount})`} />
+            <Pill active={activeTab === "live"} onClick={() => setActiveTab("live")} label={`Live batches (${liveCount})`} />
+            <Pill active={activeTab === "explore"} onClick={() => setActiveTab("explore")} label="Explore & add" />
+          </div>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: C.muted, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+            <BookOpen size={15} color={C.brand} /> {displayedCourses.length} {displayedCourses.length === 1 ? "program" : "programs"}
+          </span>
+        </div>
 
-      {/* ═══════════════════════════════════════════════
-          PLACEMENT MODAL
-      ═══════════════════════════════════════════════ */}
-      {placementModalOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.7)", backdropFilter: "blur(8px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "slideUp 0.25s ease-out" }}>
-          <div style={{ background: "#ffffff", borderRadius: 24, maxWidth: 580, width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.3)", position: "relative" }}>
-            <div style={{ position: "relative", height: 150, overflow: "hidden", background: "#0f172a", borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
-              <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80" alt="Placement success students celebrating" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.75 }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(15,23,42,0.25) 0%, rgba(15,23,42,0.92) 100%)", padding: "20px 26px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-                <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 6, textTransform: "uppercase", letterSpacing: "0.05em", alignSelf: "flex-start", boxShadow: "0 4px 10px rgba(16,185,129,0.35)" }}>Guaranteed Job Program</span>
-                <h3 style={{ fontSize: 20, fontWeight: 800, color: "#ffffff", margin: "8px 0 0", letterSpacing: "-0.02em" }}>100% Placement Guarantee Application</h3>
+        {displayedCourses.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "64px 20px", background: C.card, borderRadius: 20, border: `1px dashed ${C.line}` }}>
+            <BookOpen size={28} color={C.brand} />
+            <h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 800 }}>No courses match your filter</h3>
+            <p style={{ margin: "0 0 18px", fontSize: 13, color: C.muted }}>Try a different search or reset the filters.</p>
+            <button type="button" className="btn-brand" onClick={() => { setActiveTab("all"); setSearchQuery(""); setSelectedLanguageFilter("all"); }} style={{ background: C.brand, color: "#fff", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>Reset filters</button>
+          </div>
+        ) : (
+          <div className="catalog-grid">
+            {displayedCourses.map((c) => (
+              <CourseTechCard
+                key={c.slug}
+                course={c}
+                isEnrolled={effectiveEnrolledSlugs.includes(c.slug)}
+                session={liveSessionsMap[c.slug]}
+                onEnroll={() => setPaymentCourse(c)}
+              />
+            ))}
+          </div>
+        )}
+        </div>
+      </section>
+
+      {/* ───────── Placement ───────── */}
+      <section id="placement" style={{ maxWidth: 1200, margin: "64px auto 0", padding: "0 20px" }}>
+        <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", background: C.ink, color: "#fff", minHeight: 260, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+          <div style={{ padding: "38px 34px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1 }}>
+            <span style={{ alignSelf: "flex-start", background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "5px 11px", borderRadius: 8, textTransform: "uppercase", letterSpacing: ".06em" }}>100% placement record</span>
+            <h2 style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.025em", margin: "14px 0 10px" }}>Dedicated corporate placement cell</h2>
+            <p style={{ margin: "0 0 22px", fontSize: 13.5, color: "#94a3b8", lineHeight: 1.65, maxWidth: 460 }}>Resume reviews, mock technical rounds, interview blueprints and interview support until you are placed.</p>
+            <button type="button" className="btn-brand" onClick={() => setPlacementModalOpen(true)} style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 8, background: C.brand, color: "#fff", border: "none", borderRadius: 12, padding: "13px 20px", fontWeight: 800, fontSize: 13.5, cursor: "pointer" }}>
+              Apply for placement <ArrowRight size={15} />
+            </button>
+          </div>
+          <div style={{ position: "relative", minHeight: 240 }}>
+            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80" alt="Netcoder alumni celebrating placement success" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(11,16,32,1) 0%, rgba(11,16,32,.2) 60%)" }} />
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14, marginTop: 22 }}>
+          {HIRING_COMPANIES.map((co) => (
+            <div key={co.name} className="tech-card" style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 16, padding: "20px 14px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              <img src={co.logo} alt={co.name} style={{ height: 28, maxWidth: 90, objectFit: "contain" }} />
+              <span style={{ fontSize: 12.5, fontWeight: 700 }}>{co.name}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ───────── Pricing / formats ───────── */}
+      <section style={{ maxWidth: 1200, margin: "64px auto 0", padding: "0 20px" }}>
+        <SectionHead eyebrow="Formats" title="Online live or in-person campus" center />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 22 }}>
+          <PricingCard
+            tag="100% online live"
+            price="₹7,999"
+            blurb="Interactive live sessions with mentors, cloud code environments and project reviews."
+            perks={["Daily live Zoom / Meet sessions", "Full HD recordings for lifetime review", "1-on-1 code reviews with mentors", "24/7 student community"]}
+            ctaLabel="Enroll in online track"
+            ctaHref="/lms/online-track"
+          />
+          <PricingCard
+            tag="Campus & lab track"
+            price="₹12,999"
+            highlight
+            blurb="In-person learning at the Dharamshala campus with dedicated workstations and mentor desks."
+            perks={["Dual-monitor code workstation", "Daily in-person mentor desk", "Hackathons and capstone portfolio", "PG / hostel guidance included"]}
+            ctaLabel="Apply for campus program"
+            ctaHref="https://www.netcoder.in/contact"
+            external
+          />
+        </div>
+      </section>
+
+      {/* ───────── Stories ───────── */}
+      <section id="stories" style={{ maxWidth: 1200, margin: "64px auto 0", padding: "0 20px" }}>
+        <SectionHead eyebrow="Success stories" title="Hear it from our students" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 22 }}>
+          {VIDEO_TESTIMONIALS.map((t) => (
+            <button key={t.videoId} type="button" className="tech-card" onClick={() => setPopupVideo(t)} style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 18, overflow: "hidden", padding: 0, textAlign: "left", cursor: "pointer", fontFamily: FONT }}>
+              <div style={{ position: "relative" }}>
+                <img src={`https://img.youtube.com/vi/${t.videoId}/hqdefault.jpg`} alt={`${t.name} testimonial`} style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover", display: "block" }} />
+                <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 52, height: 52, borderRadius: "50%", background: C.brand, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 24px rgba(255,85,50,.45)" }}>
+                  <Play size={20} color="#fff" fill="#fff" />
+                </span>
               </div>
-              <button type="button" onClick={() => setPlacementModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.55)", color: "#ffffff", border: "none", width: 34, height: 34, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
+              <div style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 800, fontSize: 14 }}>{t.name}</span>
+                <span style={{ display: "flex", gap: 2 }}>{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={12} color="#f59e0b" fill="#f59e0b" />)}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <a href="https://www.youtube.com/@netcodertechnology/videos" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.brandDeep, fontWeight: 800, fontSize: 13.5, textDecoration: "none" }}>
+            View more testimonials <ExternalLink size={14} />
+          </a>
+        </div>
+      </section>
+
+      <footer style={{ maxWidth: 1200, margin: "64px auto 0", padding: "24px 20px 48px", borderTop: `1px solid ${C.line}`, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, fontSize: 12, color: C.muted }}>
+        <span>© Netcoder Technology</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Shield size={13} /> Encrypted session</span>
+      </footer>
+
+      {/* ───────── Placement modal ───────── */}
+      {placementModalOpen && (
+        <Overlay onClose={() => setPlacementModalOpen(false)}>
+          <div style={{ background: "#fff", borderRadius: 22, maxWidth: 560, width: "100%", maxHeight: "90vh", overflowY: "auto", position: "relative" }}>
+            <div style={{ background: C.ink, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: "22px 26px", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#6ee7b7", textTransform: "uppercase", letterSpacing: ".06em" }}>Guaranteed job program</span>
+                <h3 style={{ margin: "6px 0 0", fontSize: 19, fontWeight: 900 }}>100% placement application</h3>
+              </div>
+              <button type="button" onClick={() => setPlacementModalOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,.12)", border: "none", color: "#fff", width: 34, height: 34, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={16} />
               </button>
             </div>
 
             {placementSubmitted ? (
-              <div style={{ padding: "40px 28px", textAlign: "center" }}>
-                <div style={{ width: 70, height: 70, borderRadius: "50%", background: T.successSoft, color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", border: `2px solid ${T.successBorder}` }}>
-                  <CheckCircle2 size={40} />
+              <div style={{ padding: "36px 28px", textAlign: "center" }}>
+                <div style={{ width: 66, height: 66, borderRadius: "50%", background: C.greenSoft, color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                  <CheckCircle2 size={36} />
                 </div>
-                <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 10px", color: T.text, letterSpacing: "-0.02em" }}>Application Registered Successfully!</h3>
-                <p style={{ fontSize: 13.5, color: T.textMuted, margin: "0 0 20px", lineHeight: 1.6 }}>
-                  Your application has been stored directly into Netcoder placement records.
-                  {placementSuccessData?.application_id && (<> Application Reference ID: <strong style={{ color: T.primaryDeep }}>#PLC-{placementSuccessData.application_id}</strong></>)}
+                <h3 style={{ margin: "0 0 8px", fontSize: 21, fontWeight: 900 }}>Application received</h3>
+                <p style={{ margin: "0 0 20px", fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
+                  {placementSuccessData?.application_id && <>Reference: <strong style={{ color: C.brandDeep }}>#PLC-{placementSuccessData.application_id}</strong>. </>}
+                  A career advisor will reach out within 24 hours.
                 </p>
-                <div style={{ background: T.surfaceMuted, borderRadius: 14, padding: "18px 20px", border: `1px solid ${T.borderLight}`, fontSize: 13, color: T.text, marginBottom: 24, textAlign: "left", lineHeight: 1.7 }}>
-                  <p style={{ margin: "0 0 6px", fontWeight: 800, color: "#059669", fontSize: 13.5 }}>What happens next?</p>
-                  <strong>1.</strong> A career advisor will review your profile within 24 hours.<br />
-                  <strong>2.</strong> You will receive an invitation for an initial technical aptitude screening.<br />
-                  <strong>3.</strong> If selected, you get a written 100% money-back placement agreement.
-                </div>
-                <button type="button" className="cta-btn" onClick={() => { setPlacementModalOpen(false); setPlacementSubmitted(false); }} style={{ padding: "12px 28px", borderRadius: 10, background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", fontWeight: 750, fontSize: 13.5, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.28)" }}>Done</button>
+                <button type="button" className="btn-brand" onClick={() => { setPlacementModalOpen(false); setPlacementSubmitted(false); }} style={{ background: C.green, color: "#fff", border: "none", borderRadius: 10, padding: "11px 26px", fontWeight: 800, fontSize: 13.5, cursor: "pointer" }}>Done</button>
               </div>
             ) : (
-              <form onSubmit={handlePlacementSubmit} style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>Full Name *</label>
-                    <input type="text" required value={placementForm.name} onChange={(e) => setPlacementForm({ ...placementForm, name: e.target.value })} placeholder="e.g. Rahul Sharma" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>Email Address *</label>
-                    <input type="email" required value={placementForm.email} onChange={(e) => setPlacementForm({ ...placementForm, email: e.target.value })} placeholder="e.g. rahul@example.com" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-                  </div>
+              <form onSubmit={handlePlacementSubmit} style={{ padding: "22px 26px", display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <Field label="Full name *"><input required value={placementForm.name} onChange={(e) => setPlacementForm({ ...placementForm, name: e.target.value })} placeholder="e.g. Rahul Sharma" style={inputStyle} /></Field>
+                  <Field label="Email *"><input type="email" required value={placementForm.email} onChange={(e) => setPlacementForm({ ...placementForm, email: e.target.value })} placeholder="you@example.com" style={inputStyle} /></Field>
+                  <Field label="Phone / WhatsApp *"><input type="tel" required value={placementForm.phone} onChange={(e) => setPlacementForm({ ...placementForm, phone: e.target.value })} placeholder="+91 98765 43210" style={inputStyle} /></Field>
+                  <Field label="City, State *"><input required value={placementForm.location} onChange={(e) => setPlacementForm({ ...placementForm, location: e.target.value })} placeholder="e.g. Dharamshala, HP" style={inputStyle} /></Field>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>Phone / WhatsApp *</label>
-                    <input type="tel" required value={placementForm.phone} onChange={(e) => setPlacementForm({ ...placementForm, phone: e.target.value })} placeholder="+91 98765 43210" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>City, State *</label>
-                    <input type="text" required value={placementForm.location} onChange={(e) => setPlacementForm({ ...placementForm, location: e.target.value })} placeholder="e.g. Dharamshala, HP" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>Highest Qualification</label>
-                    <select value={placementForm.qualification} onChange={(e) => setPlacementForm({ ...placementForm, qualification: e.target.value })} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box", background: "#fff" }}>
-                      <option value="B.Tech / B.E (Computer Science / IT)">B.Tech / B.E (CSE / IT)</option>
-                      <option value="B.Tech / B.E (Other Branches)">B.Tech / B.E (Other)</option>
-                      <option value="BCA / MCA">BCA / MCA</option>
-                      <option value="B.Sc / M.Sc (IT / Science)">B.Sc / M.Sc (IT / Science)</option>
-                      <option value="Diploma / Polytechnic">Diploma / Polytechnic</option>
-                      <option value="Non-Tech Degree / Career Switcher">Non-Tech / Career Switcher</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>Current Status</label>
-                    <select value={placementForm.current_status} onChange={(e) => setPlacementForm({ ...placementForm, current_status: e.target.value })} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box", background: "#fff" }}>
-                      <option value="final_year">Final Year Student</option>
-                      <option value="fresher">Recent Graduate / Fresher</option>
-                      <option value="working_professional">Working Professional (Switching)</option>
-                      <option value="career_gap">Career Gap / Looking for Job</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>Course of Interest *</label>
-                  <select value={placementForm.course_slug} onChange={(e) => setPlacementForm({ ...placementForm, course_slug: e.target.value })} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box", background: "#fff" }}>
-                    {courses.map((course) => (<option key={course.slug} value={course.slug}>{course.title} ({course.category})</option>))}
+                <Field label="Course of interest *">
+                  <select required value={placementForm.course_slug} onChange={(e) => setPlacementForm({ ...placementForm, course_slug: e.target.value })} style={inputStyle}>
+                    {courses.map((course) => <option key={course.slug} value={course.slug}>{course.title}</option>)}
                   </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 6 }}>Preferred Learning Track</label>
-                  <div style={{ display: "flex", gap: 12 }}>
-                    <label style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: placementForm.track_preference === "online" ? "1.5px solid #10b981" : `1.5px solid ${T.border}`, background: placementForm.track_preference === "online" ? T.successSoft : "#fff", fontSize: 12.5, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontWeight: 600 }}>
-                      <input type="radio" name="track" checked={placementForm.track_preference === "online"} onChange={() => setPlacementForm({ ...placementForm, track_preference: "online" })} />
-                      100% Online Live Track
-                    </label>
-                    <label style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: placementForm.track_preference === "offline" ? "1.5px solid #10b981" : `1.5px solid ${T.border}`, background: placementForm.track_preference === "offline" ? T.successSoft : "#fff", fontSize: 12.5, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontWeight: 600 }}>
-                      <input type="radio" name="track" checked={placementForm.track_preference === "offline"} onChange={() => setPlacementForm({ ...placementForm, track_preference: "offline" })} />
-                      Dharamshala Campus
-                    </label>
+                </Field>
+                <Field label="Preferred track">
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {[["online", "Online live"], ["offline", "Dharamshala campus"]].map(([val, lbl]) => {
+                      const on = placementForm.track_preference === val;
+                      return (
+                        <button key={val} type="button" onClick={() => setPlacementForm({ ...placementForm, track_preference: val })} style={{ flex: 1, padding: "11px 12px", borderRadius: 10, border: on ? `2px solid ${C.green}` : `1px solid ${C.line}`, background: on ? C.greenSoft : "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: FONT, color: C.ink }}>
+                          {lbl}
+                        </button>
+                      );
+                    })}
                   </div>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 750, color: T.text, display: "block", marginBottom: 5 }}>LinkedIn / GitHub Profile (Optional)</label>
-                  <input type="url" value={placementForm.notes} onChange={(e) => setPlacementForm({ ...placementForm, notes: e.target.value })} placeholder="https://linkedin.com/in/yourname" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-                </div>
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
-                  <button type="button" onClick={() => setPlacementModalOpen(false)} style={{ padding: "11px 20px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: "#fff", fontSize: 13, cursor: "pointer", fontWeight: 600, color: T.textMuted }}>Cancel</button>
-                  <button type="submit" disabled={placementSubmitting} className="cta-btn" style={{ padding: "11px 24px", borderRadius: 10, background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", fontSize: 13, fontWeight: 750, cursor: "pointer", boxShadow: "0 6px 18px rgba(16,185,129,0.28)" }}>
-                    {placementSubmitting ? "Submitting…" : "Apply for 100% Placement"}
+                </Field>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 6 }}>
+                  <button type="button" onClick={() => setPlacementModalOpen(false)} style={{ padding: "11px 18px", borderRadius: 10, border: `1px solid ${C.line}`, background: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", color: C.muted }}>Cancel</button>
+                  <button type="submit" disabled={placementSubmitting} className="btn-brand" style={{ padding: "11px 22px", borderRadius: 10, background: C.green, color: "#fff", border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+                    {placementSubmitting ? "Submitting…" : "Apply for placement"}
                   </button>
                 </div>
               </form>
             )}
           </div>
-        </div>
+        </Overlay>
       )}
 
-      {/* ═══════════════════════════════════════════════
-          REEL VIDEO MODAL
-      ═══════════════════════════════════════════════ */}
-      {activeReel && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.82)", backdropFilter: "blur(8px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "slideUp 0.25s ease-out" }}>
-          <div style={{ background: "#ffffff", borderRadius: 24, maxWidth: 460, width: "100%", overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
-            <div style={{ position: "relative", height: 280 }}>
-              <img src={activeReel.videoThumbnail} alt={activeReel.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.45) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ width: 68, height: 68, borderRadius: "50%", background: "rgba(255,255,255,0.98)", display: "flex", alignItems: "center", justifyContent: "center", color: T.primary, boxShadow: "0 10px 30px rgba(0,0,0,0.35)" }}>
-                  <Play size={28} fill={T.primary} />
-                </div>
-              </div>
-              <button type="button" onClick={() => setActiveReel(null)} style={{ position: "absolute", top: 14, right: 14, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", width: 34, height: 34, borderRadius: "50%", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
-                <X size={16} />
-              </button>
-            </div>
-            <div style={{ padding: "22px 24px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: T.primaryDeep, textTransform: "uppercase", background: T.primarySoft, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.primaryBorder}` }}>{activeReel.company} &bull; {activeReel.salary}</span>
-                <span style={{ fontSize: 11, fontWeight: 800, color: "#16a34a", background: "#dcfce7", padding: "4px 10px", borderRadius: 6 }}>{activeReel.hike}</span>
-              </div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: T.text, letterSpacing: "-0.02em" }}>{activeReel.name}</h3>
-              <p style={{ fontSize: 13, color: T.textMuted, margin: "0 0 14px", fontWeight: 500 }}>{activeReel.role}</p>
-              <blockquote style={{ fontSize: 13.5, color: T.text, fontStyle: "italic", margin: "0 0 20px", padding: "14px 18px", background: T.surfaceMuted, borderRadius: 12, borderLeft: `3px solid ${T.primary}`, lineHeight: 1.6 }}>
-                &ldquo;{activeReel.quote}&rdquo;
-              </blockquote>
-              <button type="button" className="cta-btn" onClick={() => { setActiveReel(null); setPlacementModalOpen(true); }} style={{ width: "100%", padding: "13px", borderRadius: 12, background: "linear-gradient(135deg, #ff5532, #ff8a5c)", color: "#fff", border: "none", fontWeight: 750, fontSize: 13.5, cursor: "pointer", boxShadow: "0 6px 18px rgba(255,85,50,0.28)" }}>
-                Enroll in Career Program Like {activeReel.name.split(" ")[0]} →
-              </button>
-            </div>
+      {/* ───────── Video popup ───────── */}
+      {popupVideo && (
+        <Overlay onClose={() => setPopupVideo(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 800, aspectRatio: "16 / 9", background: "#000", borderRadius: 18, overflow: "hidden", position: "relative" }}>
+            <button type="button" onClick={() => setPopupVideo(null)} aria-label="Close video" style={{ position: "absolute", top: 10, right: 12, zIndex: 2, background: "rgba(0,0,0,.6)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: "50%", cursor: "pointer", fontSize: 22 }}>×</button>
+            <iframe
+              src={`https://www.youtube.com/embed/${popupVideo.videoId}?autoplay=1&rel=0&playsinline=1`}
+              title={`${popupVideo.name} testimonial video`}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              style={{ width: "100%", height: "100%", border: "none" }}
+            />
           </div>
-        </div>
+        </Overlay>
       )}
 
+      {/* ───────── Payment modal ───────── */}
+      {paymentCourse && (
+        <PaymentModal
+          isOpen={!!paymentCourse}
+          onClose={() => setPaymentCourse(null)}
+          onSuccess={handlePaymentSuccess}
+          courseTitle={paymentCourse.title}
+          courseSlug={paymentCourse.slug}
+          coursePrice={Number(paymentCourse.price || 459)}
+          courseOriginalPrice={Number(paymentCourse.originalPrice || 799)}
+          courseImage={paymentCourse.image}
+          courseInstructor={paymentCourse.instructor}
+        />
+      )}
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────────────────
-   HELPER SUB-COMPONENTS
-───────────────────────────────────────────────────────── */
+/* ─────────────── Presentation helpers ─────────────── */
 
-function MiniStatCard({ icon, tint, color, value, label }: { icon: React.ReactNode; tint: string; color: string; value: string; label: string; }) {
+function SectionHead({ eyebrow, title, center, inline }: { eyebrow: string; title: string; center?: boolean; inline?: boolean }) {
   return (
-    <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: 16, boxShadow: T.shadow, display: "flex", alignItems: "center", gap: 16, border: `1px solid ${T.borderLight}`, transition: "all 0.2s ease" }}>
-      <div style={{ width: 48, height: 48, borderRadius: 14, background: tint, display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0 }}>{icon}</div>
-      <div>
-        <div style={{ fontSize: 19, fontWeight: 900, color: T.text, lineHeight: 1.1, letterSpacing: "-0.02em" }}>{value}</div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, marginTop: 3 }}>{label}</div>
+    <div style={{ textAlign: center ? "center" : "left", marginBottom: inline ? 0 : 22 }}>
+      <span style={{ fontSize: 11, fontWeight: 800, color: C.brandDeep, textTransform: "uppercase", letterSpacing: ".08em" }}>{eyebrow}</span>
+      <h2 style={{ margin: "6px 0 0", fontSize: 26, fontWeight: 900, letterSpacing: "-0.025em", color: C.ink }}>{title}</h2>
+    </div>
+  );
+}
+
+function Pill({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button type="button" aria-pressed={active} onClick={onClick} style={{ padding: "9px 16px", borderRadius: 999, border: active ? `1.5px solid ${C.brand}` : `1px solid ${C.line}`, background: active ? C.brand : "#fff", color: active ? "#fff" : C.ink, fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: FONT, transition: "all .2s" }}>
+      {label}
+    </button>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label style={{ display: "block" }}>
+      <span style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 13px",
+  borderRadius: 10,
+  border: `1px solid ${C.line}`,
+  fontSize: 13,
+  outline: "none",
+  boxSizing: "border-box",
+  background: "#fff",
+  fontFamily: FONT,
+};
+
+function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(11,16,32,.72)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", justifyContent: "center", width: "100%" }}>{children}</div>
+    </div>
+  );
+}
+
+function CourseTechCard({ course: c, isEnrolled, session, onEnroll }: { course: any; isEnrolled: boolean; session: any; onEnroll: () => void }) {
+  const isLive = session?.status === "live";
+  const isFree = c.is_free || Number(c.price) === 0;
+  const tags: string[] = [c.programming_language, c.category].filter(Boolean);
+
+  return (
+    <div className="tech-card catalog-course-card" style={{ background: C.card, borderRadius: 20, border: `1px solid ${isEnrolled ? "#ffd3c6" : C.line}`, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 6px 18px rgba(11,16,32,.05)" }}>
+      <Link href={`/lms/courses/${c.slug}`} aria-label={`View ${c.title}`} className="catalog-course-media" style={{ position: "relative", display: "block", height: 170, background: C.ink }}>
+        <img src={c.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80"} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(11,16,32,.75) 100%)" }} />
+        <div style={{ position: "absolute", left: 12, bottom: 12, display: "flex", gap: 6 }}>
+          {tags.map((t) => (
+            <span key={t} style={{ background: "rgba(255,255,255,.92)", color: C.ink, fontSize: 10.5, fontWeight: 800, padding: "4px 9px", borderRadius: 7, display: "inline-flex", alignItems: "center", gap: 4 }}>
+              {t === c.programming_language && <Code size={11} color={C.brand} />}{t}
+            </span>
+          ))}
+        </div>
+        {isEnrolled && (
+          <span style={{ position: "absolute", top: 12, right: 12, background: C.green, color: "#fff", fontSize: 11, fontWeight: 800, padding: "5px 10px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Check size={12} strokeWidth={3} /> Enrolled
+          </span>
+        )}
+      </Link>
+
+      <div style={{ padding: "18px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", gap: 12, fontSize: 11.5, fontWeight: 700, color: C.muted, marginBottom: 8, flexWrap: "wrap" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Clock size={12} color={C.brand} />{c.duration || `${c.durationWeeks || 8} weeks`}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Layers size={12} color={C.brand} />{c.modulesCount || 2} modules</span>
+        </div>
+        <Link href={`/lms/courses/${c.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 16.5, fontWeight: 850, lineHeight: 1.35, letterSpacing: "-0.01em" }}>{c.title}</h3>
+        </Link>
+        <p style={{ margin: "0 0 14px", fontSize: 12.5, color: C.muted, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          {c.subtitle || "Hands-on training with industry mentors and placement support."}
+        </p>
+
+        {isLive ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, padding: "10px 12px", marginBottom: 14 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 800, color: "#b91c1c" }}>
+              <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: C.red }} /> Live now
+            </span>
+            <a href={session.meetingLink} target="_blank" rel="noopener noreferrer" style={{ background: C.red, color: "#fff", padding: "6px 12px", borderRadius: 8, fontSize: 11.5, fontWeight: 800, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              Join <ExternalLink size={11} />
+            </a>
+          </div>
+        ) : session ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.greenSoft, border: "1px solid #a7f3d0", borderRadius: 12, padding: "10px 12px", marginBottom: 14, fontSize: 11.5, fontWeight: 700, color: "#047857" }}>
+            <Calendar size={13} /> {session.date} · {session.time}
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 12, padding: "10px 12px", marginBottom: 14, fontSize: 11.5, color: C.muted, fontWeight: 600 }}>
+            <Info size={13} /> Self-paced · live batch soon
+          </div>
+        )}
+
+        <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 14, borderTop: `1px solid ${C.line}` }}>
+          <div>
+            {isFree ? (
+              <span style={{ fontSize: 15, fontWeight: 900, color: "#059669" }}>Free</span>
+            ) : (
+              <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em" }}>₹{Number(c.price || 0).toLocaleString("en-IN")}</span>
+            )}
+          </div>
+          {isEnrolled ? (
+            <Link href={`/lms/courses/${c.slug}`} className="btn-brand" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.brand, color: "#fff", padding: "10px 16px", borderRadius: 10, fontWeight: 800, fontSize: 12.5, textDecoration: "none" }}>
+              Open <ArrowRight size={13} />
+            </Link>
+          ) : (
+            <button type="button" className="btn-brand" onClick={onEnroll} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.ink, color: "#fff", border: "none", padding: "10px 16px", borderRadius: 10, fontWeight: 800, fontSize: 12.5, cursor: "pointer" }}>
+              Enroll <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function TabButton({ active, label, onClick, highlight }: { active: boolean; label: string; onClick: () => void; highlight?: boolean; }) {
+function PricingCard({ tag, price, blurb, perks, ctaLabel, ctaHref, external, highlight }: {
+  tag: string; price: string; blurb: string; perks: string[]; ctaLabel: string; ctaHref: string; external?: boolean; highlight?: boolean;
+}) {
+  const btnStyle: React.CSSProperties = {
+    display: "block", textAlign: "center", padding: "13px", borderRadius: 12, fontWeight: 800, fontSize: 13.5, textDecoration: "none",
+    background: highlight ? C.green : C.ink, color: "#fff",
+  };
   return (
-    <button
-      type="button"
-      className="tab-btn"
-      onClick={onClick}
-      style={{
-        padding: "10px 18px",
-        borderRadius: 12,
-        border: active ? `1.5px solid ${T.primary}` : `1.5px solid transparent`,
-        background: active ? T.primarySoft : highlight ? T.surfaceMuted : "transparent",
-        color: active ? T.primaryDeep : highlight ? T.primary : T.textMuted,
-        fontSize: 13,
-        fontWeight: active || highlight ? 750 : 600,
-        cursor: "pointer",
-        letterSpacing: "-0.01em",
-      }}
-    >
-      {label}
-    </button>
+    <div className="tech-card" style={{ background: C.card, borderRadius: 22, border: highlight ? `2px solid ${C.green}` : `1px solid ${C.line}`, padding: 28, display: "flex", flexDirection: "column", position: "relative" }}>
+      {highlight && <span style={{ position: "absolute", top: -12, right: 22, background: C.green, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "5px 12px", borderRadius: 999 }}>Placement guarantee</span>}
+      <span style={{ fontSize: 11.5, fontWeight: 800, color: highlight ? "#047857" : C.brandDeep, textTransform: "uppercase", letterSpacing: ".06em" }}>{tag}</span>
+      <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: "-0.03em", margin: "10px 0 6px" }}>{price} <span style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>one-time</span></div>
+      <p style={{ margin: "0 0 18px", fontSize: 13, color: C.muted, lineHeight: 1.6 }}>{blurb}</p>
+      <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 10 }}>
+        {perks.map((p) => (
+          <li key={p} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 600 }}>
+            <Check size={15} color={C.green} strokeWidth={3} /> {p}
+          </li>
+        ))}
+      </ul>
+      {external ? (
+        <a href={ctaHref} target="_blank" rel="noopener noreferrer" style={btnStyle}>{ctaLabel}</a>
+      ) : (
+        <Link href={ctaHref} style={btnStyle}>{ctaLabel}</Link>
+      )}
+    </div>
+  );
+}
+
+function PageSkeleton() {
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", padding: "40px 20px", fontFamily: FONT }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div className="sk" style={{ height: 380, borderRadius: 24, marginBottom: 28 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 22 }}>
+          {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="sk" style={{ height: 340, borderRadius: 20 }} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MyCoursesPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <MyCoursesContent />
+    </Suspense>
   );
 }

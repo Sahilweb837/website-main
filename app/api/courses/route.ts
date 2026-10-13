@@ -111,7 +111,8 @@ export async function GET(request: Request) {
     if (slug) {
       const course = all.find(
         (c) => c.slug?.toLowerCase() === slug.toLowerCase()
-      );
+      ) || LMS_COURSES.find((c) => c.slug?.toLowerCase() === slug.toLowerCase());
+
       if (!course) {
         return NextResponse.json(
           { success: false, message: `Course '${slug}' not found` },
@@ -120,6 +121,7 @@ export async function GET(request: Request) {
       }
       return NextResponse.json({ success: true, data: course });
     }
+
 
     let results = all;
 

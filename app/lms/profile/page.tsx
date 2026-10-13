@@ -13,6 +13,7 @@ import {
   BookOpen, Clock, Flame, Trophy, School, LayoutDashboard,
   Share2, Download, Copy, Lock, KeyRound, LogOut,
   MessageCircle, Headphones, CheckCircle2,
+  Sparkles, Radio, PlayCircle,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────
@@ -109,6 +110,44 @@ function ProfileContent() {
   const [preferencesError, setPreferencesError] = useState("");
   const [courseProgress, setCourseProgress] = useState<Record<string, number>>({});
   const [certificateMessage, setCertificateMessage] = useState("");
+  const [learningMode, setLearningMode] = useState<"live" | "buy_online">("live");
+  const [programmingLanguage, setProgrammingLanguage] = useState<string>("Python");
+  const [registeredLiveClasses, setRegisteredLiveClasses] = useState<string[]>([]);
+  const [autoEnrolledCourses, setAutoEnrolledCourses] = useState<{ slug: string; title: string; track?: string }[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedMode = localStorage.getItem("student_learning_mode") as "live" | "buy_online" | null;
+      if (savedMode) setLearningMode(savedMode);
+
+      const savedLang = localStorage.getItem("student_programming_language");
+      if (savedLang) setProgrammingLanguage(savedLang);
+
+      try {
+        const live = JSON.parse(localStorage.getItem("lms_registered_live_classes") || "[]");
+        setRegisteredLiveClasses(Array.isArray(live) ? live : []);
+      } catch {}
+
+      try {
+        const auto = JSON.parse(localStorage.getItem("student_auto_enrolled_courses") || "[]");
+        setAutoEnrolledCourses(Array.isArray(auto) ? auto : []);
+      } catch {}
+    }
+  }, []);
+
+  const handleSwitchMode = (mode: "live" | "buy_online") => {
+    setLearningMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("student_learning_mode", mode);
+    }
+  };
+
+  const handleSwitchLanguage = (lang: string) => {
+    setProgrammingLanguage(lang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("student_programming_language", lang);
+    }
+  };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -249,8 +288,10 @@ function ProfileContent() {
   };
 
   const studentEnrollments = DEFAULT_ENROLLMENTS.filter((enrollment) => enrollment.userId === user?.id);
+  const autoEnrolledSlugs = autoEnrolledCourses.map((c) => c.slug);
   const certificateRecords = Array.from(new Set([
     ...enrolledCourses,
+    ...autoEnrolledSlugs,
     ...studentEnrollments.map((enrollment) => enrollment.courseSlug),
   ])).map((slug) => {
     const course = LMS_COURSES.find((item) => item.slug === slug);
@@ -1255,6 +1296,508 @@ function ProfileContent() {
             <div
               style={{ display: "flex", flexDirection: "column", gap: 16 }}
             >
+              {/* ─── TAILORED LEARNING TRACK & LIVE BATCH CARD ─── */}
+              <div
+                style={{
+                  background: T.surface,
+                  borderRadius: T.radius,
+                  border: `1px solid ${T.border}`,
+                  boxShadow: T.shadow,
+                  padding: 24,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Accent ribbon */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    background:
+                      learningMode === "live"
+                        ? "linear-gradient(90deg, #ff5532, #ff8a65)"
+                        : "linear-gradient(90deg, #0284c7, #38bdf8)",
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 800,
+                      margin: 0,
+                      color: T.text,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Sparkles size={18} color={T.primary} />
+                    Tailored Learning Track
+                  </h3>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: "3px 8px",
+                      borderRadius: 99,
+                      background: learningMode === "live" ? "#fee2e2" : "#e0f2fe",
+                      color: learningMode === "live" ? "#dc2626" : "#0369a1",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    {learningMode === "live" ? (
+                      <>
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "#dc2626",
+                          }}
+                        />
+                        Live Interactive
+                      </>
+                    ) : (
+                      <>
+                        <PlayCircle size={10} />
+                        On-Demand Course
+                      </>
+                    )}
+                  </span>
+                </div>
+
+                {/* Track Mode Switcher (Live vs Buy Online) */}
+                <div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: T.textMuted,
+                      marginBottom: 8,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Learning Mode
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 8,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode("live")}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: T.radiusSm,
+                        border:
+                          learningMode === "live"
+                            ? `2px solid ${T.primary}`
+                            : `1px solid ${T.border}`,
+                        background:
+                          learningMode === "live" ? T.primarySoft : T.bg,
+                        color:
+                          learningMode === "live" ? T.primary : T.textMuted,
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        justifyContent: "center",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <Radio
+                        size={14}
+                        color={learningMode === "live" ? T.primary : T.textMuted}
+                      />
+                      Live Classes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode("buy_online")}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: T.radiusSm,
+                        border:
+                          learningMode === "buy_online"
+                            ? "2px solid #0284c7"
+                            : `1px solid ${T.border}`,
+                        background:
+                          learningMode === "buy_online" ? "#f0f9ff" : T.bg,
+                        color:
+                          learningMode === "buy_online"
+                            ? "#0284c7"
+                            : T.textMuted,
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        justifyContent: "center",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <PlayCircle
+                        size={14}
+                        color={
+                          learningMode === "buy_online"
+                            ? "#0284c7"
+                            : T.textMuted
+                        }
+                      />
+                      Online Course
+                    </button>
+                  </div>
+                </div>
+
+                {/* Programming Language Preference */}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: T.textMuted,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                      }}
+                    >
+                      Selected Language
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: T.primary,
+                      }}
+                    >
+                      {programmingLanguage}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {[
+                      { name: "Python", icon: "🐍" },
+                      { name: "JavaScript", icon: "⚡" },
+                      { name: "Java", icon: "☕" },
+                      { name: "C++", icon: "⚙️" },
+                      { name: "PHP", icon: "🐘" },
+                      { name: "Go", icon: "🔷" },
+                    ].map((lang) => {
+                      const isActive =
+                        programmingLanguage.toLowerCase() ===
+                        lang.name.toLowerCase();
+                      return (
+                        <button
+                          key={lang.name}
+                          type="button"
+                          onClick={() => handleSwitchLanguage(lang.name)}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: 8,
+                            border: isActive
+                              ? `1.5px solid ${T.primary}`
+                              : `1px solid ${T.border}`,
+                            background: isActive ? T.primarySoft : "#ffffff",
+                            color: isActive ? T.primary : T.text,
+                            fontSize: 12,
+                            fontWeight: isActive ? 800 : 600,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <span>{lang.icon}</span>
+                          <span>{lang.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Learning Mode Specific Card */}
+                {learningMode === "live" ? (
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: T.radiusSm,
+                      background:
+                        "linear-gradient(135deg, #fff5f2 0%, #fff0ea 100%)",
+                      border: "1px solid #ffd8cf",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: "#c2410c",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        Active Live Cohort
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#15803d",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "#15803d",
+                          }}
+                        />
+                        Daily 8:00 PM IST
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: T.text,
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      1-on-1 Interactive {programmingLanguage} Masterclass
+                    </div>
+
+                    <div style={{ fontSize: 12, color: T.textMuted }}>
+                      Real-time live debugging, cohort mentor reviews & Zoom/Meet link active.
+                    </div>
+
+                    <Link
+                      href="/lms/courses?tab=live"
+                      className="pf-btn-hover"
+                      style={{
+                        marginTop: 4,
+                        width: "100%",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        height: 40,
+                        borderRadius: T.radiusSm,
+                        background: T.primary,
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        boxShadow: "0 4px 12px rgba(255, 85, 50, 0.25)",
+                      }}
+                    >
+                      <Radio size={15} /> Join Live Classroom Now
+                    </Link>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: T.radiusSm,
+                      background:
+                        "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                      border: "1px solid #bae6fd",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: "#0369a1",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        On-Demand Video Track
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#0284c7",
+                        }}
+                      >
+                        Full HD 1080p
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: T.text,
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      Complete {programmingLanguage} Self-Paced Video Curriculum
+                    </div>
+
+                    <div style={{ fontSize: 12, color: T.textMuted }}>
+                      Curated video lectures, cloud code sandboxes, and lifetime updates.
+                    </div>
+
+                    <Link
+                      href="/lms/courses"
+                      className="pf-btn-hover"
+                      style={{
+                        marginTop: 4,
+                        width: "100%",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        height: 40,
+                        borderRadius: T.radiusSm,
+                        background: "#0284c7",
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        boxShadow: "0 4px 12px rgba(2, 132, 199, 0.25)",
+                      }}
+                    >
+                      <PlayCircle size={15} /> Browse & Watch Online Courses
+                    </Link>
+                  </div>
+                )}
+
+                {/* Auto-Enrolled Courses section */}
+                {autoEnrolledCourses.length > 0 && (
+                  <div
+                    style={{
+                      borderTop: `1px solid ${T.border}`,
+                      paddingTop: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: T.textMuted,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      Auto-Enrolled in Your Profile ({autoEnrolledCourses.length})
+                    </div>
+                    {autoEnrolledCourses.map((c, i) => (
+                      <div
+                        key={c.slug || i}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "8px 10px",
+                          borderRadius: 8,
+                          background: T.bg,
+                          border: `1px solid ${T.border}`,
+                          fontSize: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            minWidth: 0,
+                            flex: 1,
+                          }}
+                        >
+                          <CheckCircle2 size={14} color="#16a34a" />
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: T.text,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {c.title || c.slug}
+                          </span>
+                        </div>
+                        <Link
+                          href={`/lms/courses/${c.slug}`}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: T.primary,
+                            textDecoration: "none",
+                            marginLeft: 8,
+                            flexShrink: 0,
+                          }}
+                        >
+                          View →
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div
                 style={{
                   background: T.surface,
@@ -1850,6 +2393,40 @@ function ProfileContent() {
                 Have doubts in code problems or system architecture? Reach out
                 to our mentors.
               </p>
+            </div>
+
+            <div
+              style={{
+                padding: 18,
+                borderRadius: 14,
+                border: `1px solid ${T.border}`,
+                background: "#fafafa",
+              }}
+            >
+              <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800, color: T.text }}>
+                Quick guide to your learning dashboard
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
+                {[
+                  {
+                    title: "Courses and progress",
+                    detail: "Open My Courses to continue lessons, review your learning progress, and explore available learning tracks.",
+                  },
+                  {
+                    title: "Live masterclasses",
+                    detail: "Find upcoming sessions, join a class from its session card, and open the details page for its agenda.",
+                  },
+                  {
+                    title: "Attendance and streak",
+                    detail: "Use the attendance card in the sidebar to mark today. The weekly row reflects your recorded activity.",
+                  },
+                ].map((item) => (
+                  <div key={item.title} style={{ padding: 13, borderRadius: 11, background: "#fff", border: `1px solid ${T.border}` }}>
+                    <div style={{ marginBottom: 5, color: T.text, fontSize: 12, fontWeight: 800 }}>{item.title}</div>
+                    <p style={{ margin: 0, color: T.textMuted, fontSize: 11.5, lineHeight: 1.55 }}>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div

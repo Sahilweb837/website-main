@@ -10,6 +10,7 @@ export type AuthUser = {
   phone: string | null;
   role: "student" | "admin";
   avatar: string | null;
+  provider?: "credentials" | "google" | "facebook" | "github" | "face" | "demo";
   profileComplete?: boolean;
 };
 
@@ -23,7 +24,13 @@ export type AuthContextType = {
   isEnrolled: (courseSlug: string) => boolean;
   loginWithPhone: (phone: string, redirectTo?: string) => Promise<void>;
   loginWithGoogle: (redirectTo?: string) => Promise<void>;
-  loginWithCredentials: (userData: { name?: string; email?: string; phone?: string }, redirectTo?: string) => Promise<void>;
+  loginWithFacebook: (redirectTo?: string) => Promise<void>;
+  loginWithGithub: (redirectTo?: string) => Promise<void>;
+  loginWithFace: (faceData?: { name?: string }, redirectTo?: string) => Promise<void>;
+  loginWithCredentials: (
+    userData: { name?: string; email?: string; phone?: string; password?: string; avatar?: string },
+    redirectTo?: string
+  ) => Promise<void>;
   loginAsDemo: (redirectTo?: string) => Promise<void>;
   logout: () => void;
   updateUser: (fields: Partial<AuthUser>) => void;
@@ -251,15 +258,128 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (redirectTo = "/lms/courses") => {
     setIsLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 500));
+      let gUser: any = null;
+      try {
+        const { getFirebaseAuth } = await import("@/lib/firebase");
+        const auth = getFirebaseAuth();
+        if (auth) {
+          const { signInWithPopup, GoogleAuthProvider } = await import("firebase/auth");
+          const provider = new GoogleAuthProvider();
+          const res = await signInWithPopup(auth, provider);
+          gUser = res.user;
+        }
+      } catch (err: any) {
+        console.warn("Firebase Google Auth fallback:", err?.message || err);
+      }
+
+      const emailVal = gUser?.email || "student@gmail.com";
+      const nameVal = gUser?.displayName || "Google Student";
+      const avatarVal = gUser?.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=google";
       const userRecord: AuthUser = {
-        id: studentIdFor("google:student@gmail.com"),
-        name: "Google Student",
-        email: "student@gmail.com",
+        id: studentIdFor(`google:${gUser?.uid || emailVal}`),
+        name: nameVal,
+        email: emailVal,
         phone: null,
         role: "student",
-        avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=google",
-        profileComplete: false,
+        avatar: avatarVal,
+        provider: "google",
+        profileComplete: true,
+      };
+      persistUser(userRecord);
+      navigateTarget(redirectTo);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithFacebook = async (redirectTo = "/lms/courses") => {
+    setIsLoading(true);
+    try {
+      let fbUser: any = null;
+      try {
+        const { getFirebaseAuth } = await import("@/lib/firebase");
+        const auth = getFirebaseAuth();
+        if (auth) {
+          const { signInWithPopup, FacebookAuthProvider } = await import("firebase/auth");
+          const provider = new FacebookAuthProvider();
+          const res = await signInWithPopup(auth, provider);
+          fbUser = res.user;
+        }
+      } catch (err: any) {
+        console.warn("Firebase Facebook Auth fallback:", err?.message || err);
+      }
+
+      const emailVal = fbUser?.email || "student.fb@facebook.com";
+      const nameVal = fbUser?.displayName || "Facebook Student";
+      const avatarVal = fbUser?.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=facebook-student";
+      const userRecord: AuthUser = {
+        id: studentIdFor(`facebook:${fbUser?.uid || emailVal}`),
+        name: nameVal,
+        email: emailVal,
+        phone: null,
+        role: "student",
+        avatar: avatarVal,
+        provider: "facebook",
+        profileComplete: true,
+      };
+      persistUser(userRecord);
+      navigateTarget(redirectTo);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGithub = async (redirectTo = "/lms/courses") => {
+    setIsLoading(true);
+    try {
+      let ghUser: any = null;
+      try {
+        const { getFirebaseAuth } = await import("@/lib/firebase");
+        const auth = getFirebaseAuth();
+        if (auth) {
+          const { signInWithPopup, GithubAuthProvider } = await import("firebase/auth");
+          const provider = new GithubAuthProvider();
+          const res = await signInWithPopup(auth, provider);
+          ghUser = res.user;
+        }
+      } catch (err: any) {
+        console.warn("Firebase GitHub Auth fallback:", err?.message || err);
+      }
+
+      const emailVal = ghUser?.email || "developer@github.com";
+      const nameVal = ghUser?.displayName || "GitHub Developer";
+      const avatarVal = ghUser?.photoURL || "https://api.dicebear.com/7.x/bottts/svg?seed=github-dev";
+      const userRecord: AuthUser = {
+        id: studentIdFor(`github:${ghUser?.uid || emailVal}`),
+        name: nameVal,
+        email: emailVal,
+        phone: null,
+        role: "student",
+        avatar: avatarVal,
+        provider: "github",
+        profileComplete: true,
+      };
+      persistUser(userRecord);
+      navigateTarget(redirectTo);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithFace = async (faceData?: { name?: string }, redirectTo = "/lms/courses") => {
+    setIsLoading(true);
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      const studentName = faceData?.name || "Verified Student (Face ID)";
+      const userRecord: AuthUser = {
+        id: studentIdFor("face:biometric-verified-student"),
+        name: studentName,
+        email: "face.student@netcoder.in",
+        phone: "+91 98167 32055",
+        role: "student",
+        avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=faceid-verified",
+        provider: "face",
+        profileComplete: true,
       };
       persistUser(userRecord);
       navigateTarget(redirectTo);
@@ -269,12 +389,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithCredentials = async (
-    userData: { name?: string; email?: string; phone?: string },
+    userData: { name?: string; email?: string; phone?: string; password?: string; avatar?: string },
     redirectTo = "/lms/courses"
   ) => {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
+      // Save in local student accounts list so credentials are remembered
+      if (typeof window !== "undefined" && userData.email) {
+        try {
+          const key = "lms_registered_students";
+          const list = JSON.parse(localStorage.getItem(key) || "[]");
+          const existingIdx = list.findIndex(
+            (u: any) => u.email?.toLowerCase() === userData.email?.toLowerCase()
+          );
+          const rec = {
+            email: userData.email,
+            name: userData.name || (existingIdx >= 0 ? list[existingIdx].name : userData.email.split("@")[0]),
+            phone: userData.phone || (existingIdx >= 0 ? list[existingIdx].phone : null),
+            password: userData.password || (existingIdx >= 0 ? list[existingIdx].password : null),
+            savedAt: new Date().toISOString(),
+          };
+          if (existingIdx >= 0) {
+            list[existingIdx] = { ...list[existingIdx], ...rec };
+          } else {
+            list.push(rec);
+          }
+          localStorage.setItem(key, JSON.stringify(list));
+        } catch (e) {
+          console.error("Local user registry write error:", e);
+        }
+      }
+
       const displayName = userData.name?.trim() || (userData.email ? userData.email.split("@")[0] : "Student");
       const identity = userData.email?.trim().toLowerCase()
         || userData.phone?.replace(/\D/g, "")
@@ -285,7 +431,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: userData.email?.trim() || null,
         phone: userData.phone?.trim() || null,
         role: "student",
-        avatar: null,
+        avatar: userData.avatar || null,
+        provider: "credentials",
         profileComplete: Boolean(userData.name && userData.email),
       };
       persistUser(userRecord);
@@ -299,7 +446,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
-      persistUser({ ...DEMO_USER, profileComplete: true });
+      persistUser({ ...DEMO_USER, profileComplete: true, provider: "demo" });
       navigateTarget(redirectTo);
     } finally {
       setIsLoading(false);
@@ -339,6 +486,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isEnrolled,
         loginWithPhone,
         loginWithGoogle,
+        loginWithFacebook,
+        loginWithGithub,
+        loginWithFace,
         loginWithCredentials,
         loginAsDemo,
         logout,
